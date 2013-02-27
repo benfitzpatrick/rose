@@ -25,13 +25,16 @@ Classes:
 
 """
 
+import cProfile
 import copy
 import itertools
 import os
+import pstats
 import re
 import shutil
 import sre_constants
 import sys
+import tempfile
 import warnings
 
 # Ignore add menu related warnings for now, but remove this later.
@@ -494,7 +497,9 @@ class MainController(object):
         duplicate = ns_metadata.get(rose.META_PROP_DUPLICATE)
         help = ns_metadata.get(rose.META_PROP_HELP)
         url = ns_metadata.get(rose.META_PROP_URL)
-        custom_widget = ns_metadata.get(rose.META_PROP_WIDGET)
+        custom_widget = ns_metadata.get(rose.config_editor.META_PROP_WIDGET)
+        custom_sub_widget = ns_metadata.get(
+                               rose.config_editor.META_PROP_WIDGET_SUB_NS)
         if custom_widget is not None:
             module, cls = re.match('([.\w]*)\.(\w+)$', custom_widget).groups()
             custom_widget = None
@@ -545,13 +550,23 @@ class MainController(object):
                          'help': help,
                          'url': url,
                          'widget': custom_widget,
+                         'widget_sub_ns': custom_sub_widget,
                          'see_also': see_also,
                          'config_name': config_name,
                          'show_modes': self.page_show_modes,
                          'icon': icon_path}
         if len(sections) == 1:
             page_metadata.update({'id': sections.pop()})
-        variable_ops = rose.config_editor.stack.VariableOperations(
+        sect_ops = rose.config_editor.stack.SectionOperations(
+                                   self.data, self.util,
+                                   self.undo_stack, self.redo_stack,
+                                   self.check_cannot_enable_setting,
+                                   self.update_namespace,
+                                   self.update_ns_info,
+                                   self.update_ns_comments,
+                                   view_page_func=self.view_page,
+                                   kill_page_func=self.kill_page)
+        var_ops = rose.config_editor.stack.VariableOperations(
                                    self.data, self.util, 
                                    self.undo_stack, self.redo_stack,
                                    self.check_cannot_enable_setting,
@@ -566,7 +581,8 @@ class MainController(object):
                                   page_metadata,
                                   data,
                                   latent_data,
-                                  variable_ops,
+                                  sect_ops,
+                                  var_ops,
                                   section_data_objects,
                                   self.data.get_format_sections,
                                   directory,
@@ -575,7 +591,7 @@ class MainController(object):
                                   launch_edit_func=launch_edit)
         #FIXME: These three should go.
         page.trigger_tab_detach = lambda b: self._handle_detach_request(page)
-        variable_ops.trigger_ignored_update = lambda v: page.update_ignored()
+        var_ops.trigger_ignored_update = lambda v: page.update_ignored()
         page.trigger_update_status = lambda: self.update_status(page)
         return page
 
@@ -928,7 +944,8 @@ class MainController(object):
         for page in self.pagelist:
             if (page.sub_data is None or
                 (namespace is not None and
-                 not namespace.startswith(page.namespace))):
+                 not namespace.startswith(page.namespace) and
+                 namespace != page.namespace)):
                 continue
             page.sub_data = self.data.get_sub_data_for_namespace(
                                                    page.namespace)
@@ -1924,7 +1941,7 @@ class MainController(object):
                 break
             do_list.append(stack_item)
         is_group = len(do_list) > 1
-        stack_info = {}
+        stack_info = []
         for stack_item in do_list:
             node = stack_item.node
             node_id = node.metadata.get('id')
@@ -1961,8 +1978,7 @@ class MainController(object):
             else:
                 stack_item.undo_func()
             del self.redo_stack[:]
-            for redo_item in redo_items:
-                self.redo_stack.append(redo_item)
+            self.redo_stack.extend(redo_items)
             just_done_item = self.undo_stack[-1]
             del self.undo_stack[-1]
             del stack[-1]
@@ -1974,8 +1990,7 @@ class MainController(object):
                 self.data.reload_namespace_tree()
             page = None
             if is_group:
-                stack_info.setdefault(namespace, [])
-                stack_info[namespace].append([stack_item.page_label, node_id])
+                stack_info.append([namespace, stack_item.page_label, node_id])
             elif self.data.is_ns_in_tree(namespace):
                 page = self.view_page(namespace, node_id)
                 self.sync_page_var_lists(page)
@@ -1991,23 +2006,7 @@ class MainController(object):
                 self.alter_bar_sensitivity()
                 self.update_stack_viewer_if_open()
         if is_group:
-            for namespace, label_id_tuples in stack_info.items():
-                node_id = None
-                if label_id_tuples:
-                    node_id = label_id_tuples[-1][1]
-                page = self.view_page(namespace, node_id)
-                self.sync_page_var_lists(page)
-                page.sort_data()
-                page.refresh()
-                page.update_ignored()
-                page.update_info()
-                page.set_main_focus(node_id)
-                self.set_current_page_indicator(page.namespace)
-                if any([l[0] != namespace for l in label_id_tuples]):
-                    # Make sure the right status update is made.
-                    self.update_status(page)
-            self.alter_bar_sensitivity()
-            self.update_stack_viewer_if_open()
+            self.data.reload_namespace_tree()
         return True
 
 # ----------------------- System functions -----------------------------------
@@ -2116,4 +2115,11 @@ if __name__ == '__main__':
     if opts.new_mode:
         cwd = None
     rose.gtk.util.set_exception_hook(keep_alive=True)
-    spawn_window(cwd)
+    if opts.debug_mode:
+        f = tempfile.NamedTemporaryFile()
+        cProfile.runctx("spawn_window(cwd)", globals(), locals(), f.name)
+        p = pstats.Stats(f.name)
+        p.strip_dirs().sort_stats('time').print_stats(40)
+        f.close()
+    else:
+        spawn_window(cwd)

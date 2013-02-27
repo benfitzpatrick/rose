@@ -523,7 +523,7 @@ class ConfigDataManager(object):
             allowed_sections = sect_map.keys()
         else:
             allowed_sections = self.get_sections_from_namespace(only_this_ns)
-        for section, sect_data in sect_map.items():
+        for section in sect_map:
             if (only_this_ns is not None and
                 section not in allowed_sections):
                 continue
@@ -816,8 +816,10 @@ class ConfigDataManager(object):
             # Remaining possibilities are not a problem:
             # Doc table: E -> E, E -> not trigger
 
-    def load_file_metadata(self, config_name):
+    def load_file_metadata(self, config_name, section_name=None):
         """Deal with file section variables."""
+        if section_name is not None and not section_name.startswith("file:"):
+            return False
         config = self.config[config_name].config
         meta_config = self.config[config_name].meta
         file_sections = []
@@ -1093,17 +1095,18 @@ class ConfigDataManager(object):
 
     def get_sub_data_for_namespace(self, ns, from_saved=False):
         """Return any sections/variables below this namespace."""
-        sub_data = {"sections": [], "variables": []}
+        sub_data = {"sections": {}, "variables": {}}
         config_name = self.util.split_full_ns(self, ns)[0]
         config_data = self.config[config_name]
         for sect, sect_data in config_data.sections.now.items():
             sect_ns = self.get_default_namespace_for_section(sect, config_name)
             if sect_ns.startswith(ns):
-                sub_data['sections'].append(sect_data)
+                sub_data['sections'].update({sect: sect_data})
         for sect, variables in config_data.vars.now.items():
             for variable in variables:
                 if variable.metadata['full_ns'].startswith(ns):
-                    sub_data['variables'].append(variable)
+                    sub_data['variables'].setdefault(sect, [])
+                    sub_data['variables'][sect].append(variable)
         return sub_data
 
     def get_ns_comments(self, ns):

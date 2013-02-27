@@ -20,10 +20,12 @@
 """
 This module contains a utility class to transform between data types.
 
-It also contains a function to launch an introspective dialog.
+It also contains a function to launch an introspective dialog, and
+one to import custom plugins.
 
 """
 
+import inspect
 import re
 
 import pygtk
@@ -94,6 +96,48 @@ class Lookup(object):
         return self.full_ns_split_lookup.get(full_namespace, (None, None))
 
 
+def import_object(import_string, from_files, error_handler):
+    """Import a Python callable.
+
+    import_string is the '.' delimited path to the callable,
+    as in normal Python - e.g. rose.config_editor.page.PageWidget
+    from_files is a list of available Python file paths to search in
+    error_handler is a function that accepts an Exception instance
+    and does something appropriate with it.
+
+    """
+    is_builtin = False
+    module_name = ".".join(import_string.split(".")[:-1])
+    if module_name.startswith("rose."):
+        is_builtin = True
+    class_name = import_string.split(".")[-1]
+    module_fpath = "/".join(import_string.rsplit(".")[:-1]) + ".py"
+    module_files = [f for f in from_files if f.endswith(module_fpath)]
+    if not module_files and not is_builtin:
+        return None
+    if not is_builtin:
+        module_dir = os.path.dirname(module_files.pop())
+        sys.path.insert(0, module_dir)
+    try:
+        module = __import__(module_name, globals(), locals(),
+                            [], 0)
+    except Exception as e:
+        if not is_builtin:
+            sys.path.pop(0)
+        error_handler(e)
+        return None
+    for submodule in module_name.split(".")[1:]:
+        module = getattr(module, submodule)
+    contents = inspect.getmembers(module)
+    return_object = None
+    for obj_name, obj in contents:
+        if obj_name == class_name and inspect.isclass(obj):
+            return_object = obj
+    if not is_builtin:
+        sys.path.pop(0)
+    return return_object
+
+
 def launch_node_info_dialog(node, changes, search_function):
     """Launch a dialog displaying attributes of a variable or section."""
     title = node.__class__.__name__ + " " + node.metadata['id']
@@ -149,6 +193,7 @@ def launch_error_dialog(exception=None, text=""):
         text += type(exception).__name__ + ": " + str(exception)
     rose.gtk.util.run_dialog(rose.gtk.util.DIALOG_TYPE_ERROR,
                              text, rose.config_editor.DIALOG_TITLE_ERROR)
+
 
 def wrap_string(text, maxlen=72, indent0=0, maxlines=4, sep=","):
     """Return a wrapped string - 'textwrap' is not flexible enough for this."""
