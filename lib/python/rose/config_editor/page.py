@@ -18,7 +18,10 @@
 # along with Rose. If not, see <http://www.gnu.org/licenses/>.
 #-----------------------------------------------------------------------------
 
+import re
+import sys
 import time
+import traceback
 import webbrowser
 
 import pygtk
@@ -26,6 +29,7 @@ pygtk.require('2.0')
 import gtk
 import pango
 
+import rose.config_editor.panelwidget
 import rose.config_editor.pagewidget
 import rose.config_editor.stack
 import rose.config_editor.util
@@ -39,9 +43,10 @@ class ConfigPage(gtk.VBox):
 
     """Returns a container for a tab."""
 
-    def __init__(self, page_metadata, config_data, ghost_data,
-                 variable_ops, sections, get_formats_func, directory=None,
-                 sub_data=None, launch_info_func=None, launch_edit_func=None):
+    def __init__(self, page_metadata, config_data, ghost_data, sect_ops,
+                 var_ops, sections, get_formats_func, directory=None,
+                 sub_data=None, sub_ops=None, launch_info_func=None,
+                 launch_edit_func=None):
         super(ConfigPage, self).__init__(homogeneous=False)
         self.namespace = page_metadata.get('namespace')
         self.ns_is_default = page_metadata.get('ns_is_default')
@@ -52,6 +57,7 @@ class ConfigPage(gtk.VBox):
         self.url = page_metadata.get('url')
         self.see_also = page_metadata.get('see_also')
         self.custom_widget = page_metadata.get('widget')
+        self.custom_sub_widget = page_metadata.get('widget_sub_ns')
         self.show_modes = page_metadata.get('show_modes')
         self.is_duplicate = (page_metadata.get('duplicate') ==
                              rose.META_PROP_VALUE_TRUE)
@@ -62,6 +68,7 @@ class ConfigPage(gtk.VBox):
         self.icon_path = page_metadata.get('icon')
         self.directory = directory
         self.sub_data = sub_data
+        self.sub_ops = sub_ops
         self.launch_info = launch_info_func
         self.launch_edit = launch_edit_func
         namespaces = self.namespace.strip('/').split('/')
@@ -77,7 +84,8 @@ class ConfigPage(gtk.VBox):
             self.info += '\n => ' + self.see_also
         self.panel_data = config_data
         self.ghost_data = ghost_data
-        self.variable_ops = variable_ops
+        self.sect_ops = sect_ops
+        self.var_ops = var_ops
         self.trigger_ask_for_config_keys = lambda: get_formats_func(
                                                        self.config_name)
         self.sort_data()
@@ -466,16 +474,57 @@ class ConfigPage(gtk.VBox):
 
     def generate_filesystem_panel(self):
         """Generate a widget to view the file hierarchy."""
-        self.filesystem_panel = rose.config_editor.panel.FileSystemPanel(
-                                                         self.directory)
+        self.filesystem_panel = (
+                rose.config_editor.panelwidget.filesystem.FileSystemPanel(
+                                                              self.directory))
 
-    def generate_sub_data_panel(self):
+    def generate_sub_data_panel(self, override_custom=False):
         """Generate a panel giving a summary of other page data."""
-        self.sub_data_panel = rose.config_editor.panel.SummaryDataPanel(
-                                          self.sub_data["sections"],
-                                          self.sub_data["variables"],
-                                          self.search_for_id,
-                                          self.is_duplicate)
+        args = (self.sub_data["sections"],
+                self.sub_data["variables"],
+                self.sect_ops,
+                self.var_ops,
+                self.search_for_id,
+                self.sub_ops,
+                self.is_duplicate)
+        if self.custom_sub_widget is not None and not override_custom:
+            widget_name_args = self.custom_sub_widget.split(None, 1)
+            if len(widget_name_args) > 1:
+                widget_path, widget_args = widget_name_args
+            else:
+                widget_path, widget_args = widget_name_args[0], None
+            metadata_files = self.sect_ops.get_ns_metadata_files(
+                                               self.namespace)
+            widget_dir = rose.META_DIR_WIDGET
+            metadata_files.sort(lambda x, y: (widget_dir in y) -
+                                             (widget_dir in x))
+            prefix = re.sub("[^\w]", "_", self.config_name.strip("/"))
+            prefix += "/" + rose.META_DIR_WIDGET + "/"            
+            custom_widget = rose.config_editor.util.import_object(
+                                        widget_path,
+                                        metadata_files,
+                                        self.handle_bad_custom_sub_widget,
+                                        module_prefix=prefix)
+            if custom_widget is None:
+                text = rose.config_editor.ERROR_IMPORT_CLASS.format(
+                                                       self.custom_sub_widget)
+                self.handle_bad_custom_sub_widget(text)
+                return False
+            try:
+                self.sub_data_panel = custom_widget(*args,
+                                                    arg_str=widget_args)
+            except Exception as e:
+                self.handle_bad_custom_sub_widget(str(e))
+        else:
+            standard_panel_module = rose.config_editor.panelwidget.standard
+            self.sub_data_panel = (
+                     standard_panel_module.StandardSummaryDataPanel(*args))
+
+    def handle_bad_custom_sub_widget(self, error_info):
+        text = rose.config_editor.ERROR_IMPORT_WIDGET.format(
+                                               traceback.format_exc())
+        sys.stderr.write(text + "\n")
+        self.generate_sub_data_panel(override_custom=True)
 
     def update_sub_data(self):
         """Update the sub (summary) data panel."""
@@ -584,7 +633,7 @@ class ConfigPage(gtk.VBox):
             if section is None and self.section.ignored_reason:
                 # Cannot add to an ignored section.
                 return False
-        self.variable_ops.add_var(variable)
+        self.var_ops.add_var(variable)
         if hasattr(self.main_container, 'add_variable_widget'):
             self.main_container.add_variable_widget(variable)
             self.trigger_update_status()
@@ -593,14 +642,34 @@ class ConfigPage(gtk.VBox):
         self.update_ignored()
         self.set_main_focus(variable.metadata.get('id'))
 
-    def generate_main_container(self):
+    def generate_main_container(self, override_custom=False):
         """Choose a container to interface with variables in panel_data."""
-        if self.custom_widget is not None:
-            self.main_container = self.custom_widget(
-                                   self.panel_data,
-                                   self.ghost_data,
-                                   self.variable_ops,
-                                   self.show_modes)
+        if self.custom_widget is not None and not override_custom:
+            widget_name_args = self.custom_sub_widget.split(None, 1)
+            if len(widget_name_args) > 1:
+                widget_path, widget_args = widget_name_args
+            else:
+                widget_path, widget_args = widget_name_args[0], None
+            metadata_files = self.sect_ops.get_ns_metadata_files(
+                                               self.namespace)
+            custom_widget = rose.config_editor.util.import_object(
+                                        widget_path,
+                                        metadata_files,
+                                        self.handle_bad_custom_main_widget)
+            if custom_widget is None:
+                text = rose.config_editor.ERROR_IMPORT_CLASS.format(
+                                                       widget_path)
+                self.handle_bad_custom_main_widget(text)
+            try:
+                self.main_container = self.custom_widget(self.panel_data,
+                                                         self.ghost_data,
+                                                         self.var_ops,
+                                                         self.show_modes,
+                                                         arg_str=widget_args)
+            except Exception as e:
+                self.handle_bad_custom_main_widget(e)
+            else:
+                return
         std_table = rose.config_editor.pagewidget.standard.PageTable
         file_chooser = rose.config_editor.pagewidget.chooser.PageFormatTree
         disc_table = rose.config_editor.pagewidget.standard.PageLatentTable
@@ -608,19 +677,26 @@ class ConfigPage(gtk.VBox):
             self.main_container = file_chooser(
                                        self.panel_data,
                                        self.ghost_data,
-                                       self.variable_ops,
+                                       self.var_ops,
                                        self.show_modes,
                                        self.trigger_ask_for_config_keys)
         elif self.namespace == "/discovery":
             self.main_container = disc_table(self.panel_data,
                                              self.ghost_data,
-                                             self.variable_ops,
+                                             self.var_ops,
                                              self.show_modes)
         else:
             self.main_container = std_table(self.panel_data,
                                             self.ghost_data,
-                                            self.variable_ops,
+                                            self.var_ops,
                                             self.show_modes)
+
+    def handle_bad_custom_main_widget(self, error_info):
+        """Handle a bad custom page widget import."""
+        text = rose.config_editor.ERROR_IMPORT_WIDGET.format(
+                                               traceback.format_exc())
+        sys.stderr.write(text + "\n")
+        self.generate_main_container(override_custom=True)
 
     def validate_errors(self, variable_id=None):
         """Check if there are there errors in variables on this page."""
@@ -883,14 +959,14 @@ class ConfigPage(gtk.VBox):
             var_name = variable.name
             new_id_list = [x.metadata['id'] for x in new_config_data]
             if var_id not in new_id_list or var_id is None:
-                self.variable_ops.remove_var(variable)
+                self.var_ops.remove_var(variable)
         for variable in [v for v in self.ghost_data]:
             # Remove redundant metadata variables.
             var_id = variable.metadata.get('id')
             var_name = variable.name
             new_id_list = [x.metadata['id'] for x in new_ghost_data]
             if var_id not in new_id_list:
-                self.variable_ops.remove_var(variable)  # From the ghost list.
+                self.var_ops.remove_var(variable)  # From the ghost list.
         for variable in new_config_data:
             # Update or add variables
             var_id = variable.metadata['id']
@@ -900,12 +976,12 @@ class ConfigPage(gtk.VBox):
                 old_variable = self.panel_data[old_id_list.index(var_id)]
                 old_variable.metadata = variable.metadata
                 if old_variable.value != variable.value:
-                    self.variable_ops.set_var_value(old_variable, 
+                    self.var_ops.set_var_value(old_variable, 
                                                     variable.value)
                 old_ign_set = set(old_variable.ignored_reason.keys())
                 new_ign_set = set(variable.ignored_reason.keys())
                 if old_ign_set != new_ign_set:
-                    self.variable_ops.set_var_ignored(
+                    self.var_ops.set_var_ignored(
                                       old_variable,
                                       variable.ignored_reason.copy(),
                                       override=True)
@@ -914,7 +990,7 @@ class ConfigPage(gtk.VBox):
                     old_variable.ignored_reason = (
                                          variable.ignored_reason.copy())
             else:
-                self.variable_ops.add_var(variable)
+                self.var_ops.add_var(variable)
         for variable in new_ghost_data:
             # Update or remove variables
             var_id = variable.metadata['id']
@@ -980,7 +1056,7 @@ class ConfigPage(gtk.VBox):
 
     def search_for_id(self, id_):
         """Launch a search for variable or section id."""
-        return self.variable_ops.search_for_var(self.namespace, id_)
+        return self.var_ops.search_for_var(self.namespace, id_)
 
     def trigger_update_status(self):
         """Connect this at a higher level to allow changed data signals."""

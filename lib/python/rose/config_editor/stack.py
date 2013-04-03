@@ -21,6 +21,7 @@
 import copy
 import os
 import re
+import time
 
 import pygtk
 pygtk.require('2.0')
@@ -35,11 +36,13 @@ class StackItem(object):
     """A dictionary containing stack information."""
 
     def __init__(self, page_label, action_text, node,
-                       undo_function, undo_args=None):
+                       undo_function, undo_args=None,
+                       group=None):
         self.page_label = page_label
         self.action = action_text
         self.node = node
         self.name = self.node.name
+        self.group = group
         if hasattr(self.node, "value"):
             self.value = self.node.value
             self.old_value = self.node.old_value
@@ -75,16 +78,14 @@ class SectionOperations(object):
         self.check_cannot_enable_setting = check_cannot_enable_func
         self.trigger_update = update_ns_func
         self.trigger_info_update = update_info_func
-        self.trigger_comments_update = update_comments_func
         self.search_id_func = search_id_func
         self.view_page_func = view_page_func
         self.kill_page_func = kill_page_func
 
-    def add_section(self, config_name, section, no_update=False):
+    def add_section(self, config_name, section, skip_update=False,
+                    no_page_launch=False):
         """Add a section to this configuration."""
         config_data = self.__data.config[config_name]
-        config = self.__data.dump_to_internal_config(config_name)
-        config_data.config = config
         new_section_data = None
         was_latent = False
         if section in config_data.sections.latent:
@@ -95,31 +96,32 @@ class SectionOperations(object):
                                                               config_name)
             new_section_data = rose.section.Section(section, [], metadata)
         config_data.sections.now.update({section: new_section_data})
-        config_data.config = self.__data.dump_to_internal_config(config_name)
-        self.__data.load_file_metadata(config_name)
+        self.__data.add_section_to_config(section, config_name)
+        self.__data.load_file_metadata(config_name, section)
         self.__data.load_vars_from_config(config_name,
                                           just_this_section=section,
                                           update=True)
-        self.__data.load_variable_namespaces(config_name)
+        self.__data.load_variable_namespaces(config_name,
+                                             just_this_section=section)
         metadata = self.__data.get_metadata_for_config_id(section,
                                                           config_name)
         new_section_data.metadata = metadata
         ns = self.__data.get_default_namespace_for_section(section, 
                                                            config_name)
-        if not no_update:
-            self.__data.reload_namespace_tree()  # This will update everything.
+        if not skip_update:
+            self.__data.reload_namespace_tree(ns)
         copy_section_data = new_section_data.copy()
         stack_item = rose.config_editor.stack.StackItem(
                           ns,
                           rose.config_editor.STACK_ACTION_ADDED,
                           copy_section_data,
                           self.remove_section,
-                          (config_name, section))
+                          (config_name, section, skip_update))
         self.__undo_stack.append(stack_item)
-        while self.__redo_stack:
-            self.__redo_stack.pop()
-        self.view_page_func(ns)
-        if not no_update:
+        del self.__redo_stack[:]
+        if not no_page_launch and not skip_update:
+            self.view_page_func(ns)
+        if not skip_update:
             self.trigger_update(ns)
 
     def ignore_section(self, config_name, section, is_ignored,
@@ -184,8 +186,7 @@ class SectionOperations(object):
                           self.ignore_section,
                           (config_name, section, not is_ignored, True))
         self.__undo_stack.append(stack_item)
-        while self.__redo_stack:
-            self.__redo_stack.pop()
+        del self.__redo_stack[:]
         nses_to_do = []
         for var in (config_data.vars.now.get(section, []) +
                     config_data.vars.latent.get(section, [])):
@@ -204,7 +205,7 @@ class SectionOperations(object):
             self.trigger_update(ns)
             self.trigger_info_update(ns)
 
-    def remove_section(self, config_name, section, no_update=False):
+    def remove_section(self, config_name, section, skip_update=False):
         """Remove a section from this configuration."""
         config_data = self.__data.config[config_name]
         old_section_data = config_data.sections.now.pop(section)
@@ -225,14 +226,13 @@ class SectionOperations(object):
                           rose.config_editor.STACK_ACTION_REMOVED,
                           old_section_data.copy(),
                           self.add_section,
-                          (config_name, section))
+                          (config_name, section, skip_update))
         for ns in ns_list:
             self.kill_page_func(ns)
         self.__undo_stack.append(stack_item)
-        while self.__redo_stack:
-            self.__redo_stack.pop()
-        if not no_update:
-            self.__data.reload_namespace_tree()  # This will update everything.
+        del self.__redo_stack[:]
+        if not skip_update:
+            self.__data.reload_namespace_tree(namespace)
 
     def set_section_comments(self, config_name, section, comments):
         """Change the comments field for the section object."""
@@ -250,10 +250,14 @@ class SectionOperations(object):
                              self.set_section_comments,
                              (config_name, section, last_comments))
         self.__undo_stack.append(stack_item)
-        while self.__redo_stack:
-            self.__redo_stack.pop()
+        del self.__redo_stack[:]
         self.trigger_update(ns)
-        self.trigger_comments_update(ns)
+
+    def get_ns_metadata_files(self, namespace):
+        """Retrieve filenames within the metadata for this namespace."""
+        config_name = self.__util.split_full_ns(
+                             self.__data, namespace)[0]
+        return self.__data.config[config_name].meta_files
 
 
 class VariableOperations(object):
@@ -282,7 +286,7 @@ class VariableOperations(object):
         var_id = possible_copy_variable.metadata['id']
         return self.__data.get_ns_variable(var_id, config_name)
 
-    def add_var(self, variable, no_update=False):
+    def add_var(self, variable, skip_update=False):
         """Add a variable to the internal list."""
         existing_variable = self._get_proper_variable(variable)
         namespace = variable.metadata.get('full_ns')
@@ -313,13 +317,12 @@ class VariableOperations(object):
                                         rose.config_editor.STACK_ACTION_ADDED,
                                         copy_var,
                                         self.remove_var,
-                                        [copy_var]))
-            for item in [i for i in self.__redo_stack]:
-                self.__redo_stack.remove(item)
-        if not no_update:
+                                        [copy_var, skip_update]))
+            del self.__redo_stack[:]
+        if not skip_update:
             self.trigger_update(variable.metadata['full_ns'])
 
-    def remove_var(self, variable, no_update=False):
+    def remove_var(self, variable, skip_update=False):
         """Remove the variable entry from the internal lists."""
         variable = self._get_proper_variable(variable)
         namespace = variable.metadata.get('full_ns')
@@ -347,10 +350,9 @@ class VariableOperations(object):
                                     rose.config_editor.STACK_ACTION_REMOVED,
                                     copy_var,
                                     self.add_var,
-                                    [copy_var]))
-        for item in [i for i in self.__redo_stack]:
-            self.__redo_stack.remove(item)
-        if not no_update:
+                                    [copy_var, skip_update]))
+        del self.__redo_stack[:]
+        if not skip_update:
             self.trigger_update(variable.metadata['full_ns'])
 
     def fix_var_ignored(self, variable):
@@ -435,8 +437,7 @@ class VariableOperations(object):
                                            copy_var,
                                            self.set_var_ignored,
                                            [copy_var, old_reason, True]))
-        for item in [i for i in self.__redo_stack]:
-            self.__redo_stack.remove(item)
+        del self.__redo_stack[:]
         self.trigger_ignored_update(variable)
         self.trigger_update(variable.metadata['full_ns'])
 
@@ -455,8 +456,7 @@ class VariableOperations(object):
                                     copy_var,
                                     self.set_var_value,
                                     [copy_var, copy_var.old_value]))
-        for item in [i for i in self.__redo_stack]:
-            self.__redo_stack.remove(item)
+        del self.__redo_stack[:]
         self.trigger_update(variable.metadata['full_ns'])
 
     def set_var_comments(self, variable, comments):
@@ -472,8 +472,7 @@ class VariableOperations(object):
                             copy_variable,
                             self.set_var_comments,
                             [copy_variable, old_comments]))
-        for item in [i for i in self.__redo_stack]:
-            self.__redo_stack.remove(item)
+        del self.__redo_stack[:]
         self.trigger_update(variable.metadata['full_ns'])
 
     def get_var_original_comments(self, variable):
@@ -579,11 +578,59 @@ class VariableOperations(object):
                              self.__data, config_name_or_namespace)[0]
         self.search_id_func(config_name, setting_id)
 
-    def get_var_metadata_files(self, variable):
-        """Retrieve filenames within the metadata for this variable."""
+    def get_ns_metadata_files(self, namespace):
+        """Retrieve filenames within the metadata for this namespace."""
         config_name = self.__util.split_full_ns(
-                             self.__data, variable.metadata['full_ns'])[0]
+                             self.__data, namespace)[0]
         return self.__data.config[config_name].meta_files
+
+
+class SubDataOperations(object):
+
+    """Class to hold a selected set of functions."""
+
+    def __init__(self, config_name,
+                 add_section_func, clone_section_func,
+                 ignore_section_func, remove_section_func,
+                 remove_sections_func, get_var_id_values_func):
+        self.config_name = config_name
+        self._add_section_func = add_section_func
+        self._clone_section_func = clone_section_func
+        self._ignore_section_func = ignore_section_func
+        self._remove_section_func = remove_section_func
+        self._remove_sections_func = remove_sections_func
+        self._get_var_id_values_func = get_var_id_values_func
+
+    def add_section(self, new_section_name, opt_map=None, no_page_launch=False):
+        """Add a new section, complete with any compulsory variables."""
+        return self._add_section_func(self.config_name, new_section_name,
+                                      opt_map=opt_map,
+                                      no_page_launch=no_page_launch)
+
+    def clone_section(self, clone_section_name):
+        """Copy a (duplicate) section and all its options."""
+        return self._clone_section_func(self.config_name, clone_section_name)
+
+    def ignore_section(self, ignore_section_name, is_ignored):
+        """User-ignore or enable a section."""
+        return self._ignore_section_func(
+                            self.config_name,
+                            ignore_section_name,
+                            is_ignored)
+
+    def remove_section(self, remove_section_name):
+        """Remove a section and all its options."""
+        return self._remove_section_func(self.config_name,
+                                         remove_section_name)
+
+    def remove_sections(self, remove_sections_list):
+        """Remove a list of sections and all their options."""
+        return self._remove_sections_func(self.config_name,
+                                          remove_sections_list)
+
+    def get_var_id_values(self):
+        """Return a map of all var id values."""
+        return self._get_var_id_values_func(self.config_name)
 
 
 class StackViewer(gtk.Window):

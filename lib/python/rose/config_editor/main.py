@@ -25,13 +25,16 @@ Classes:
 
 """
 
+import cProfile
 import copy
 import itertools
 import os
+import pstats
 import re
 import shutil
 import sre_constants
 import sys
+import tempfile
 import warnings
 
 # Ignore add menu related warnings for now, but remove this later.
@@ -126,7 +129,6 @@ class MainController(object):
                                    self.check_cannot_enable_setting,
                                    self.update_namespace,
                                    self.update_ns_info,
-                                   self.update_ns_comments,
                                    view_page_func=self.view_page,
                                    kill_page_func=self.kill_page)
 
@@ -394,7 +396,7 @@ class MainController(object):
         if not any([c.is_top_level for c in self.data.config.values()]):
             self.menubar.uimanager.get_widget(
                          "/TopMenuBar/Tools/Run Suite").set_sensitive(False)
-        self.alter_bar_sensitivity()
+        self.update_bar_sensitivity()
         self.top_menu = self.menubar.uimanager.get_widget('/TopMenuBar')
         # Load the keyboard accelerators.
         accel = {
@@ -427,21 +429,23 @@ class MainController(object):
     def generate_hyper_panel(self):
         """"Create tree panel and link functions."""
         self.hyper_panel = rose.config_editor.panel.HyperLinkTreePanel(
-                                              self.data.namespace_tree)
+                                       self.data.namespace_tree,
+                                       self.handle.get_metadata_and_comments)
         self.hyper_panel.send_create_request = self.handle.create_request
         self.hyper_panel.send_launch_request = self.handle_launch_request
         self.hyper_panel.send_add_dialog_request = self.handle.add_dialog
-        self.hyper_panel.ask_can_clone = self.handle.ask_can_clone
+        self.hyper_panel.ask_can_clone = self.handle.is_ns_duplicate
         self.hyper_panel.ask_is_top = (
                    lambda n: "/" + n in self.data.config.keys())
         self.hyper_panel.ask_has_content = (
                    lambda n: self.data.is_ns_content("/" + n))
-        self.hyper_panel.send_clone_request = self.handle.clone_request
+        self.hyper_panel.send_clone_request = self.handle.copy_request
         self.hyper_panel.send_delete_request = self.handle.delete_request
         self.hyper_panel.send_edit_request = self.handle.edit_request
         self.hyper_panel.send_fix_request = self.handle.fix_request
         self.hyper_panel.send_ignore_request = self.handle.ignore_request
         self.hyper_panel.send_info_request = self.handle.info_request
+        self.hyper_panel.send_rename_request = self.handle.rename_request
         self.hyper_panel.send_search_request = self.perform_find_by_ns_id
 
 #------------------ Page manipulation functions ------------------------------
@@ -493,17 +497,17 @@ class MainController(object):
         duplicate = ns_metadata.get(rose.META_PROP_DUPLICATE)
         help = ns_metadata.get(rose.META_PROP_HELP)
         url = ns_metadata.get(rose.META_PROP_URL)
-        custom_widget = ns_metadata.get(rose.META_PROP_WIDGET)
-        if custom_widget is not None:
-            module, cls = re.match('([.\w]*)\.(\w+)$', custom_widget).groups()
-            custom_widget = None
+        custom_widget = ns_metadata.get(rose.config_editor.META_PROP_WIDGET)
+        custom_sub_widget = ns_metadata.get(
+                               rose.config_editor.META_PROP_WIDGET_SUB_NS)
+        has_sub_data = self.data.is_ns_sub_data(namespace_name)
         label = ns_metadata.get(rose.META_PROP_TITLE)
         if label is None:
             label = subspace.split('/')[-1]
-        if label.isdigit() and duplicate == rose.META_PROP_VALUE_TRUE:
+        if duplicate == rose.META_PROP_VALUE_TRUE and not has_sub_data:
+            # For example, namelist/foo/1 should be shown as foo(1).
             label = "(".join(subspace.split('/')[-2:]) + ")"
         sections = [s for s in ns_metadata.get('sections', [])]
-        has_sub_data = self.data.is_ns_sub_data(namespace_name)
         section_data_objects = []
         for section in sections:
             sect_data = config_data.sections.now.get(section)
@@ -534,8 +538,10 @@ class MainController(object):
         icon_path = self.data.get_icon_path_for_config(config_name)
         is_default = self.get_ns_is_default(namespace_name)
         sub_data = None
+        sub_ops = None
         if has_sub_data:
             sub_data = self.data.get_sub_data_for_namespace(namespace_name)
+            sub_ops = self.handle.get_sub_ops_for_namespace(namespace_name)
         page_metadata = {'namespace': namespace_name,
                          'ns_is_default': is_default,
                          'label': label,
@@ -544,13 +550,22 @@ class MainController(object):
                          'help': help,
                          'url': url,
                          'widget': custom_widget,
+                         'widget_sub_ns': custom_sub_widget,
                          'see_also': see_also,
                          'config_name': config_name,
                          'show_modes': self.page_show_modes,
                          'icon': icon_path}
         if len(sections) == 1:
             page_metadata.update({'id': sections.pop()})
-        variable_ops = rose.config_editor.stack.VariableOperations(
+        sect_ops = rose.config_editor.stack.SectionOperations(
+                                   self.data, self.util,
+                                   self.undo_stack, self.redo_stack,
+                                   self.check_cannot_enable_setting,
+                                   self.update_namespace,
+                                   self.update_ns_info,
+                                   view_page_func=self.view_page,
+                                   kill_page_func=self.kill_page)
+        var_ops = rose.config_editor.stack.VariableOperations(
                                    self.data, self.util, 
                                    self.undo_stack, self.redo_stack,
                                    self.check_cannot_enable_setting,
@@ -565,20 +580,23 @@ class MainController(object):
                                   page_metadata,
                                   data,
                                   latent_data,
-                                  variable_ops,
+                                  sect_ops,
+                                  var_ops,
                                   section_data_objects,
                                   self.data.get_format_sections,
                                   directory,
                                   sub_data=sub_data,
+                                  sub_ops=sub_ops,
                                   launch_info_func=launch_info,
                                   launch_edit_func=launch_edit)
         #FIXME: These three should go.
         page.trigger_tab_detach = lambda b: self._handle_detach_request(page)
-        variable_ops.trigger_ignored_update = lambda v: page.update_ignored()
+        var_ops.trigger_ignored_update = lambda v: page.update_ignored()
         page.trigger_update_status = lambda: self.update_status(page)
         return page
 
     def get_orphan_page(self, namespace):
+        """Return a page widget for embedding somewhere else."""
         page = self.make_page(namespace)
         orphan_container = self.handle.get_orphan_container(page)
         self.orphan_pages.append(page)
@@ -657,14 +675,14 @@ class MainController(object):
     def handle_page_change(self, *args):
         """Handle a page change and select the correct tree row."""
         current_page = self._get_current_page()
-        self.alter_page_menubar_toolbar_sensitivity(current_page)
+        self.update_page_menubar_toolbar_sensitivity(current_page)
         if current_page is None:
             self.hyper_panel.select_row(None)
             return False
         self.set_current_page_indicator(current_page.namespace)
         return False
 
-    def alter_page_menubar_toolbar_sensitivity(self, current_page):
+    def update_page_menubar_toolbar_sensitivity(self, current_page):
         if not hasattr(self, 'toolbar') or not hasattr(self, 'menubar'):
             return False
         page_icons = ['Add to page...', 'Revert page to saved']
@@ -818,10 +836,25 @@ class MainController(object):
                         return rose.config_editor.TREE_PANEL_TIP_CHANGED_SECTIONS
         return ""
 
-    def tree_trigger_update(self):
+    def tree_trigger_update(self, just_this_namespace=None):
+        """Reload the tree panel, and perform an update.
+
+        If just_this_namespace is not None, perform a selective update
+        to save time.
+
+        """
         if hasattr(self, 'hyper_panel'):
             self.hyper_panel.load_tree(None, self.data.namespace_tree)
-            self.update_all()
+            if just_this_namespace is None:
+                self.update_all()
+            else:
+                config_name = self.util.split_full_ns(self.data,
+                                                      just_this_namespace)[0]
+                self.update_config(config_name)
+                spaces = just_this_namespace.lstrip("/").split("/")
+                for i in range(len(spaces), 0, -1):
+                    update_ns = "/" + "/".join(spaces[:i])
+                    self.update_namespace(update_ns, skip_config_update=True)
 
     def refresh_ids(self, config_name, setting_ids, is_loading=False):
         """Refresh and redraw settings if needed."""
@@ -877,45 +910,49 @@ class MainController(object):
                 self.update_tree_status(page)  # Faster.
             else:
                 self.update_tree_status(ns)
-        self.alter_bar_sensitivity()
+        self.update_bar_sensitivity()
         self.update_stack_viewer_if_open()
         for config_name in configs:
             self.update_metadata_id(config_name)
         self.update_ns_sub_data()
 
     def update_namespace(self, namespace, are_errors_done=False,
-                         is_loading=False):
+                         is_loading=False, skip_config_update=False):
         """Update driver function. Updates the page if open."""
         self._generate_pagelist()
         if namespace in [p.namespace for p in self.pagelist]:
             index = [p.namespace for p in self.pagelist].index(namespace)
             page = self.pagelist[index]
-            self.update_status(page, are_errors_done)
+            self.update_status(page, are_errors_done=are_errors_done,
+                               skip_config_update=skip_config_update)
         else:
-            self.update_config(namespace)
+            if not skip_config_update:
+                self.update_config(namespace)
             self.update_sections(namespace)
             self.update_ignored_statuses(namespace)
             if not are_errors_done and not is_loading:
                 self.perform_error_check(namespace)
             self.update_tree_status(namespace)
             if not is_loading:
-                self.alter_bar_sensitivity()
+                self.update_bar_sensitivity()
             self.update_stack_viewer_if_open()
             if namespace in self.data.config.keys():
                 self.update_metadata_id(namespace)
             self.update_ns_sub_data(namespace)
 
-    def update_status(self, page, are_errors_done=False):
+    def update_status(self, page, are_errors_done=False,
+                      skip_config_update=False):
         """Update ignored statuses and update the tree statuses."""
         self._generate_pagelist()
         self.sync_page_var_lists(page)
-        self.update_config(page.namespace)
+        if not skip_config_update:
+            self.update_config(page.namespace)
         self.update_sections(page.namespace)
         self.update_ignored_statuses(page.namespace)
         if not are_errors_done:
             self.perform_error_check(page.namespace)
         self.update_tree_status(page)
-        self.alter_bar_sensitivity()
+        self.update_bar_sensitivity()
         self.update_stack_viewer_if_open()
         if page.namespace in self.data.config.keys():
             self.update_metadata_id(page.namespace)
@@ -926,7 +963,8 @@ class MainController(object):
         for page in self.pagelist:
             if (page.sub_data is None or
                 (namespace is not None and
-                 not namespace.startswith(page.namespace))):
+                 not namespace.startswith(page.namespace) and
+                 namespace != page.namespace)):
                 continue
             page.sub_data = self.data.get_sub_data_for_namespace(
                                                    page.namespace)
@@ -958,13 +996,6 @@ class MainController(object):
                 action(var)
         for var in refresh_vars:
             page.refresh(var.metadata['id'])
-
-    def update_ns_comments(self, namespace):
-        """Update section comments for this namespace."""
-        if hasattr(self, "hyper_panel"):
-            comment = self.data.get_ns_comment_string(namespace)
-            self.hyper_panel.update_comment(namespace.lstrip("/").split("/"),
-                                            comment)
 
     def update_config(self, namespace):
         """Update the config object for the macros. To be removed."""
@@ -1448,7 +1479,7 @@ class MainController(object):
                 return self.menu_widgets[address]
         return None
 
-    def alter_bar_sensitivity(self):
+    def update_bar_sensitivity(self):
         """Update bar functionality like Undo and Redo."""
         if not hasattr(self, 'toolbar'):
             return False
@@ -1479,6 +1510,9 @@ class MainController(object):
                                           found_error)
         for config_name in self.data.config:
             config_data = self.data.config[config_name]
+            if self._namespace_data_is_modified(config_name):
+                self._update_change_widget_sensitivity(is_changed=True)
+                break
             now_vars = []
             for v in config_data.vars.get_all(no_latent=True):
                 now_vars.append(v.to_hashable())
@@ -1486,15 +1520,12 @@ class MainController(object):
             for v in config_data.vars.get_all(no_latent=True, save=True):
                 las_vars.append(v.to_hashable())
             if set(now_vars) ^ set(las_vars):
-                self._alter_change_widget_sensitivity(is_changed=True)
-                break
-            if self._namespace_data_is_modified(config_name):
-                self._alter_change_widget_sensitivity(is_changed=True)
+                self._update_change_widget_sensitivity(is_changed=True)
                 break
         else:
-            self._alter_change_widget_sensitivity(is_changed=False)
+            self._update_change_widget_sensitivity(is_changed=False)
 
-    def _alter_change_widget_sensitivity(self, is_changed=False):
+    def _update_change_widget_sensitivity(self, is_changed=False):
         # Alter sensitivity of 'unsaved changes' related widgets.
         self.toolbar.set_widget_sensitive('Save', is_changed)
         self._get_menu_widget('/Save').set_sensitive(is_changed)
@@ -1517,8 +1548,8 @@ class MainController(object):
             configs = self.data.config.keys()
         else:
             configs = [just_this_config]
-        self.data.namespace_meta_lookup = {}
         for config_name in configs:
+            self.data.clear_meta_lookups(config_name)
             config = self.data.dump_to_internal_config(config_name)
             config_data = self.data.config[config_name]
             config_data.config = config
@@ -1914,10 +1945,16 @@ class MainController(object):
         if not stack:
             return False
         self._generate_pagelist()
-        do_list = [stack[-1]]  # Undo all list items at once
-        # do_list should only contain items for a single page
-        focused = False
-        new_page = None
+        do_list = [stack[-1]]
+        # We should undo/redo all same-grouped items together.
+        for stack_item in reversed(stack[:-1]):
+            if (stack_item.group is None or
+                stack_item.group != do_list[0].group):
+                break
+            do_list.append(stack_item)
+        group = do_list[0].group
+        is_group = len(do_list) > 1
+        stack_info = []
         for stack_item in do_list:
             node = stack_item.node
             node_id = node.metadata.get('id')
@@ -1941,7 +1978,7 @@ class MainController(object):
                 else:
                     namespace = self.data.get_default_namespace_for_section(
                                                       node_id, config_name)
-            if self.data.is_ns_in_tree(namespace):
+            if not is_group and self.data.is_ns_in_tree(namespace):
                 page = self.view_page(namespace, node_id)
             redo_items = [x for x in self.redo_stack]
             if stack_item.undo_args:
@@ -1954,9 +1991,9 @@ class MainController(object):
             else:
                 stack_item.undo_func()
             del self.redo_stack[:]
-            for redo_item in redo_items:
-                self.redo_stack.append(redo_item)
+            self.redo_stack.extend(redo_items)
             just_done_item = self.undo_stack[-1]
+            just_done_item.group = group
             del self.undo_stack[-1]
             del stack[-1]
             if redo_mode_on:
@@ -1965,11 +2002,11 @@ class MainController(object):
                 self.redo_stack.append(just_done_item)
             if not self.data.is_ns_in_tree(namespace):
                 self.data.reload_namespace_tree()
-            if self.data.is_ns_in_tree(namespace):
+            page = None
+            if is_group:
+                stack_info.append([namespace, stack_item.page_label, node_id])
+            elif self.data.is_ns_in_tree(namespace):
                 page = self.view_page(namespace, node_id)
-            else:
-                page = None
-            if page is not None:
                 self.sync_page_var_lists(page)
                 page.sort_data()
                 page.refresh(node_id)
@@ -1980,8 +2017,10 @@ class MainController(object):
                 if namespace != stack_item.page_label:
                     # Make sure the right status update is made.
                     self.update_status(page)
-            self.alter_bar_sensitivity()
-            self.update_stack_viewer_if_open()
+                self.update_bar_sensitivity()
+                self.update_stack_viewer_if_open()
+        if is_group:
+            self.data.reload_namespace_tree()
         return True
 
 # ----------------------- System functions -----------------------------------
@@ -2090,4 +2129,11 @@ if __name__ == '__main__':
     if opts.new_mode:
         cwd = None
     rose.gtk.util.set_exception_hook(keep_alive=True)
-    spawn_window(cwd)
+    if opts.debug_mode:
+        f = tempfile.NamedTemporaryFile()
+        cProfile.runctx("spawn_window(cwd)", globals(), locals(), f.name)
+        p = pstats.Stats(f.name)
+        p.strip_dirs().sort_stats('cumulative').print_stats(40)
+        f.close()
+    else:
+        spawn_window(cwd)
