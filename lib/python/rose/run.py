@@ -81,22 +81,35 @@ class Runner(object):
     REC_OPT_DEFINE = re.compile(r"\A(?:\[([^\]]+)\])?([^=]+)?(?:=(.*))?\Z")
 
     def __init__(self, event_handler=None, popen=None, config_pm=None,
-                 fs_util=None, suite_engine_proc=None):
+                 fs_util=None, suite_engine_proc=None,
+                 sub_event_handlers=None):
         if not self.CONF_NAME:
             self.CONF_NAME = self.NAME
         self.event_handler = event_handler
+        if sub_event_handlers is None:
+            sub_event_handlers = {}
         if popen is None:
-            popen = RosePopener(event_handler)
+            popen_event_handler = sub_event_handlers.get(
+                "popen", event_handler)
+            popen = RosePopener(popen_event_handler)
         self.popen = popen
         if fs_util is None:
-            fs_util = FileSystemUtil(event_handler)
+            fs_util_event_handler = sub_event_handlers.get(
+                "fs_util", event_handler)
+            fs_util = FileSystemUtil(fs_util_event_handler)
         self.fs_util = fs_util
         if config_pm is None:
-            config_pm = ConfigProcessorsManager(event_handler, popen, fs_util)
+            config_pm_event_handler = sub_event_handlers.get(
+                "config_pm", event_handler)
+            config_pm = ConfigProcessorsManager(
+                config_pm_event_handler, popen, fs_util)
         self.config_pm = config_pm
         if suite_engine_proc is None:
+            suite_engine_proc_event_handler = sub_event_handlers.get(
+                "suite_engine_proc", event_handler)
             suite_engine_proc = SuiteEngineProcessor.get_processor(
-                    event_handler=event_handler, popen=popen, fs_util=fs_util)
+                    event_handler=suite_engine_proc_event_handler,
+                    popen=popen, fs_util=fs_util)
         self.suite_engine_proc = suite_engine_proc
         self.conf_tree_loader = ConfigTreeLoader()
 

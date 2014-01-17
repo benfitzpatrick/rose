@@ -601,7 +601,11 @@ def main():
     opt_parser.add_my_options(*option_keys)
     opts, args = opt_parser.parse_args(sys.argv[1:])
     event_handler = Reporter(opts.verbosity - opts.quietness)
-    runner = SuiteRunner(event_handler)
+    fs_util_event_handler = Reporter(opts.verbosity - opts.quietness - 1)
+    runner = SuiteRunner(
+        event_handler=event_handler,
+        sub_event_handlers={"fs_util": fs_util_event_handler}
+    )
     try:
         sys.exit(runner(opts, args))
     except Exception as e:
