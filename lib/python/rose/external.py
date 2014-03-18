@@ -22,9 +22,11 @@
 from rose.popen import RosePopener
 
 
-def _launch(name, event_handler=None, *args, **kwargs):
+def _launch(name, event_handler=None, run_fg=False, *args, **kwargs):
     popen = RosePopener(event_handler)
     command = popen.get_cmd(name, *args)
+    if run_fg:
+        return popen.run(*command, **kwargs)
     return popen.run_bg(*command, **kwargs)
 
 
@@ -33,13 +35,19 @@ def launch_fs_browser(source, event_handler=None, **kwargs):
     _launch("fs_browser", event_handler, source, **kwargs)
 
 
+def launch_geditor(source, event_handler=None, **kwargs):
+    """Launch a graphical text editor for a path e.g. gedit."""
+    _launch("geditor", event_handler, source, **kwargs)
+
+
+def launch_image_viewer(source, event_handler=None, run_fg=False,
+                        **kwargs):
+    """Launch an image viewer for a image file e.g. gimp."""
+    _launch("image_viewer", event_handler, run_fg, source, **kwargs)
+
+
 def launch_terminal(args=None, event_handler=None, **kwargs):
     """Launch a terminal e.g. gnome-terminal."""
     if args is None:
         args = []
     _launch("terminal", event_handler, *args, **kwargs)
-
-
-def launch_geditor(source, event_handler=None, **kwargs):
-    """Launch a graphical text editor for a path e.g. gedit."""
-    _launch("geditor", event_handler, source, **kwargs)
