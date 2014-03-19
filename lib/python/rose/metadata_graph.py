@@ -61,7 +61,7 @@ def get_node_state_attrs(config, section, option=None, allowed_sections=None):
     return node_attrs
 
 
-def get_graph(config, meta_config, allowed_sections=None,
+def get_graph(config, meta_config, name, allowed_sections=None,
               allowed_properties=None, err_reporter=None):
     if allowed_sections is None:
         allowed_sections = []
@@ -71,6 +71,7 @@ def get_graph(config, meta_config, allowed_sections=None,
         err_reporter = rose.reporter.Reporter()
     graph = pygraphviz.AGraph(directed=True)
     graph.graph_attr['rankdir'] = "LR"
+    graph.graph_attr['label'] = name
     if not allowed_properties or (
             allowed_properties and "trigger" in allowed_properties):
         get_trigger_graph(graph, config, meta_config,
@@ -208,7 +209,7 @@ if __name__ == "__main__":
         os.chdir(opts.conf_dir)
     sys.path.append(os.getenv("ROSE_HOME"))
     rose.macro.add_opt_meta_paths(opts.meta_path)
-   
+
     config_file_path = os.path.join(os.getcwd(), rose.SUB_CONFIG_NAME)
     meta_config_file_path = os.path.join(os.getcwd(), rose.META_CONFIG_NAME)
     config_loader = rose.config.ConfigLoader()
@@ -230,7 +231,12 @@ if __name__ == "__main__":
         meta_config = config_loader(meta_config_file_path)
     else:
         exit_fail()
-    graph = get_graph(config, meta_config, allowed_sections=args,
+    name = os.path.dirname(os.getcwd())
+    if args:
+        name += ": " + ",".join(args)
+    if opts.property:
+        name += " (" + ",".join(opts.property) + ")"
+    graph = get_graph(config, meta_config, name, allowed_sections=args,
                       allowed_properties=opts.property)
     if graph is None:
         exit_fail()

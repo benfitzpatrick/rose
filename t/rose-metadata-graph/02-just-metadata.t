@@ -101,10 +101,13 @@ type=logical
 [namelist:qux=wubble]
 type=logical
 __META_CONFIG__
+META_CONFIG_PATH=$(cd ../config/meta && pwd -P)
 run_pass "$TEST_KEY" rose metadata-graph --debug --config=../config/meta
 sort "$TEST_KEY.out" -o "$TEST_KEY.out"
-sed -i 's/\(pos\|bb\|width\|height\|lp\)="[^"]*\("\|$\)//g; s/[, ]*\]\?;\? *$//g; /^\t/!d;' "$TEST_KEY.out"
-file_cmp "$TEST_KEY.out" "$TEST_KEY.out" <<'__OUTPUT__'
+sed -i -e 's/\(pos\|bb\|width\|height\|lp\)="[^"]*\("\|$\)//g;' \
+       -e 's/[, ]*\]\?;\? *$//g; /^\t/!d;' "$TEST_KEY.out"
+file_xxdiff "$TEST_KEY.out" "$TEST_KEY.out" <<'__OUTPUT__'
+		
 	"env=CONTROL" -> "env=CONTROL=None" [color=grey
 	"env=CONTROL" -> "env=CONTROL=bar" [color=grey
 	"env=CONTROL" -> "env=CONTROL=baz" [color=grey
@@ -155,8 +158,8 @@ file_cmp "$TEST_KEY.out" "$TEST_KEY.out" <<'__OUTPUT__'
 	"namelist:wibble=wobble=.true." [label=".true.", shape=box, color=grey, style=filled
 	"namelist:wibble=wubble" [
 	env [shape=octagon
+	graph [label="$META_CONFIG_PATH", rankdir=LR
 	graph [
-	graph [rankdir=LR
 	node [label="\N"
 __OUTPUT__
 file_cmp "$TEST_KEY.err" "$TEST_KEY.err" </dev/null

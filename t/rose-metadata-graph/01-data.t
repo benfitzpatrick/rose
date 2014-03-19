@@ -31,9 +31,11 @@ DEPENDENT3=foo
 CONTROL_NAMELIST_QUX=foo
 CONTROL_NAMELIST_WIBBLE=bar
 CONTROL_NAMELIST_WIBBLE_WUBBLE=foo
+
 [!!namelist:qux]
 wobble=.false.
 !!wubble=.true.
+
 [namelist:wibble]
 wobble=.true.
 !!wubble=.true.
@@ -46,46 +48,67 @@ TEST_KEY=$TEST_KEY_BASE-ok-full
 setup
 init_meta <<__META_CONFIG__
 [env]
+
 [env=CONTROL]
+
 trigger=env=DEPENDENT1: bar, baz;
         env=DEPENDENT2: bar;
         env=DEPENDENT3;
         env=DEPENDENT_MISSING1: foo, bar;
 values=foo,bar
+
 [env=CONTROL_NAMELIST_QUX]
 trigger=namelist:qux: bar;
 values=foo,bar
+
 [env=CONTROL_NAMELIST_WIBBLE]
 trigger=namelist:wibble: bar;
 values=foo,bar
+
 [env=CONTROL_NAMELIST_WIBBLE_WUBBLE]
 trigger=namelist:wibble=wubble: bar;
+
 [env=DEPENDENT1]
+
 [env=DEPENDENT2]
+
 [env=DEPENDENT3]
+
 [env=DEPENDENT_MISSING1]
 trigger=env=DEPENDENT_DEPENDENT1
+
 [env=DEPENDENT_DEPENDENT1]
+
 [env=USER_IGNORED]
 type=integer
+
 [env=MISSING_VARIABLE]
+
 [namelist:wibble]
+
 [namelist:wibble=wobble]
 trigger=namelist:wibble=wubble: .true.
 type=logical
+
 [namelist:wibble=wubble]
 type=logical
+
 [namelist:qux]
+
 [namelist:qux=wobble]
 trigger=namelist:qux=wubble: .true.
 type=logical
+
 [namelist:qux=wubble]
 type=logical
 __META_CONFIG__
+CONFIG_PATH=$(cd ../config && pwd -P)
 run_pass "$TEST_KEY" rose metadata-graph --debug --config=../config
 sort "$TEST_KEY.out" -o "$TEST_KEY.out"
-sed -i 's/\(pos\|bb\|width\|height\|lp\)="[^"]*\("\|$\)//g; s/[, ]*\]\?;\? *$//g; /^\t/!d;' "$TEST_KEY.out"
-file_xxdiff "$TEST_KEY.out" "$TEST_KEY.out" <<'__OUTPUT__'
+sed -i -e 's/\(pos\|bb\|width\|height\|lp\)="[^"]*\("\|$\)//g;' \
+       -e 's/[, ]*\]\?;\? *$//g; /^\t/!d;' "$TEST_KEY.out"
+file_xxdiff "$TEST_KEY.out" "$TEST_KEY.out" <<__OUTPUT__
+		
 	"env=CONTROL" -> "env=CONTROL=None" [color=green, label=foo
 	"env=CONTROL" -> "env=CONTROL=bar" [color=red, label=foo
 	"env=CONTROL" -> "env=CONTROL=baz" [color=red, label=foo
@@ -136,8 +159,8 @@ file_xxdiff "$TEST_KEY.out" "$TEST_KEY.out" <<'__OUTPUT__'
 	"namelist:wibble=wobble=.true." [label=".true.", color=green, shape=box, style=filled
 	"namelist:wibble=wubble" [label="!!namelist:wibble=wubble", color=red
 	env [color=green, shape=octagon
+	graph [label="$CONFIG_PATH", rankdir=LR
 	graph [
-	graph [rankdir=LR
 	node [label="\N"
 __OUTPUT__
 file_xxdiff "$TEST_KEY.err" "$TEST_KEY.err" </dev/null
@@ -145,8 +168,10 @@ file_xxdiff "$TEST_KEY.err" "$TEST_KEY.err" </dev/null
 TEST_KEY=$TEST_KEY_BASE-ok-sub-section
 run_pass "$TEST_KEY" rose metadata-graph --debug --config=../config namelist:qux
 sort "$TEST_KEY.out" -o "$TEST_KEY.out"
-sed -i 's/\(pos\|bb\|width\|height\|lp\)="[^"]*\("\|$\)//g; s/[, ]*\]\?;\? *$//g; /^\t/!d;' "$TEST_KEY.out"
-file_xxdiff "$TEST_KEY.out" "$TEST_KEY.out" <<'__OUTPUT__'
+sed -i -e 's/\(pos\|bb\|width\|height\|lp\)="[^"]*\("\|$\)//g;' \
+       -e 's/[, ]*\]\?;\? *$//g; /^\t/!d;' "$TEST_KEY.out"
+file_xxdiff "$TEST_KEY.out" "$TEST_KEY.out" <<__OUTPUT__
+		
 	"env=CONTROL_NAMELIST_QUX" -> "env=CONTROL_NAMELIST_QUX=bar" [color=red, label=foo
 	"env=CONTROL_NAMELIST_QUX" [color=green, shape=rectangle
 	"env=CONTROL_NAMELIST_QUX=bar" -> "namelist:qux" [color=red
@@ -157,8 +182,8 @@ file_xxdiff "$TEST_KEY.out" "$TEST_KEY.out" <<'__OUTPUT__'
 	"namelist:qux=wobble=.true." -> "namelist:qux=wubble" [color=red
 	"namelist:qux=wobble=.true." [label=".true.", color=red, shape=box, style=filled
 	"namelist:qux=wubble" [label="^!!namelist:qux=wubble", color=red
+	graph [label="$CONFIG_PATH: namelist:qux", rankdir=LR
 	graph [
-	graph [rankdir=LR
 	node [label="\N"
 __OUTPUT__
 file_xxdiff "$TEST_KEY.err" "$TEST_KEY.err" </dev/null
@@ -167,8 +192,10 @@ TEST_KEY=$TEST_KEY_BASE-ok-property
 run_pass "$TEST_KEY" rose metadata-graph --debug --config=../config \
     --property=trigger
 sort "$TEST_KEY.out" -o "$TEST_KEY.out"
-sed -i 's/\(pos\|bb\|width\|height\|lp\)="[^"]*\("\|$\)//g; s/[, ]*\]\?;\? *$//g; /^\t/!d;' "$TEST_KEY.out"
-file_xxdiff "$TEST_KEY.out" "$TEST_KEY.out" <<'__OUTPUT__'
+sed -i -e 's/\(pos\|bb\|width\|height\|lp\)="[^"]*\("\|$\)//g;' \
+       -e 's/[, ]*\]\?;\? *$//g; /^\t/!d;' "$TEST_KEY.out"
+file_xxdiff "$TEST_KEY.out" "$TEST_KEY.out" <<__OUTPUT__
+		
 	"env=CONTROL" -> "env=CONTROL=None" [color=green, label=foo
 	"env=CONTROL" -> "env=CONTROL=bar" [color=red, label=foo
 	"env=CONTROL" -> "env=CONTROL=baz" [color=red, label=foo
@@ -219,8 +246,8 @@ file_xxdiff "$TEST_KEY.out" "$TEST_KEY.out" <<'__OUTPUT__'
 	"namelist:wibble=wobble=.true." [label=".true.", color=green, shape=box, style=filled
 	"namelist:wibble=wubble" [label="!!namelist:wibble=wubble", color=red
 	env [color=green, shape=octagon
+	graph [label="$CONFIG_PATH (trigger)", rankdir=LR
 	graph [
-	graph [rankdir=LR
 	node [label="\N"
 __OUTPUT__
 file_xxdiff "$TEST_KEY.err" "$TEST_KEY.err" </dev/null
@@ -229,8 +256,10 @@ TEST_KEY=$TEST_KEY_BASE-ok-property-sub-section
 run_pass "$TEST_KEY" rose metadata-graph --debug --config=../config \
     --property=trigger env
 sort "$TEST_KEY.out" -o "$TEST_KEY.out"
-sed -i 's/\(pos\|bb\|width\|height\|lp\)="[^"]*\("\|$\)//g; s/[, ]*\]\?;\? *$//g; /^\t/!d;' "$TEST_KEY.out"
-file_xxdiff "$TEST_KEY.out" "$TEST_KEY.out" <<'__OUTPUT__'
+sed -i -e 's/\(pos\|bb\|width\|height\|lp\)="[^"]*\("\|$\)//g;' \
+       -e 's/[, ]*\]\?;\? *$//g; /^\t/!d;' "$TEST_KEY.out"
+file_xxdiff "$TEST_KEY.out" "$TEST_KEY.out" <<__OUTPUT__
+		
 	"env=CONTROL" -> "env=CONTROL=None" [color=green, label=foo
 	"env=CONTROL" -> "env=CONTROL=bar" [color=red, label=foo
 	"env=CONTROL" -> "env=CONTROL=baz" [color=red, label=foo
@@ -272,8 +301,8 @@ file_xxdiff "$TEST_KEY.out" "$TEST_KEY.out" <<'__OUTPUT__'
 	"namelist:wibble" [color=green, shape=rectangle
 	"namelist:wibble=wubble" [label="!!namelist:wibble=wubble", color=red, shape=rectangle
 	env [color=green, shape=octagon
+	graph [label="$CONFIG_PATH: env (trigger)", rankdir=LR
 	graph [
-	graph [rankdir=LR
 	node [label="\N"
 __OUTPUT__
 file_xxdiff "$TEST_KEY.err" "$TEST_KEY.err" </dev/null
