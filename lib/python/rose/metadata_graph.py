@@ -1,11 +1,29 @@
 # -*- coding: utf-8 -*-
+#-------------------------------------------------------------------------------
+# (C) British Crown Copyright 2012-4 Met Office.
+#
+# This file is part of Rose, a framework for meteorological suites.
+#
+# Rose is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# Rose is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with Rose. If not, see <http://www.gnu.org/licenses/>.
+#-------------------------------------------------------------------------------
+"""Module to produce Graphviz graphing of Rose configuration metadata."""
 
 import os
 import sys
 import tempfile
-import webbrowser
 
-import pygraphviz
+import pygraphviz  # Graphviz and pygraphviz need to be installed.
 
 import rose.config
 import rose.external
@@ -16,6 +34,7 @@ import rose.reporter
 
 
 def get_node_state_attrs(config, section, option=None, allowed_sections=None):
+    """Get Graphviz node attributes like color for a given setting."""
     node_attrs = {}
     if option is None:
         node_attrs["shape"] = "octagon"
@@ -63,6 +82,7 @@ def get_node_state_attrs(config, section, option=None, allowed_sections=None):
 
 def get_graph(config, meta_config, name, allowed_sections=None,
               allowed_properties=None, err_reporter=None):
+    """Return a Graphviz graph object constructed from metadata properties."""
     if allowed_sections is None:
         allowed_sections = []
     if allowed_properties is None:
@@ -74,13 +94,14 @@ def get_graph(config, meta_config, name, allowed_sections=None,
     graph.graph_attr['label'] = name
     if not allowed_properties or (
             allowed_properties and "trigger" in allowed_properties):
-        get_trigger_graph(graph, config, meta_config,
+        add_trigger_graph(graph, config, meta_config,
                           err_reporter, allowed_sections=allowed_sections)
     return graph
 
 
-def get_trigger_graph(graph, config, meta_config, err_reporter,
+def add_trigger_graph(graph, config, meta_config, err_reporter,
                       allowed_sections=None):
+    """Add trigger-related nodes and edges to the graph."""
     trigger = rose.macros.trigger.TriggerMacro()
     bad_reports = trigger.validate_dependencies(config, meta_config)
     if bad_reports:
@@ -90,6 +111,9 @@ def get_trigger_graph(graph, config, meta_config, err_reporter,
     ids = []
     for keylist, node in meta_config.walk(no_ignore=True):
         id_ = keylist[0]
+        if (id_.startswith(rose.META_PROP_NS + rose.CONFIG_DELIMITER) or
+            id_.startswith(rose.SUB_CONFIG_FILE_DIR + ":*")):
+            continue
         if isinstance(node.value, dict):
             section, option = (
                 rose.macro.get_section_option_from_id(id_))
@@ -173,7 +197,13 @@ def get_trigger_graph(graph, config, meta_config, err_reporter,
                 graph.add_edge(value_id, dependent_id, **dependent_attrs)
 
 
-def draw_graph(graph, debug_mode=False):
+def output_graph(graph, debug_mode=False):
+    """Output a Graphviz Graph object.
+
+    If debug_mode is True, print the 'dot' text output.
+    Otherwise, save to a temporary file and launch in an image viewer.
+
+    """
     suffix = ".svg"
     if debug_mode:
         suffix = ".dot"
@@ -188,7 +218,8 @@ def draw_graph(graph, debug_mode=False):
     rose.external.launch_image_viewer(image_file_handle.name, run_fg=True)
 
 
-def exit_fail():
+def _exit_with_metadata_fail():
+    """Handle a load metadata failure."""
     text = rose.macro.ERROR_LOAD_METADATA.format("")
     rose.reporter.Reporter()(text,
                              kind=rose.reporter.Reporter.KIND_ERR,
@@ -196,7 +227,8 @@ def exit_fail():
     sys.exit(1)
 
 
-if __name__ == "__main__":
+def main():
+    """Run the metadata graphing from the command line."""
     rose.macro.add_site_meta_paths()
     rose.macro.add_env_meta_paths()
     opt_parser = rose.opt_parse.RoseOptionParser()
@@ -219,18 +251,18 @@ if __name__ == "__main__":
         meta_path, warning = rose.macro.load_meta_path(
             config, opts.conf_dir)
         if meta_path is None:
-            exit_fail()
+            _exit_with_metadata_fail()
         meta_config = rose.macro.load_meta_config(
             config,
             directory=opts.conf_dir,
         )
         if not meta_config.value.keys():
-            exit_fail()
+            _exit_with_metadata_fail()
     elif os.path.exists(meta_config_file_path):
         config = rose.config.ConfigNode()
         meta_config = config_loader(meta_config_file_path)
     else:
-        exit_fail()
+        _exit_with_metadata_fail()
     name = os.getcwd()
     if args:
         name += ": " + ",".join(args)
@@ -239,5 +271,9 @@ if __name__ == "__main__":
     graph = get_graph(config, meta_config, name, allowed_sections=args,
                       allowed_properties=opts.property)
     if graph is None:
-        exit_fail()
-    draw_graph(graph, debug_mode=opts.debug_mode)
+        _exit_with_metadata_fail()
+    output_graph(graph, debug_mode=opts.debug_mode)
+
+
+if __name__ == "__main__":
+    main()
