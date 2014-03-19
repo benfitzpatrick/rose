@@ -74,7 +74,6 @@ init_meta </dev/null
 TEST_KEY=$TEST_KEY_BASE-null-metadata
 setup
 run_fail "$TEST_KEY" rose metadata-graph --debug -C ../config
-sed -i 's/\(bb|pos|width|height\)="[^"]*"//g' "$TEST_KEY.out"
 file_xxdiff "$TEST_KEY.out" "$TEST_KEY.out" </dev/null
 file_xxdiff "$TEST_KEY.err" "$TEST_KEY.err" <<'__ERROR__'
 [FAIL] Could not load metadata 
