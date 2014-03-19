@@ -28,21 +28,21 @@
 #
 # OPTIONS
 #     --config=DIR, -C DIR
-#        The directory containing either the configuration or
-#        the configuration metadata. If the configuration is
-#        given, the metadata will be looked up in the normal
-#        way (see also --meta-path, ROSE_META_PATH). If the
-#        configuration metadata is given, there will be no
-#        configuration data used in the graphing.
-#        If not specified, the current directory will be used.
+#         The directory containing either the configuration or
+#         the configuration metadata. If the configuration is
+#         given, the metadata will be looked up in the normal
+#         way (see also --meta-path, ROSE_META_PATH). If the
+#         configuration metadata is given, there will be no
+#         configuration data used in the graphing.
+#         If not specified, the current directory will be used.
 #     --meta-path=PATH, -M PATH
 #         Prepend PATH to the metadata search path.
 #     --property=PROPERTY, -p PROPERTY
-#        Graph a certain property e.g. trigger. If specified,
-#        only this property will be graphed.
+#         Graph a certain property e.g. trigger. If specified,
+#         only this property will be graphed.
 # ARGUMENTS
 #     SECTION
-#        One or more configuration sections to graph. If
-#        specified, only these sections will be checked.
+#         One or more configuration sections to graph. If
+#         specified, only these sections will be checked.
 #-------------------------------------------------------------------------------
 exec python -m rose.metadata_graph "$@"
