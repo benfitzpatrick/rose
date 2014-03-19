@@ -46,7 +46,7 @@ tests 12
 # Check trigger checking - this is nearly cyclic but should be fine.
 TEST_KEY=$TEST_KEY_BASE-ok-full
 setup
-init_meta <<__META_CONFIG__
+init_meta <<'__META_CONFIG__'
 [env]
 
 [env=CONTROL]

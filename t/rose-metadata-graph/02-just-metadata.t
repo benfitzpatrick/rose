@@ -46,7 +46,7 @@ tests 3
 # Check trigger checking - this is nearly cyclic but should be fine.
 TEST_KEY=$TEST_KEY_BASE-ok-full
 setup
-init_meta <<__META_CONFIG__
+init_meta <<'__META_CONFIG__'
 [env]
 
 [env=CONTROL]
@@ -106,7 +106,7 @@ run_pass "$TEST_KEY" rose metadata-graph --debug --config=../config/meta
 sort "$TEST_KEY.out" -o "$TEST_KEY.out"
 sed -i -e 's/\(pos\|bb\|width\|height\|lp\)="[^"]*\("\|$\)//g;' \
        -e 's/[, ]*\]\?;\? *$//g; /^\t/!d;' "$TEST_KEY.out"
-file_xxdiff "$TEST_KEY.out" "$TEST_KEY.out" <<'__OUTPUT__'
+file_xxdiff "$TEST_KEY.out" "$TEST_KEY.out" <<__OUTPUT__
 		
 	"env=CONTROL" -> "env=CONTROL=None" [color=grey
 	"env=CONTROL" -> "env=CONTROL=bar" [color=grey

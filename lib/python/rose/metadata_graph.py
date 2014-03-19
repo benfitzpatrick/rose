@@ -231,7 +231,7 @@ if __name__ == "__main__":
         meta_config = config_loader(meta_config_file_path)
     else:
         exit_fail()
-    name = os.path.dirname(os.getcwd())
+    name = os.getcwd()
     if args:
         name += ": " + ",".join(args)
     if opts.property:
