@@ -20,6 +20,10 @@
 # Test "rose macro" in built-in trigger checking mode.
 #-------------------------------------------------------------------------------
 . $(dirname $0)/test_header
+
+python -c "import pygraphviz" 2>/dev/null || \
+    skip_all 'pygraphviz not installed'
+
 init <<'__CONFIG__'
 [env]
 !USER_IGNORED=0
