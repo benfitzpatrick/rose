@@ -26,7 +26,7 @@ def _launch(name, event_handler=None, run_fg=False, *args, **kwargs):
     popen = RosePopener(event_handler)
     command = popen.get_cmd(name, *args)
     if run_fg:
-        popen.run(*command, **kwargs)
+        return popen.run(*command, **kwargs)
     popen.run_bg(*command, **kwargs)
 
 

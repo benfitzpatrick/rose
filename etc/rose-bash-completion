@@ -232,7 +232,7 @@ _rose_metadata_graph_ARGS() {
     fi
 }
 
-_rose_metadata_graph_property() {
+_rose_metadata_graph__property() {
     COMPREPLY=( $(compgen -W "trigger" -- $1) )
     return 0
 }

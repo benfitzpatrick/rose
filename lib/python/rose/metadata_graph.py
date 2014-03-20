@@ -238,6 +238,7 @@ def main():
     if opts.conf_dir is None:
         opts.conf_dir = os.getcwd()
     else:
+        opts.conf_dir = os.path.abspath(opts.conf_dir)
         os.chdir(opts.conf_dir)
     sys.path.append(os.getenv("ROSE_HOME"))
     rose.macro.add_opt_meta_paths(opts.meta_path)
