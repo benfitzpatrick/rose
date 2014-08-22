@@ -101,7 +101,7 @@ class RoseDateTimeOperator(object):
         if not calendar_mode:
             calendar_mode = os.getenv("ROSE_CYCLING_MODE")
 
-        if calendar_mode:
+        if calendar_mode and calendar_mode.lower() in Calendar.MODES:
             Calendar.default().set_mode(calendar_mode)
 
         self.time_point_dumper = TimePointDumper()
