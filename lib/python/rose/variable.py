@@ -87,22 +87,28 @@ class Variable(object):
         """Process existing or resupplied metadata into the correct form."""
         if metadata is not None:
             self.metadata = metadata
+
+        if (rose.META_PROP_TYPE in self.metadata and
+                not isinstance(self.metadata[rose.META_PROP_TYPE], list)):
+            self.metadata[rose.META_PROP_TYPE] = (
+                parse_type_expression(self.metadata[rose.META_PROP_TYPE]))
+
         if ('type' in self.metadata and
             not isinstance(self.metadata['type'], list)):
             self.metadata['type'] = parse_type_expression(
                                                self.metadata['type'])
         # Replace this kind of thing with a proper metadata handler later.
         for key, delim in [
-                ("values", ","),
-                ("value-titles", None),
-                ("value-hints", ",")]:
+                (rose.META_PROP_ELEMENT_TITLES, None),
+                (rose.META_PROP_VALUES, ","),
+                (rose.META_PROP_VALUE_HINTS, ","),
+                (rose.META_PROP_VALUE_TITLES, None)]:
             if (key in self.metadata and
                     not isinstance(self.metadata[key], list)):
                 self.metadata[key] = array_split(
                     self.metadata[key],
                     only_this_delim=delim,
                     remove_esc_char=True)
-
         return self.metadata
 
     def to_hashable(self):
