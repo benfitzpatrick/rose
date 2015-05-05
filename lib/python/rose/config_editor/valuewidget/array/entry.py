@@ -24,7 +24,6 @@ import sys
 import pygtk
 pygtk.require('2.0')
 import gtk
-import gobject
 import pango
 
 import rose.config_editor.util
@@ -77,16 +76,8 @@ class EntryArrayValueWidget(gtk.HBox):
             for i, val in enumerate(value_array):
                 value_array[i] = (
                       rose.config_editor.util.text_for_quoted_widget(val))
-        
-        self._element_titles_map = dict(enumerate(
-            self.metadata.get(rose.META_PROP_ELEMENT_TITLES, [])))
-        self.columns_fixed = bool(self._element_titles_map)
-
         # Designate the number of allowed columns - 10 for 4 chars width
         self.num_allowed_columns = 3
-        if self.columns_fixed:
-            self.num_allowed_columns = max(
-                len(self._element_titles_map), len(value_array))
         self.entry_table = gtk.Table(rows=1,
                                      columns=self.num_allowed_columns,
                                      homogeneous=True)
@@ -99,9 +90,8 @@ class EntryArrayValueWidget(gtk.HBox):
         self.populate_table()
         self.pack_start(self.add_del_button_box, expand=False, fill=False)
         self.pack_start(self.entry_table, expand=True, fill=True)
-        if not self.columns_fixed:
-            self.entry_table.connect_after('size-allocate',
-                                           lambda w, e: self.idle_reshape_table())
+        self.entry_table.connect_after('size-allocate',
+                                       lambda w, e: self.reshape_table())
         self.connect('focus-in-event',
                      lambda w, e: self.hook.get_focus(self.get_focus_entry()))
 
@@ -193,8 +183,6 @@ class EntryArrayValueWidget(gtk.HBox):
         self.arrow_box.pack_start(left_event_box, expand=False, fill=False)
         self.arrow_box.pack_end(right_event_box, expand=False, fill=False)
         self.set_arrow_sensitive(False, False)
-        if self.columns_fixed:
-            self.arrow_box.hide()
         del_image = gtk.image_new_from_stock(gtk.STOCK_REMOVE,
                                              gtk.ICON_SIZE_MENU)
         del_image.show()
@@ -211,6 +199,7 @@ class EntryArrayValueWidget(gtk.HBox):
         self.button_box = gtk.HBox()
         self.button_box.show()
         self.button_box.pack_start(self.arrow_box, expand=False, fill=True)
+        #self.button_box.pack_start(self.del_button, expand=False, fill=False)
         add_image = gtk.image_new_from_stock(gtk.STOCK_ADD, gtk.ICON_SIZE_MENU)
         add_image.show()
         self.add_button = gtk.EventBox()
@@ -279,19 +268,12 @@ class EntryArrayValueWidget(gtk.HBox):
 
     def populate_table(self, focus_widget=None):
         """Populate a table with the array elements, dynamically."""
-        self._reshape_pending = True
         position = None
         table_widgets = self.entries + [self.button_box]
         table_children = self.entry_table.get_children()
         if focus_widget is None:
             for child in table_children:
-                if isinstance(child, gtk.Box):
-                    for grandchild in child.get_children():
-                        if (grandchild.is_focus() and
-                                isinstance(grandchild, gtk.Entry)):
-                            focus_widget = grandchild
-                            position = focus_widget.get_position()
-                elif child.is_focus() and isinstance(child, gtk.Entry):
+                if child.is_focus() and isinstance(child, gtk.Entry):
                     focus_widget = child
                     position = focus_widget.get_position()
         else:
@@ -327,7 +309,6 @@ class EntryArrayValueWidget(gtk.HBox):
         if len(self.entries) < 2:
             self.set_arrow_sensitive(False, False)
         for i, widget in enumerate(table_widgets):
-            title = None
             if isinstance(widget, gtk.Entry):
                 if self.is_char_array or self.is_quoted_array:
                     w_value = widget.get_text()
@@ -335,21 +316,9 @@ class EntryArrayValueWidget(gtk.HBox):
                                             (i + 1), w_value))
                 else:
                     widget.set_tooltip_text(self.TIP_ELEMENT.format((i + 1)))
-                title = self._element_titles_map.get(i)
             row = i // self.num_allowed_columns
             column = i % self.num_allowed_columns
-            cell_widget = widget
-            if title is not None:
-                label = gtk.Label(title)
-                label.set_width_chars(len(title))
-                label.show()
-                widget.show()
-                box = gtk.VBox()
-                box.show()
-                box.pack_start(label, expand=False)
-                box.pack_start(widget, expand=False)
-                cell_widget = box
-            self.entry_table.attach(cell_widget,
+            self.entry_table.attach(widget,
                                     column, column + 1,
                                     row, row + 1,
                                     xoptions=gtk.FILL,
@@ -361,33 +330,20 @@ class EntryArrayValueWidget(gtk.HBox):
         self.grab_focus = lambda : self.hook.get_focus(
                                                  self._get_widget_for_focus())
         self.check_resize()
-        return False
-
-    def idle_reshape_table(self):
-        """Queue a reshape of the table."""
-        if self._reshape_pending or self.columns_fixed:
-            return False
-        self._reshape_pending = True
-        gobject.idle_add(self.reshape_table)
 
     def reshape_table(self):
         """Reshape a table according to the space allocated."""
         total_x_bound = self.entry_table.get_allocation().width
-        if not len(self.entries) or self.columns_fixed:
-            self._reshape_pending = False            
+        if not len(self.entries):
             return False
-        entry_widths = []
-        for child in self.entry_table.get_children():
-            entry_widths.append(child.get_allocation().width)
-        entry_max_width = max(entry_widths)
-        maximum_entry_number = float(total_x_bound) / float(entry_max_width)
+        entries_bound = sum([e.get_allocation().width for e in self.entries])
+        each_entry_bound = entries_bound / len(self.entries)
+        maximum_entry_number = float(total_x_bound) / float(each_entry_bound)
         rounded_max = int(maximum_entry_number) + 1
-        num_allowed_columns = max(1, rounded_max - 2)
-        if num_allowed_columns != self.num_allowed_columns:
-            self.num_allowed_columns = num_allowed_columns
+        if (rounded_max != self.num_allowed_columns + 2 and
+            rounded_max > 2):
+            self.num_allowed_columns = max(1, rounded_max - 2)
             self.populate_table()
-        self._reshape_pending = False
-        return False
 
     def add_entry(self):
         """Add a new entry (with null text) to the variable array."""
