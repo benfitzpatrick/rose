@@ -69,6 +69,25 @@ def _check_duplicate(value):
         return INVALID_SYNTAX.format(value)
 
 
+def _check_element_titles(title_value, length, type):
+    try:
+        title_list = rose.variable.array_split(title_value,
+                                               only_this_delim=",")
+    except Exception as exc:
+        return INVALID_SYNTAX.format(type(exc).__name__ + ": " + str(exc))
+    try:
+        type_list = rose.variable.array_split(type,
+                                              only_this_delim=",")
+    except Exception as exc:
+        pass
+    else:
+        if len(type_list) > 1 and len(title_list) != len(type_list):
+            return INCOMPATIBLE.format(rose.META_PROP_TYPE)
+        return
+    if length and length.isdigit() and len(title_list) != int(length):
+        return INCOMPATIBLE.format(rose.META_PROP_LENGTH)
+
+
 def _check_rule(value, setting_id, meta_config):
     evaluator = rose.macros.rule.RuleEvaluator()
     ids_used = evaluator.evaluate_rule_id_usage(
@@ -292,6 +311,11 @@ def metadata_check(meta_config, meta_dir=None,
             elif option in [rose.META_PROP_FAIL_IF, rose.META_PROP_WARN_IF]:
                 check_func = lambda v: _check_rule(
                     v, section, meta_config)
+            elif option == rose.META_PROP_ELEMENT_TITLES:
+                check_func = lambda v: _check_element_titles(
+                    v, node.get_value([rose.META_PROP_LENGTH]),
+                    node.get_value([rose.META_PROP_TYPE])
+                )
             else:
                 func_name = "_check_" + option.replace("-", "_")
                 check_func = globals().get(func_name, lambda v: None)

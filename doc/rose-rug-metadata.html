@@ -286,6 +286,26 @@ warn-if=this &gt;= namelist:run_snow=max_ok_ice_fraction or this &lt; 0.2
     </div>
 
     <div class="slide">
+      <h3 class="alwayshidden">More Metadata Options - element-titles</h3>
+
+      <dl>
+        <dt><code>element-titles</code></dt>
+
+        <dd>Give titles to elements of an array or derived type setting. For example:  
+        <pre class=class="prettyprint lang-rose_conf">
+[env=COLOUR]
+description=Control the RGB colour of something
+element-titles=Red,Green,Blue
+length=3
+type=integer
+</pre>
+        </dd>
+
+      </dl>
+
+    </div>
+
+    <div class="slide">
       <h3 class="alwayshidden">More Metadata Options - value-titles</h3>
 
       <dl>
