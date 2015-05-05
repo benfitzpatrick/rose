@@ -52,6 +52,7 @@ class EntryArrayValueWidget(gtk.HBox):
         self.max_length = self.metadata[rose.META_PROP_LENGTH]
 
         value_array = rose.variable.array_split(self.value)
+        self.element_titles = metadata.get(rose.META_PROP_ELEMENT_TITLES)
         self.chars_width = max([len(v) for v in value_array] + [1]) + 1
         self.last_selected_src = None
         arr_type = self.metadata.get(rose.META_PROP_TYPE)
@@ -286,6 +287,8 @@ class EntryArrayValueWidget(gtk.HBox):
             position = len(focus_widget.get_text())
         num_fields = len(self.entries + [self.button_box])
         num_rows_now = 1 + (num_fields - 1) / self.num_allowed_columns
+        if self.element_titles:
+            num_rows_now += 1
         self.entry_table.resize(num_rows_now, self.num_allowed_columns)
         if (self.max_length.isdigit() and
             len(self.entries) >= int(self.max_length)):
@@ -308,6 +311,21 @@ class EntryArrayValueWidget(gtk.HBox):
                 self.set_arrow_sensitive(True, False)
         if len(self.entries) < 2:
             self.set_arrow_sensitive(False, False)
+        row_offset = 0
+        if self.element_titles:
+            for i, title in enumerate(self.element_titles):
+                label = gtk.Label(title)
+                label.set_ellipsize(pango.ELLIPSIZE_END)
+                label.set_tooltip_text(title)
+                label.show()
+                self.entry_table.attach(
+                    label,
+                    i, i + 1,
+                    0, 1,
+                    xoptions=gtk.FILL,
+                    yoptions=gtk.SHRINK
+                )
+            row_offset = 1
         for i, widget in enumerate(table_widgets):
             if isinstance(widget, gtk.Entry):
                 if self.is_char_array or self.is_quoted_array:
@@ -316,7 +334,7 @@ class EntryArrayValueWidget(gtk.HBox):
                                             (i + 1), w_value))
                 else:
                     widget.set_tooltip_text(self.TIP_ELEMENT.format((i + 1)))
-            row = i // self.num_allowed_columns
+            row = (i // self.num_allowed_columns) + row_offset
             column = i % self.num_allowed_columns
             self.entry_table.attach(widget,
                                     column, column + 1,
@@ -333,6 +351,13 @@ class EntryArrayValueWidget(gtk.HBox):
 
     def reshape_table(self):
         """Reshape a table according to the space allocated."""
+        if self.element_titles:
+            new_num_allowed_columns = max(
+                len(self.entries) + 1, len(self.element_titles))
+            if new_num_allowed_columns != self.num_allowed_columns:
+                self.num_allowed_columns = new_num_allowed_columns
+                self.populate_table()
+            return
         total_x_bound = self.entry_table.get_allocation().width
         if not len(self.entries):
             return False

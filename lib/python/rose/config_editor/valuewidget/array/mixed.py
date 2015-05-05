@@ -68,6 +68,7 @@ class MixedArrayValueWidget(gtk.HBox):
             self.array_length = 1
         else:
             self.array_length = metadata.get(rose.META_PROP_LENGTH, 1)
+        self.element_titles = metadata.get(rose.META_PROP_ELEMENT_TITLES)
         self.num_cols = len(metadata[rose.META_PROP_TYPE])
         self.types_row = [t for t in
                           metadata[rose.META_PROP_TYPE]]
@@ -82,8 +83,22 @@ class MixedArrayValueWidget(gtk.HBox):
         self.entry_table.connect('focus-in-event',
                                  self.hook.trigger_scroll)
         self.entry_table.show()
-        r = 0
-        for r in range(self.num_rows):
+        row_offset = 0
+        if self.element_titles:
+            for i, title in enumerate(self.element_titles):
+                label = gtk.Label(title)
+                label.set_ellipsize(pango.ELLIPSIZE_END)
+                label.set_tooltip_text(title)
+                label.show()
+                self.entry_table.attach(
+                    label,
+                    i, i + 1,
+                    0, 1,
+                    xoptions=gtk.FILL,
+                    yoptions=gtk.SHRINK
+                )
+            row_offset = 1
+        for r in range(row_offset, self.num_rows):
             self.insert_row(r)
         self.normalise_width_widgets()
         self.generate_buttons()
@@ -117,6 +132,9 @@ class MixedArrayValueWidget(gtk.HBox):
             self.num_rows = 1
         if self.max_rows == 0:
             self.max_rows = 1
+        if self.element_titles:
+            self.num_rows += 1
+            self.max_rows += 1
 
     def grab_focus(self):
         if self.entry_table.focus_child is None:

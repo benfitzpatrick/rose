@@ -46,6 +46,7 @@ class LogicalArrayValueWidget(gtk.HBox):
         self.hook = hook
         self.max_length = metadata[rose.META_PROP_LENGTH]
         value_array = rose.variable.array_split(value)
+        self.element_titles = metadata.get(rose.META_PROP_ELEMENT_TITLES)
         if metadata.get(rose.META_PROP_TYPE) == "boolean":
             self.allowed_values = [rose.TYPE_BOOLEAN_VALUE_FALSE,
                                    rose.TYPE_BOOLEAN_VALUE_TRUE]
@@ -169,6 +170,8 @@ class LogicalArrayValueWidget(gtk.HBox):
             focus = self.entries[-1]
         num_fields = len(self.entries)
         num_rows_now = 1 + (num_fields - 1) / self.num_allowed_columns
+        if self.element_titles:
+            num_rows_now += 1
         self.entry_table.resize(num_rows_now, self.num_allowed_columns)
         if (self.max_length.isdigit() and
             len(self.entries) >= int(self.max_length)):
@@ -180,8 +183,23 @@ class LogicalArrayValueWidget(gtk.HBox):
             self.del_button.hide()
         else:
             self.del_button.show()
+        row_offset = 0
+        if self.element_titles:
+            for i, title in enumerate(self.element_titles):
+                label = gtk.Label(title)
+                label.set_ellipsize(pango.ELLIPSIZE_END)
+                label.set_tooltip_text(title)
+                label.show()
+                self.entry_table.attach(
+                    label,
+                    i, i + 1,
+                    0, 1,
+                    xoptions=gtk.FILL,
+                    yoptions=gtk.SHRINK
+                )
+            row_offset = 1
         for i, widget in enumerate(table_widgets):
-            row = i // self.num_allowed_columns
+            row = (i // self.num_allowed_columns) + row_offset
             column = i % self.num_allowed_columns
             self.entry_table.attach(widget,
                                     column, column + 1,
@@ -193,6 +211,13 @@ class LogicalArrayValueWidget(gtk.HBox):
 
     def reshape_table(self):
         """Reshape a table according to the space allocated."""
+        if self.element_titles:
+            new_num_allowed_columns = max(
+                len(self.entries) + 1, len(self.element_titles))
+            if new_num_allowed_columns != self.num_allowed_columns:
+                self.num_allowed_columns = new_num_allowed_columns
+                self.populate_table()
+            return
         total_x_bound = self.entry_table.get_allocation().width
         if not len(self.entries):
             return False
