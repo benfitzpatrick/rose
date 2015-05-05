@@ -50,6 +50,7 @@ class RowArrayValueWidget(gtk.HBox):
         self.set_value = set_value
         self.hook = hook
         self.value_array = rose.variable.array_split(value)
+        self.element_titles = metadata.get(rose.META_PROP_ELEMENT_TITLES)
         self.extra_array = []  # For new rows
         self.element_values = []
         self.rows = []
@@ -81,8 +82,7 @@ class RowArrayValueWidget(gtk.HBox):
         self.entry_table.connect('focus-in-event',
                                  self.hook.trigger_scroll)
         self.entry_table.show()
-        for r in range(self.num_rows):
-            self.insert_row(r)
+        self.recreate_table()
         self.normalise_width_widgets()
         self.generate_buttons(is_for_elements=not isinstance(self.type, list))
         self.pack_start(self.add_del_button_box, expand=False, fill=False)
@@ -95,6 +95,9 @@ class RowArrayValueWidget(gtk.HBox):
             self.num_rows = 1
             self.max_rows = 1
             self.unlimited = False
+            if self.element_titles:
+                self.num_rows = 2
+                self.max_rows = 2
             return
         columns = len(self.type)
         if self.CHECK_NAME_IS_ELEMENT(self.metadata['id']):
@@ -121,6 +124,9 @@ class RowArrayValueWidget(gtk.HBox):
             self.num_rows = 1
         if self.max_rows == 0:
             self.max_rows = 1
+        if self.element_titles:
+            self.num_rows += 1
+            self.max_rows += 1
 
     def get_type(self, index):
         """Get the metadata type for this value index."""
@@ -138,6 +144,28 @@ class RowArrayValueWidget(gtk.HBox):
         else:
             self.hook.get_focus(self.entry_table.focus_child)
 
+    def recreate_table(self):
+        """Delete and re-create table child widgets."""
+        for child in self.entry_table.get_children():
+            self.entry_table.remove(child)
+        row_offset = 0
+        if self.element_titles:
+            for i, title in enumerate(self.element_titles):
+                label = gtk.Label(title)
+                label.set_ellipsize(pango.ELLIPSIZE_END)
+                label.set_tooltip_text(title)
+                label.show()
+                self.entry_table.attach(
+                    label,
+                    i, i + 1,
+                    0, 1,
+                    xoptions=gtk.FILL,
+                    yoptions=gtk.SHRINK
+                )
+            row_offset = 1
+        for r in range(row_offset, self.num_rows):
+            self.insert_row(r)
+
     def add_element(self, *args):
         """Create a new element (non-derived types)."""
         new_index = len(self.value_array)
@@ -146,10 +174,7 @@ class RowArrayValueWidget(gtk.HBox):
         self.value_array = self.value_array + [w_value]
         self.value = rose.variable.array_join(self.value_array)
         self.set_value(self.value)
-        for child in self.entry_table.get_children():
-            self.entry_table.remove(child)
-        for r in range(self.num_rows):
-            self.insert_row(r)
+        self.recreate_table()
         self.normalise_width_widgets()
         self._decide_show_buttons()
 
@@ -225,10 +250,7 @@ class RowArrayValueWidget(gtk.HBox):
         self.value_array.pop()
         self.value = rose.variable.array_join(self.value_array)
         self.set_value(self.value)
-        for child in self.entry_table.get_children():
-            self.entry_table.remove(child)
-        for r in range(self.num_rows):
-            self.insert_row(r)
+        self.recreate_table()
         self.normalise_width_widgets()
         self._decide_show_buttons()
 
@@ -282,7 +304,10 @@ class RowArrayValueWidget(gtk.HBox):
         new_values = []
         actual_num_cols = len(self.get_types())
         for c, el_piece_type in enumerate(self.get_types()):
-            unwrapped_index = row_index * actual_num_cols + c
+            if self.element_titles:
+                unwrapped_index = (row_index - 1) * actual_num_cols + c
+            else:
+                unwrapped_index = row_index * actual_num_cols + c
             value_index = unwrapped_index
             if (not isinstance(self.type, list) and
                 value_index >= len(self.value_array)):

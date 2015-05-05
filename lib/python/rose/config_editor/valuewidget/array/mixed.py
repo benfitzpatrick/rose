@@ -83,23 +83,7 @@ class MixedArrayValueWidget(gtk.HBox):
         self.entry_table.connect('focus-in-event',
                                  self.hook.trigger_scroll)
         self.entry_table.show()
-        row_offset = 0
-        if self.element_titles:
-            for i, title in enumerate(self.element_titles):
-                label = gtk.Label(title)
-                label.set_ellipsize(pango.ELLIPSIZE_END)
-                label.set_tooltip_text(title)
-                label.show()
-                self.entry_table.attach(
-                    label,
-                    i, i + 1,
-                    0, 1,
-                    xoptions=gtk.FILL,
-                    yoptions=gtk.SHRINK
-                )
-            row_offset = 1
-        for r in range(row_offset, self.num_rows):
-            self.insert_row(r)
+        self.recreate_table()
         self.normalise_width_widgets()
         self.generate_buttons()
         self.pack_start(self.add_del_button_box, expand=False, fill=False)
@@ -115,8 +99,8 @@ class MixedArrayValueWidget(gtk.HBox):
             self.num_rows += [1, 0][rem == 0]
             self.max_rows = sys.maxint
         else:
-            self.num_rows = int(self.array_length)
             num, rem = divmod(len(self.value_array), self.num_cols)
+            self.num_rows = num
             if self.num_rows == 0:
                self.num_rows = 1
             self.max_rows = self.num_rows
@@ -141,6 +125,26 @@ class MixedArrayValueWidget(gtk.HBox):
             self.hook.get_focus(self.rows[-1][-1])
         else:
             self.hook.get_focus(self.entry_table.focus_child)
+
+    def recreate_table(self):
+        """Delete and re-create table child widgets."""        
+        row_offset = 0
+        if self.element_titles:
+            for i, title in enumerate(self.element_titles):
+                label = gtk.Label(title)
+                label.set_ellipsize(pango.ELLIPSIZE_END)
+                label.set_tooltip_text(title)
+                label.show()
+                self.entry_table.attach(
+                    label,
+                    i, i + 1,
+                    0, 1,
+                    xoptions=gtk.FILL,
+                    yoptions=gtk.SHRINK
+                )
+            row_offset = 1
+        for r in range(row_offset, self.num_rows):
+            self.insert_row(r)
 
     def add_row(self, *args):
         """Create a new row of widgets."""
@@ -245,7 +249,10 @@ class MixedArrayValueWidget(gtk.HBox):
         widget_list = []
         new_values = []
         for c, el_piece_type in enumerate(self.types_row):
-            unwrapped_index = row_index * self.num_cols + c
+            if self.element_titles:
+                unwrapped_index = (row_index - 1) * self.num_cols + c
+            else:
+                unwrapped_index = row_index * self.num_cols + c
             value_index = unwrapped_index
             while value_index > len(self.value_array) - 1:
                 value_index -= len(self.types_row)
