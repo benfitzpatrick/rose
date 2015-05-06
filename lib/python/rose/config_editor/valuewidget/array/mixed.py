@@ -67,7 +67,7 @@ class MixedArrayValueWidget(gtk.HBox):
         if self.unlimited:
             self.array_length = 1
         else:
-            self.array_length = metadata.get(rose.META_PROP_LENGTH, 1)
+            self.array_length = int(metadata.get(rose.META_PROP_LENGTH, 1))
         self.element_titles = metadata.get(rose.META_PROP_ELEMENT_TITLES)
         self.num_cols = len(metadata[rose.META_PROP_TYPE])
         self.types_row = [t for t in
@@ -94,16 +94,12 @@ class MixedArrayValueWidget(gtk.HBox):
         """Derive the number of columns and rows."""
         if self.CHECK_NAME_IS_ELEMENT(self.metadata['id']):
             self.unlimited = False
+        self.num_rows, rem = divmod(len(self.value_array), self.num_cols)
         if self.unlimited:
-            self.num_rows, rem = divmod(len(self.value_array), self.num_cols)
             self.num_rows += [1, 0][rem == 0]
             self.max_rows = sys.maxint
         else:
-            num, rem = divmod(len(self.value_array), self.num_cols)
-            self.num_rows = num
-            if self.num_rows == 0:
-               self.num_rows = 1
-            self.max_rows = self.num_rows
+            self.max_rows = self.array_length
         if rem != 0:
             # Then there is an incorrect number of entries.
             # Display as entry box.
@@ -233,16 +229,19 @@ class MixedArrayValueWidget(gtk.HBox):
 
     def _decide_show_buttons(self):
         # Show or hide the add row and delete row buttons.
-        if len(self.rows) >= self.max_rows and not self.unlimited:
+        row_offset = 1 if self.element_titles else 0
+
+        if self.unlimited:
+            self.add_button.show()
+        elif len(self.rows) + row_offset >= self.max_rows:
             self.add_button.hide()
-            self.del_button.show()
         else:
             self.add_button.show()
+
+        if len(self.rows) > 1:
             self.del_button.show()
-        if len(self.rows) == 1:
+        else:
             self.del_button.hide()
-        else:
-            self.add_button.show()
 
     def insert_row(self, row_index):
         """Create a row of widgets from type_list."""
