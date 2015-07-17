@@ -365,7 +365,7 @@ class SuiteEngineProcessor(object):
         """Run suite engine dependent logic (at end of "rose suite-clean")."""
         raise NotImplementedError()
 
-    def cmp_suite_conf(self, suite_name, strict_mode=False, debug_mode=False):
+    def cmp_suite_conf(self, suite_name, strict_mode=False):
         """Compare current suite configuration with that in the previous run.
 
         An implementation of this method should:

@@ -292,8 +292,7 @@ class SuiteRunner(Runner):
         # and determine if it is up to date (unchanged)
         suite_conf_unchanged = self.suite_engine_proc.cmp_suite_conf(
                                                             suite_name,
-                                                            opts.strict_mode,
-                                                            opts.debug_mode)
+                                                            opts.strict_mode)
 
         if opts.local_install_only_mode:
             return
