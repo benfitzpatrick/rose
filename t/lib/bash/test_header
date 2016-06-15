@@ -99,6 +99,12 @@
 #         array index. It can also be a dict {attr_key: attr_value, ...}. In
 #         which case, the expected data item is under a list of dicts, where a
 #         unique dict in the list contains all elements attr_key: attr_value.
+#     datetime_replace FILENAME
+#         Replace all full ISO 8601 year-month-day datetime strings in FILENAME
+#         with 'YYYY-MM-DDT...' and echo the result to standard output. For
+#         example, a line in FILENAME like this:
+#         "[FAIL] 2016-06-13T14:52:00+01:00 oh no" would be output as:
+#         "[FAIL] YYYY-MM-DDT... oh no".
 #
 # VARIABLES
 #     TEST_DIR
@@ -413,6 +419,12 @@ __PYTHON__
     if [[ -s "${TEST_KEY}.err" ]]; then
         cat "${TEST_KEY}.err" >&2
     fi
+}
+
+datetime_replace() {
+    local FILENAME="$1"
+    sed 's/[0-9]*-[0-9]*-[0-9]*T[0-9]*:[0-9]*:[0-9]*+\(Z\|[0-9:]*\)/YYYY-MM-DDT.../g' \
+        $FILENAME
 }
 
 ROSE_HOME=${ROSE_HOME:-$(cd $(dirname $BASH_SOURCE)/../../.. && pwd)}

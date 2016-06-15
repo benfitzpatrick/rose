@@ -34,11 +34,20 @@ run_pass "$TEST_KEY" \
     --no-gcontrol --host=localhost -- --debug
 #-------------------------------------------------------------------------------
 TEST_KEY="$TEST_KEY_BASE-prune.log"
-sed 's/[0-9]*-[0-9]*-[0-9]*T[0-9]*:[0-9]*:[0-9]*+[0-9]*/YYYY-MM-DDTHHMM/g'\
-    "${SUITE_RUN_DIR}/prune.log" > stamp-removed.log
-sed '/^\[INFO\] YYYY-MM-DDTHHMM export ROSE_TASK_CYCLE_TIME=/p;
-    /^\[INFO\] YYYY-MM-DDTHHMM delete: /!d' \
+datetime_replace "${SUITE_RUN_DIR}/prune.log" > stamp-removed.log
+cat stamp-removed.log >/dev/tty
+echo "DONE STAMP REMOVED LOG" >/dev/tty
+echo >/dev/tty
+echo >/dev/tty
+sed '/^\[INFO\] YYYY-MM-DDT... export ROSE_TASK_CYCLE_TIME=/p;
+    /^\[INFO\] YYYY-MM-DDT... delete: /!d' \
     stamp-removed.log >edited-prune.log
+cat "$TEST_SOURCE_DIR/$TEST_KEY_BASE.log" >/dev/tty
+echo >/dev/tty
+echo >/dev/tty
+echo >/dev/tty
+echo >/dev/tty
+cat edited-prune.log >/dev/tty
 file_cmp "$TEST_KEY" "$TEST_SOURCE_DIR/$TEST_KEY_BASE.log" edited-prune.log
 #-------------------------------------------------------------------------------
 rose suite-clean -q -y $NAME

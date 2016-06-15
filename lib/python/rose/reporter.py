@@ -25,9 +25,13 @@ import multiprocessing
 import os
 import re
 import sys
-
 import time
 
+import isodatetime.timezone
+
+TIMEZONE_STRING = isodatetime.timezone.get_local_time_zone_format(
+    extended_mode=True, reduced_mode=True
+)
 _DEFAULT_REPORTER = None
 
 
@@ -85,7 +89,7 @@ class Reporter(object):
         msg_lines = []
 
         if verbosity >= self.VV:
-            stamp = time.strftime("%Y-%m-%dT%H:%M:%S%z ")
+            stamp = time.strftime("%Y-%m-%dT%H:%M:%S") + TIMEZONE_STRING + " "
         else:
             stamp = ""
 

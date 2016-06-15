@@ -37,50 +37,50 @@ run_pass "$TEST_KEY" \
 # Test the output
 OUTPUT=$HOME/cylc-run/$NAME/log/job/1/rose_ana_t1/01/job.out
 TEST_KEY=$TEST_KEY_BASE-exact_numeric_success
-file_grep $TEST_KEY "[ OK ].*Semi-major Axis.*all: 0%:" $OUTPUT
+file_grep $TEST_KEY "^\[ OK \] .*Semi-major Axis.*all: 0%:" $OUTPUT
 TEST_KEY=$TEST_KEY_BASE-exact_numeric_fail
-file_grep $TEST_KEY "[FAIL].*Orbital Period.*1: 5.234%" $OUTPUT
+file_grep $TEST_KEY "^\[FAIL\] .*Orbital Period.*1: 5.234%" $OUTPUT
 TEST_KEY=$TEST_KEY_BASE-exact_text_success
-file_grep $TEST_KEY "[ OK ].*Atmosphere.*all: 0%" $OUTPUT
+file_grep $TEST_KEY "^\[ OK \] .*Atmosphere.*all: 0%" $OUTPUT
 TEST_KEY=$TEST_KEY_BASE-exact_text_fail
-file_grep $TEST_KEY "[FAIL].*Planet.*1: XX%.* (4 values)" $OUTPUT
+file_grep $TEST_KEY "^\[FAIL\] .*Planet.*1: XX%.* (4 values)" $OUTPUT
 TEST_KEY=$TEST_KEY_BASE-within_percentage_success
-file_grep $TEST_KEY "[ OK ].*Oxygen Partial Pressure.*all% <= 5%" $OUTPUT
+file_grep $TEST_KEY "^\[ OK \] .*Oxygen Partial Pressure.*all% <= 5%" $OUTPUT
 TEST_KEY=$TEST_KEY_BASE-within_percentage_fail
-file_grep $TEST_KEY "[FAIL].*Ocean coverage.*35.3107344633% > 5%:.* (95.8) c.f. .* (70.8)" $OUTPUT
+file_grep $TEST_KEY "^\[FAIL\] .*Ocean coverage.*35.3107344633% > 5%:.* (95.8) c.f. .* (70.8)" $OUTPUT
 TEST_KEY=$TEST_KEY_BASE-within_absolute_success
-file_grep $TEST_KEY "[ OK ].*Surface Gravity.*all% <= 1.0:" $OUTPUT
+file_grep $TEST_KEY "^\[ OK \] .*Surface Gravity.*all% <= 1.0:" $OUTPUT
 TEST_KEY=$TEST_KEY_BASE-within_absolute_fail
-file_grep $TEST_KEY "[FAIL].*Rotation Period.*7.04623622489% > 0.05:.* (0.927) c.f. .* (0.99727)" $OUTPUT
+file_grep $TEST_KEY "^\[FAIL\] .*Rotation Period.*7.04623622489% > 0.05:.* (0.927) c.f. .* (0.99727)" $OUTPUT
 TEST_KEY=$TEST_KEY_BASE-exact_list_success
-file_grep $TEST_KEY "[ OK ].*Satellites Natural/Artificial.*all: 0%:" $OUTPUT
+file_grep $TEST_KEY "^\[ OK \] .*Satellites Natural/Artificial.*all: 0%:" $OUTPUT
 TEST_KEY=$TEST_KEY_BASE-exact_list_fail
-file_grep $TEST_KEY "[FAIL].*Other Planets.*1: XX%:.* (4 values)" $OUTPUT
+file_grep $TEST_KEY "^\[FAIL\] .*Other Planets.*1: XX%:.* (4 values)" $OUTPUT
 TEST_KEY=$TEST_KEY_BASE-within_list_success
-file_grep $TEST_KEY "[ OK ].*Periastron/Apastron.*all% <= 5%:" $OUTPUT
+file_grep $TEST_KEY "^\[ OK \] .*Periastron/Apastron.*all% <= 5%:" $OUTPUT
 TEST_KEY=$TEST_KEY_BASE-within_list_fail
-file_grep $TEST_KEY "[FAIL].*Inclination/Axial Tilt.*285.744234801% > 5%:.* (value 1 of 2)" $OUTPUT
+file_grep $TEST_KEY "^\[FAIL\] .*Inclination/Axial Tilt.*285.744234801% > 5%:.* (value 1 of 2)" $OUTPUT
 #-------------------------------------------------------------------------------
 # Test of ignoring a task
 # First, test that the basic task ran ok
 OUTPUT=$HOME/cylc-run/$NAME/log/job/1/rose_ana_t2_activated/01/job.out
 TEST_KEY=$TEST_KEY_BASE-ignore-basic-1
-file_grep $TEST_KEY "[FAIL].*Species" $OUTPUT
+file_grep $TEST_KEY "^\[FAIL\] .*Species" $OUTPUT
 TEST_KEY=$TEST_KEY_BASE-ignore-basic-2
-file_grep $TEST_KEY "[ OK ].*Class" $OUTPUT
+file_grep $TEST_KEY "^\[ OK \] .*Class" $OUTPUT
 # Then test that ignoring a test means the output is not present
 OUTPUT=$HOME/cylc-run/$NAME/log/job/1/rose_ana_t2_deactivated/01/job.out
 TEST_KEY=$TEST_KEY_BASE-ignore-notpresent
-file_grep_fail $TEST_KEY "[FAIL].*Species" $OUTPUT
+file_grep_fail $TEST_KEY "^\[FAIL\] .*Species" $OUTPUT
 #-------------------------------------------------------------------------------
 # Test tolerance as an environment variable
 # First, test that the basic task ran ok
 OUTPUT=$HOME/cylc-run/$NAME/log/job/1/rose_ana_t3_within_tolerance/01/job.out
 TEST_KEY=$TEST_KEY_BASE-tolerance-env-var-pass
-file_grep $TEST_KEY "[PASS].*data" $OUTPUT
+file_grep $TEST_KEY "^\[ OK \] .*data" $OUTPUT
 OUTPUT=$HOME/cylc-run/$NAME/log/job/1/rose_ana_t3_outside_tolerance/01/job.out
 TEST_KEY=$TEST_KEY_BASE-tolerance-env-var-fail
-file_grep $TEST_KEY "[FAIL].*data" $OUTPUT
+file_grep $TEST_KEY "^\[FAIL\] .*data" $OUTPUT
 #-------------------------------------------------------------------------------
 
 # Test of comparison database

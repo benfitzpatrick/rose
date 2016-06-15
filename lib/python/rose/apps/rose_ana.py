@@ -224,7 +224,7 @@ class TaskCompletionEvent(Event):
         self.kind = Event.KIND_OUT
 
     def __repr__(self):
-        return " %s" % (self.message)
+        return "%s" % (self.message)
 
     __str__ = __repr__
 
@@ -314,7 +314,7 @@ class Analyse(object):
                 task = self.do_comparison(task)
 
             self.reporter(TaskCompletionEvent(task),
-                          prefix="[%s]" % (task.userstatus))
+                          prefix="[%s] " % (task.userstatus))
             if task.numericstatus != PASS:
                 rc += 1
         return rc, self.tasks
