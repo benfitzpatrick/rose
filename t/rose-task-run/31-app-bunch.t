@@ -74,6 +74,7 @@ file_grep $TEST_KEY_PREFIX-record-error \
     "\[FAIL\] [0-9]*-[0-9]*-[0-9]*T[0-9]*:[0-9]*:[0-9]*+[0:9]* 1 # return-code=127, stderr=" $FILE
 file_grep $TEST_KEY_PREFIX-output-error \
     "\[FAIL\] [0-9]*-[0-9]*-[0-9]*T[0-9]*:[0-9]*:[0-9]*+[0:9]* .*: oops:.* not found" $FILE
+cat $FILE >/dev/tty
 #-------------------------------------------------------------------------------
 # Testing incremental mode
 #-------------------------------------------------------------------------------
