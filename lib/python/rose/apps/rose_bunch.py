@@ -279,8 +279,8 @@ class RoseBunchApp(BuiltinApp):
                 procs[key] = app_runner.popen.run_bg(
                     cmd,
                     shell=True,
-                    stdout=open(cmd_stdout, 'w'),
-                    stderr=open(cmd_stderr, 'w'),
+              #      stdout=open(cmd_stdout, 'w'),
+              #      stderr=open(cmd_stderr, 'w'),
                     env=bunch_environ)
 
             sleep(self.SLEEP_DURATION)
