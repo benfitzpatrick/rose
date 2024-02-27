@@ -1,7 +1,7 @@
 try:
-    import pygtk
-    pygtk.require('2.0')
-    import gtk
+    import gi
+    gi.require_version('Gtk', '3.0')
+    from gi.repository import Gtk
 except (ImportError, RuntimeError, AssertionError):
     INTERACTIVE_ENABLED = False
 else:

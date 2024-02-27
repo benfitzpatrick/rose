@@ -27,19 +27,19 @@ import sys
 import threading
 import time
 
-import pygtk
-pygtk.require("2.0")
-import gtk
-import gobject
-import pango
+import gi
+gi.require_version("Gtk", "3.0")
+from gi.repository import Gtk
+from gi.repository import GObject
+from gi.repository import Pango
 
 import rose.gtk.util
 import rose.popen
 
-gobject.threads_init()
+GObject.threads_init()
 
 
-class SplashScreen(gtk.Window):
+class SplashScreen(Gtk.Window):
 
     """Run a splash screen that receives update information."""
 
@@ -58,29 +58,29 @@ class SplashScreen(gtk.Window):
         self.set_decorated(False)
         self.stopped = False
         self.set_icon(rose.gtk.util.get_icon())
-        self.modify_bg(gtk.STATE_NORMAL,
+        self.modify_bg(Gtk.StateType.NORMAL,
                        rose.gtk.util.color_parse(self.BACKGROUND_COLOUR))
-        self.set_gravity(gtk.gdk.GRAVITY_CENTER)
-        self.set_position(gtk.WIN_POS_CENTER)
-        main_vbox = gtk.VBox()
+        self.set_gravity(Gdk.GRAVITY_CENTER)
+        self.set_position(Gtk.WindowPosition.CENTER)
+        main_vbox = Gtk.VBox()
         main_vbox.show()
-        image = gtk.image_new_from_file(logo_path)
+        image = Gtk.image_new_from_file(logo_path)
         image.show()
-        image_hbox = gtk.HBox()
+        image_hbox = Gtk.HBox()
         image_hbox.show()
         image_hbox.pack_start(image, expand=False, fill=True)
         main_vbox.pack_start(image_hbox, expand=False, fill=True)
         self._is_progress_bar_pulsing = False
         self._progress_fraction = 0.0
-        self.progress_bar = gtk.ProgressBar()
+        self.progress_bar = Gtk.ProgressBar()
         self.progress_bar.set_pulse_step(self.PULSE_FRACTION)
         self.progress_bar.show()
-        self.progress_bar.modify_font(pango.FontDescription(self.FONT_DESC))
-        self.progress_bar.set_ellipsize(pango.ELLIPSIZE_END)
+        self.progress_bar.modify_font(Pango.FontDescription(self.FONT_DESC))
+        self.progress_bar.set_ellipsize(Pango.EllipsizeMode.END)
         self._progress_message = None
         self.event_count = 0.0
         self.total_number_of_events = float(total_number_of_events)
-        progress_hbox = gtk.HBox(spacing=self.SUB_PADDING)
+        progress_hbox = Gtk.HBox(spacing=self.SUB_PADDING)
         progress_hbox.show()
         progress_hbox.pack_start(self.progress_bar, expand=True, fill=True,
                                  padding=self.SUB_PADDING)
@@ -89,8 +89,8 @@ class SplashScreen(gtk.Window):
         self.add(main_vbox)
         if self.total_number_of_events > 0:
             self.show()
-        while gtk.events_pending():
-            gtk.main_iteration()
+        while Gtk.events_pending():
+            Gtk.main_iteration()
 
     def update(self, event, no_progress=False, new_total_events=None):
         """Show text corresponding to an event."""
@@ -110,19 +110,19 @@ class SplashScreen(gtk.Window):
         self._stop_pulse()
 
         if not no_progress:
-            gobject.idle_add(self.progress_bar.set_fraction, fraction)
+            GObject.idle_add(self.progress_bar.set_fraction, fraction)
             self._progress_fraction = fraction
 
         self.progress_bar.set_text(text)
         self._progress_message = text
-        gobject.timeout_add(self.TIME_IDLE_BEFORE_PULSE,
+        GObject.timeout_add(self.TIME_IDLE_BEFORE_PULSE,
                             self._start_pulse, fraction, text)
 
         if fraction == 1.0 and not no_progress:
-            gobject.timeout_add(self.TIME_WAIT_FINISH, self.finish)
+            GObject.timeout_add(self.TIME_WAIT_FINISH, self.finish)
 
-        while gtk.events_pending():
-            gtk.main_iteration()
+        while Gtk.events_pending():
+            Gtk.main_iteration()
 
     def _start_pulse(self, idle_fraction, idle_message):
         """Start the progress bar pulsing (moving side-to-side)."""
@@ -130,7 +130,7 @@ class SplashScreen(gtk.Window):
                 self._progress_fraction != idle_fraction):
             return False
         self._is_progress_bar_pulsing = True
-        gobject.timeout_add(self.TIME_INTERVAL_PULSE,
+        GObject.timeout_add(self.TIME_INTERVAL_PULSE,
                             self._pulse)
         return False
 
@@ -140,14 +140,14 @@ class SplashScreen(gtk.Window):
     def _pulse(self):
         if self._is_progress_bar_pulsing:
             self.progress_bar.pulse()
-        while gtk.events_pending():
-            gtk.main_iteration()
+        while Gtk.events_pending():
+            Gtk.main_iteration()
         return self._is_progress_bar_pulsing
 
     def finish(self):
         """Delete the splash screen."""
         self.stopped = True
-        gobject.idle_add(self.destroy)
+        GObject.idle_add(self.destroy)
         return False
 
 
@@ -249,7 +249,7 @@ class SplashScreenUpdaterThread(threading.Thread):
 
     def run(self):
         """Loop over time and wait for stdin lines."""
-        gobject.timeout_add(1000, self._check_splash_screen_alive)
+        GObject.timeout_add(1000, self._check_splash_screen_alive)
         while not self.stop_event.is_set():
             time.sleep(0.005)
             if self.stop_event.is_set():
@@ -265,12 +265,12 @@ class SplashScreenUpdaterThread(threading.Thread):
             if update_input == "stop":
                 self._stop()
                 continue
-            gobject.idle_add(self._update_splash_screen, update_input)
+            GObject.idle_add(self._update_splash_screen, update_input)
 
     def _stop(self):
         self.stop_event.set()
         try:
-            gtk.main_quit()
+            Gtk.main_quit()
         except RuntimeError:
             # This can result from gtk having already quit.
             pass
@@ -297,7 +297,7 @@ def main():
         splash_screen, stop_event, sys.stdin)
     update_thread.start()
     try:
-        gtk.main()
+        Gtk.main()
     except KeyboardInterrupt:
         pass
     finally:

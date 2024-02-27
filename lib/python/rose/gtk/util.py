@@ -25,12 +25,12 @@ import sys
 import threading
 import webbrowser
 
-import pygtk
-pygtk.require("2.0")
-import gtk
-import gobject
-import glib
-import pango
+import gi
+gi.require_version("Gtk", "3.0")
+from gi.repository import Gtk
+from gi.repository import GObject
+from gi.repository import GLib
+from gi.repository import Pango
 
 import rose.reporter
 import rose.resource
@@ -56,19 +56,19 @@ class ColourParseError(ValueError):
         return "unable to parse colour specification: %s" % self.args[0]
 
 
-class CustomButton(gtk.Button):
+class CustomButton(Gtk.Button):
 
-    """Returns a custom gtk.Button."""
+    """Returns a custom Gtk.Button."""
 
     def __init__(self, label=None, stock_id=None,
-                 size=gtk.ICON_SIZE_SMALL_TOOLBAR, tip_text=None,
+                 size=Gtk.IconSize.SMALL_TOOLBAR, tip_text=None,
                  as_tool=False, icon_at_start=False, has_menu=False):
-        self.hbox = gtk.HBox()
+        self.hbox = Gtk.HBox()
         self.size = size
         self.as_tool = as_tool
         self.icon_at_start = icon_at_start
         if label is not None:
-            self.label = gtk.Label()
+            self.label = Gtk.Label()
             self.label.set_text(label)
             self.label.show()
 
@@ -80,7 +80,7 @@ class CustomButton(gtk.Button):
                                      padding=5)
         if stock_id is not None:
             self.stock_id = stock_id
-            self.icon = gtk.Image()
+            self.icon = Gtk.Image()
             self.icon.set_from_stock(stock_id, size)
             self.icon.show()
             if self.icon_at_start:
@@ -88,15 +88,15 @@ class CustomButton(gtk.Button):
             else:
                 self.hbox.pack_end(self.icon, expand=False, fill=False)
         if has_menu:
-            arrow = gtk.Arrow(gtk.ARROW_DOWN, gtk.SHADOW_NONE)
+            arrow = Gtk.Arrow(Gtk.ArrowType.DOWN, Gtk.ShadowType.NONE)
             arrow.show()
             self.hbox.pack_end(arrow, expand=False, fill=False)
             self.hbox.reorder_child(arrow, 0)
         self.hbox.show()
         super(CustomButton, self).__init__()
         if self.as_tool:
-            self.set_relief(gtk.RELIEF_NONE)
-            self.connect("leave", lambda b: b.set_relief(gtk.RELIEF_NONE))
+            self.set_relief(Gtk.ReliefStyle.NONE)
+            self.connect("leave", lambda b: b.set_relief(Gtk.ReliefStyle.NONE))
         self.add(self.hbox)
         self.show()
         if tip_text is not None:
@@ -127,13 +127,13 @@ class CustomButton(gtk.Button):
         return xpos, ypos, False
 
 
-class CustomExpandButton(gtk.Button):
+class CustomExpandButton(Gtk.Button):
 
     """Custom button for expanding/hiding something"""
 
     def __init__(self, expander_function=None,
                  label=None,
-                 size=gtk.ICON_SIZE_SMALL_TOOLBAR,
+                 size=Gtk.IconSize.SMALL_TOOLBAR,
                  tip_text=None,
                  as_tool=False,
                  icon_at_start=False,
@@ -142,21 +142,21 @@ class CustomExpandButton(gtk.Button):
         self.expander_function = expander_function
         self.minimised = minimised
 
-        self.expand_id = gtk.STOCK_ADD
-        self.minimise_id = gtk.STOCK_REMOVE
+        self.expand_id = Gtk.STOCK_ADD
+        self.minimise_id = Gtk.STOCK_REMOVE
 
         if minimised:
             self.stock_id = self.expand_id
         else:
             self.stock_id = self.minimise_id
 
-        self.hbox = gtk.HBox()
+        self.hbox = Gtk.HBox()
         self.size = size
         self.as_tool = as_tool
         self.icon_at_start = icon_at_start
 
         if label is not None:
-            self.label = gtk.Label()
+            self.label = Gtk.Label()
             self.label.set_text(label)
             self.label.show()
 
@@ -166,7 +166,7 @@ class CustomExpandButton(gtk.Button):
             else:
                 self.hbox.pack_start(self.label, expand=False, fill=False,
                                      padding=5)
-        self.icon = gtk.Image()
+        self.icon = Gtk.Image()
         self.icon.set_from_stock(self.stock_id, size)
         self.icon.show()
         if self.icon_at_start:
@@ -177,8 +177,8 @@ class CustomExpandButton(gtk.Button):
         super(CustomExpandButton, self).__init__()
 
         if self.as_tool:
-            self.set_relief(gtk.RELIEF_NONE)
-            self.connect("leave", lambda b: b.set_relief(gtk.RELIEF_NONE))
+            self.set_relief(Gtk.ReliefStyle.NONE)
+            self.connect("leave", lambda b: b.set_relief(Gtk.ReliefStyle.NONE))
         self.add(self.hbox)
         self.show()
         if tip_text is not None:
@@ -216,28 +216,28 @@ class CustomExpandButton(gtk.Button):
         self.set_stock_id(self.stock_id)
 
 
-class CustomMenuButton(gtk.MenuToolButton):
+class CustomMenuButton(Gtk.MenuToolButton):
 
     """Custom wrapper for the gtk Menu Tool Button."""
 
     def __init__(self, label=None, stock_id=None,
-                 size=gtk.ICON_SIZE_SMALL_TOOLBAR, tip_text=None,
+                 size=Gtk.IconSize.SMALL_TOOLBAR, tip_text=None,
                  menu_items=[], menu_funcs=[]):
         if stock_id is not None:
             self.stock_id = stock_id
-            self.icon = gtk.Image()
+            self.icon = Gtk.Image()
             self.icon.set_from_stock(stock_id, size)
             self.icon.show()
-        gtk.MenuToolButton.__init__(self, self.icon, label)
+        GObject.GObject.__init__(self, self.icon, label)
         self.set_tooltip_text(tip_text)
         self.show()
-        button_menu = gtk.Menu()
+        button_menu = Gtk.Menu()
         for item_tuple, func in zip(menu_items, menu_funcs):
             name = item_tuple[0]
             if len(item_tuple) == 1:
-                new_item = gtk.MenuItem(name)
+                new_item = Gtk.MenuItem(name)
             else:
-                new_item = gtk.ImageMenuItem(stock_id=item_tuple[1])
+                new_item = Gtk.ImageMenuItem(stock_id=item_tuple[1])
                 new_item.set_label(name)
             new_item._func = func
             new_item.connect("activate", lambda m: m._func())
@@ -247,9 +247,9 @@ class CustomMenuButton(gtk.MenuToolButton):
         self.set_menu(button_menu)
 
 
-class ToolBar(gtk.Toolbar):
+class ToolBar(Gtk.Toolbar):
 
-    """An easier-to-use gtk.Toolbar."""
+    """An easier-to-use Gtk.Toolbar."""
 
     def __init__(self, widgets=[], sep_on_name=[]):
         super(ToolBar, self).__init__()
@@ -258,11 +258,11 @@ class ToolBar(gtk.Toolbar):
         widgets.reverse()
         for name, stock in widgets:
             if name in sep_on_name:
-                separator = gtk.SeparatorToolItem()
+                separator = Gtk.SeparatorToolItem()
                 separator.show()
                 self.insert(separator, 0)
-            if isinstance(stock, str) and stock.startswith("gtk."):
-                stock = getattr(gtk, stock.replace("gtk.", "", 1))
+            if isinstance(stock, str) and stock.startswith("Gtk."):
+                stock = getattr(gtk, stock.replace("Gtk.", "", 1))
             if callable(stock):
                 widget = stock()
                 widget.show()
@@ -270,7 +270,7 @@ class ToolBar(gtk.Toolbar):
             else:
                 widget = CustomButton(stock_id=stock, tip_text=name,
                                       as_tool=True)
-            icon_tool_item = gtk.ToolItem()
+            icon_tool_item = Gtk.ToolItem()
             icon_tool_item.add(widget)
             icon_tool_item.show()
             self.item_dict[name] = {"tip": name, "widget": widget,
@@ -290,7 +290,7 @@ class ToolBar(gtk.Toolbar):
         self.item_dict[name]["widget"].set_sensitive(is_sensitive)
 
 
-class AsyncStatusbar(gtk.Statusbar):
+class AsyncStatusbar(Gtk.Statusbar):
 
     """Wrapper class to add polling a file to statusbar API."""
 
@@ -301,7 +301,7 @@ class AsyncStatusbar(gtk.Statusbar):
         self.ctx_id = self.get_context_id("_all")
         self.should_stop = False
         self.connect("destroy", self._handle_destroy)
-        gobject.timeout_add(1000, self._poll)
+        GObject.timeout_add(1000, self._poll)
 
     def _handle_destroy(self, *args):
         self.should_stop = True
@@ -326,7 +326,7 @@ class AsyncStatusbar(gtk.Statusbar):
             self.update()
 
 
-class AsyncLabel(gtk.Label):
+class AsyncLabel(Gtk.Label):
 
     """Wrapper class to add polling a file to label API."""
 
@@ -336,7 +336,7 @@ class AsyncLabel(gtk.Label):
         self.queue = multiprocessing.Queue()
         self.should_stop = False
         self.connect("destroy", self._handle_destroy)
-        gobject.timeout_add(1000, self._poll)
+        GObject.timeout_add(1000, self._poll)
 
     def _handle_destroy(self, *args):
         self.should_stop = True
@@ -361,7 +361,7 @@ class AsyncLabel(gtk.Label):
             self.update()
 
 
-class ThreadedProgressBar(gtk.ProgressBar):
+class ThreadedProgressBar(Gtk.ProgressBar):
 
     """Wrapper class to allow threaded progress bar pulsing."""
 
@@ -374,28 +374,28 @@ class ThreadedProgressBar(gtk.ProgressBar):
         self.stop = False
         self.show()
         self.thread = threading.Thread()
-        self.thread.run = lambda: gobject.timeout_add(50, self._run)
+        self.thread.run = lambda: GObject.timeout_add(50, self._run)
         self.thread.start()
 
     def _run(self):
-        gtk.gdk.threads_enter()
+        Gdk.threads_enter()
         self.pulse()
         if self.stop:
             self.set_fraction(1.0)
-        while gtk.events_pending():
-            gtk.main_iteration()
-        gtk.gdk.threads_leave()
+        while Gtk.events_pending():
+            Gtk.main_iteration()
+        Gdk.threads_leave()
         return not self.stop
 
     def stop_pulsing(self):
         self.stop = True
         self.thread.join()
-        gobject.idle_add(self.hide)
+        GObject.idle_add(self.hide)
 
 
-class Notebook(gtk.Notebook):
+class Notebook(Gtk.Notebook):
 
-    """Wrapper class to improve the gtk.Notebook API."""
+    """Wrapper class to improve the Gtk.Notebook API."""
 
     def __init__(self, *args):
         super(Notebook, self).__init__(*args)
@@ -442,22 +442,22 @@ class Notebook(gtk.Notebook):
         self.remove_page(self.get_page_ids().index(page_id))
 
     def set_tab_label_packing(self, page, expand=False, fill=True,
-                              pack_type=gtk.PACK_START):
+                              pack_type=Gtk.PACK_START):
         super(Notebook, self).set_tab_label_packing(page, expand, fill,
                                                     pack_type)
 
 
-class TooltipTreeView(gtk.TreeView):
+class TooltipTreeView(Gtk.TreeView):
 
-    """Wrapper class for gtk.TreeView with a better tooltip API.
+    """Wrapper class for Gtk.TreeView with a better tooltip API.
 
-    It takes two keyword arguments, model as in gtk.TreeView and
+    It takes two keyword arguments, model as in Gtk.TreeView and
     get_tooltip_func which is analogous to the 'query-tooltip'
-    connector in gtk.TreeView.
+    connector in Gtk.TreeView.
 
     This should be overridden either at or after initialisation.
-    It takes four arguments - the gtk.TreeView, a gtk.TreeIter and
-    a column index for the gtk.TreeView, and a gtk.ToolTip.
+    It takes four arguments - the Gtk.TreeView, a Gtk.TreeIter and
+    a column index for the Gtk.TreeView, and a Gtk.ToolTip.
 
     Return True to display the ToolTip, or False to hide it.
 
@@ -473,7 +473,7 @@ class TooltipTreeView(gtk.TreeView):
         self.connect('query-tooltip', self._handle_tooltip)
         if multiple_selection:
             self.set_rubber_banding(True)
-            self.get_selection().set_mode(gtk.SELECTION_MULTIPLE)
+            self.get_selection().set_mode(Gtk.SelectionMode.MULTIPLE)
 
     def _handle_tooltip(self, view, xpos, ypos, kbd_ctx, tip):
         """Handle creating a tooltip for the treeview."""
@@ -513,7 +513,7 @@ class TreeModelSortUtil(object):
     You must connect to both handle_sort_column_change and sort_column
     for multi-column sorting. Example code:
 
-    sort_model = gtk.TreeModelSort(filter_model)
+    sort_model = Gtk.TreeModelSort(filter_model)
     sort_util = TreeModelSortUtil(
                          lambda: sort_model,
                          multi_sort_num=2)
@@ -560,12 +560,12 @@ class TreeModelSortUtil(object):
         rval = self.cmp_(val1, val2)
         # If rval is 1 or -1, no need for a multi-column sort.
         if rval == 0:
-            if isinstance(model, gtk.TreeModelSort):
+            if isinstance(model, Gtk.TreeModelSort):
                 this_order = model.get_sort_column_id()[1]
             else:
                 this_order = self._get_sort_model().get_sort_column_id()[1]
             cmp_factor = 1
-            if this_order == gtk.SORT_DESCENDING:
+            if this_order == Gtk.SortType.DESCENDING:
                 # We need to de-invert the sort order for multi sorting.
                 cmp_factor = -1
         i = 0
@@ -575,7 +575,7 @@ class TreeModelSortUtil(object):
                 i += 1
                 continue
             next_cmp_factor = cmp_factor * 1
-            if next_order == gtk.SORT_DESCENDING:
+            if next_order == Gtk.SortType.DESCENDING:
                 # Set the correct order for multi sorting.
                 next_cmp_factor = cmp_factor * -1
             val1 = model.get_value(iter1, next_id)
@@ -586,22 +586,22 @@ class TreeModelSortUtil(object):
 
 
 def color_parse(color_specification):
-    """Wrap gtk.gdk.color_parse and report errors with the specification."""
+    """Wrap Gdk.color_parse and report errors with the specification."""
     try:
-        return gtk.gdk.color_parse(color_specification)
+        return Gdk.color_parse(color_specification)
     except ValueError:
         rose.reporter.Reporter().report(ColourParseError(color_specification))
         # Return a noticeable colour.
-        return gtk.gdk.color_parse("#0000FF")  # Blue
+        return Gdk.color_parse("#0000FF")  # Blue
 
 
 def get_hyperlink_label(text, search_func=lambda i: False):
     """Return a label with clickable hyperlinks."""
-    label = gtk.Label()
+    label = Gtk.Label()
     label.show()
     try:
-        pango.parse_markup(text)
-    except glib.GError:
+        Pango.parse_markup(text)
+    except GLib.GError:
         label.set_text(text)
     else:
         try:
@@ -619,15 +619,15 @@ def get_hyperlink_label(text, search_func=lambda i: False):
 
 
 def get_icon(system="rose"):
-    """Return a gtk.gdk.Pixbuf for the system icon."""
+    """Return a GdkPixbuf.Pixbuf for the system icon."""
     locator = rose.resource.ResourceLocator(paths=sys.path)
     icon_path = locator.locate("etc/images/{0}-icon-trim.svg".format(system))
     try:
-        pixbuf = gtk.gdk.pixbuf_new_from_file(icon_path)
+        pixbuf = GdkPixbuf.Pixbuf.new_from_file(icon_path)
     except Exception:
         icon_path = locator.locate(
             "etc/images/{0}-icon-trim.png".format(system))
-        pixbuf = gtk.gdk.pixbuf_new_from_file(icon_path)
+        pixbuf = GdkPixbuf.Pixbuf.new_from_file(icon_path)
     return pixbuf
 
 
@@ -661,28 +661,28 @@ def extract_link(label, search_function):
 
 
 def rc_setup(rc_resource):
-    """Run gtk.rc_parse on the resource, to setup the gtk settings."""
-    gtk.rc_parse(rc_resource)
+    """Run Gtk.rc_parse on the resource, to setup the gtk settings."""
+    Gtk.rc_parse(rc_resource)
 
 
 def setup_scheduler_icon(ipath=None):
     """Setup a 'stock' icon for the scheduler"""
-    new_icon_factory = gtk.IconFactory()
+    new_icon_factory = Gtk.IconFactory()
     locator = rose.resource.ResourceLocator(paths=sys.path)
     iname = "rose-gtk-scheduler"
     if ipath is None:
         new_icon_factory.add(
-            iname, gtk.icon_factory_lookup_default(gtk.STOCK_MISSING_IMAGE))
+            iname, Gtk.icon_factory_lookup_default(Gtk.STOCK_MISSING_IMAGE))
     else:
         path = locator.locate(ipath)
-        pixbuf = gtk.gdk.pixbuf_new_from_file(path)
-        new_icon_factory.add(iname, gtk.IconSet(pixbuf))
+        pixbuf = GdkPixbuf.Pixbuf.new_from_file(path)
+        new_icon_factory.add(iname, Gtk.IconSet(pixbuf))
     new_icon_factory.add_default()
 
 
 def setup_stock_icons():
     """Setup any additional 'stock' icons."""
-    new_icon_factory = gtk.IconFactory()
+    new_icon_factory = Gtk.IconFactory()
     locator = rose.resource.ResourceLocator(paths=sys.path)
     for png_icon_name in ["gnome_add",
                           "gnome_add_errors",
@@ -693,11 +693,11 @@ def setup_stock_icons():
         ifile = png_icon_name + ".png"
         istring = png_icon_name.replace("_", "-")
         path = locator.locate("etc/images/rose-config-edit/" + ifile)
-        pixbuf = gtk.gdk.pixbuf_new_from_file(path)
+        pixbuf = GdkPixbuf.Pixbuf.new_from_file(path)
         new_icon_factory.add("rose-gtk-" + istring,
-                             gtk.IconSet(pixbuf))
+                             Gtk.IconSet(pixbuf))
     exp_icon_pixbuf = get_icon()
-    new_icon_factory.add("rose-exp-logo", gtk.IconSet(exp_icon_pixbuf))
+    new_icon_factory.add("rose-exp-logo", Gtk.IconSet(exp_icon_pixbuf))
     new_icon_factory.add_default()
 
 

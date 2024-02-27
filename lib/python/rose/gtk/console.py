@@ -20,14 +20,14 @@
 
 import datetime
 
-import pygtk
-pygtk.require("2.0")
-import gtk
+import gi
+gi.require_version("Gtk", "3.0")
+from gi.repository import Gtk
 
 import rose.resource
 
 
-class ConsoleWindow(gtk.Window):
+class ConsoleWindow(Gtk.Window):
 
     """Create an error console window."""
 
@@ -53,25 +53,25 @@ class ConsoleWindow(gtk.Window):
         self.category_icons = []
         for id_ in category_stock_ids:
             self.category_icons.append(
-                self.render_icon(id_, gtk.ICON_SIZE_MENU))
+                self.render_icon(id_, Gtk.IconSize.MENU))
         self._destroy_hook = destroy_hook
-        top_vbox = gtk.VBox()
+        top_vbox = Gtk.VBox()
         top_vbox.show()
         self.add(top_vbox)
 
-        message_scrolled_window = gtk.ScrolledWindow()
-        message_scrolled_window.set_policy(gtk.POLICY_AUTOMATIC,
-                                           gtk.POLICY_AUTOMATIC)
+        message_scrolled_window = Gtk.ScrolledWindow()
+        message_scrolled_window.set_policy(Gtk.PolicyType.AUTOMATIC,
+                                           Gtk.PolicyType.AUTOMATIC)
         message_scrolled_window.show()
-        self._message_treeview = gtk.TreeView()
+        self._message_treeview = Gtk.TreeView()
         self._message_treeview.show()
         self._message_treeview.set_rules_hint(True)
 
         # Set up the category column (icons).
-        category_column = gtk.TreeViewColumn()
+        category_column = Gtk.TreeViewColumn()
         category_column.set_title(self.COLUMN_TITLE_CATEGORY)
-        cell_category = gtk.CellRendererPixbuf()
-        category_column.pack_start(cell_category, expand=False)
+        cell_category = Gtk.CellRendererPixbuf()
+        category_column.pack_start(cell_category, False, True, 0)
         category_column.set_cell_data_func(cell_category,
                                            self._set_category_cell, 0)
         category_column.set_clickable(True)
@@ -79,10 +79,10 @@ class ConsoleWindow(gtk.Window):
         self._message_treeview.append_column(category_column)
 
         # Set up the message column (info text).
-        message_column = gtk.TreeViewColumn()
+        message_column = Gtk.TreeViewColumn()
         message_column.set_title(self.COLUMN_TITLE_MESSAGE)
-        cell_message = gtk.CellRendererText()
-        message_column.pack_start(cell_message, expand=False)
+        cell_message = Gtk.CellRendererText()
+        message_column.pack_start(cell_message, False, True, 0)
         message_column.add_attribute(cell_message, attribute="text",
                                      column=1)
         message_column.set_clickable(True)
@@ -90,17 +90,17 @@ class ConsoleWindow(gtk.Window):
         self._message_treeview.append_column(message_column)
 
         # Set up the time column (text).
-        time_column = gtk.TreeViewColumn()
+        time_column = Gtk.TreeViewColumn()
         time_column.set_title(self.COLUMN_TITLE_TIME)
-        cell_time = gtk.CellRendererText()
-        time_column.pack_start(cell_time, expand=False)
+        cell_time = Gtk.CellRendererText()
+        time_column.pack_start(cell_time, False, True, 0)
         time_column.set_cell_data_func(cell_time, self._set_time_cell, 2)
         time_column.set_clickable(True)
         time_column.set_sort_indicator(True)
         time_column.connect("clicked", self._sort_column, 2)
         self._message_treeview.append_column(time_column)
 
-        self._message_store = gtk.TreeStore(str, str, int)
+        self._message_store = Gtk.TreeStore(str, str, int)
         for category, message, time in category_message_time_tuples:
             self._message_store.append(None, [category, message, time])
         filter_model = self._message_store.filter_new()
@@ -110,11 +110,11 @@ class ConsoleWindow(gtk.Window):
         message_scrolled_window.add(self._message_treeview)
         top_vbox.pack_start(message_scrolled_window, expand=True, fill=True)
 
-        category_hbox = gtk.HBox()
+        category_hbox = Gtk.HBox()
         category_hbox.show()
         top_vbox.pack_end(category_hbox, expand=False, fill=False)
         for category in categories + [self.CATEGORY_ALL]:
-            togglebutton = gtk.ToggleButton(label=category,
+            togglebutton = Gtk.ToggleButton(label=category,
                                             use_underline=False)
             togglebutton.connect("toggled",
                                  lambda b: self._set_new_filter(
@@ -176,9 +176,9 @@ class ConsoleWindow(gtk.Window):
 
     def _sort_column(self, column, index):
         # Sort a column.
-        new_sort_order = gtk.SORT_ASCENDING
-        if column.get_sort_order() == gtk.SORT_ASCENDING:
-            new_sort_order = gtk.SORT_DESCENDING
+        new_sort_order = Gtk.SortType.ASCENDING
+        if column.get_sort_order() == Gtk.SortType.ASCENDING:
+            new_sort_order = Gtk.SortType.DESCENDING
         column.set_sort_order(new_sort_order)
         for other_column in self._message_treeview.get_columns():
             other_column.set_sort_indicator(column == other_column)

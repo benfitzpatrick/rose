@@ -18,14 +18,14 @@
 # along with Rose. If not, see <http://www.gnu.org/licenses/>.
 # -----------------------------------------------------------------------------
 
-import pygtk
-pygtk.require('2.0')
-import gtk
+import gi
+gi.require_version('Gtk', '3.0')
+from gi.repository import Gtk
 
 import rose
 
 
-class ChoicesListView(gtk.TreeView):
+class ChoicesListView(Gtk.TreeView):
 
     """Class to hold and display an ordered list of strings.
 
@@ -34,10 +34,10 @@ class ChoicesListView(gtk.TreeView):
     ordered list of included names to display.
     handle_search is a function that accepts a name and triggers a
     search for it.
-    title is a string or gtk.Widget displayed as the column header, if
+    title is a string or Gtk.Widget displayed as the column header, if
     given.
     get_custom_menu_items, if given, should be a function that
-    accepts no arguments and returns a list of gtk.MenuItem-derived
+    accepts no arguments and returns a list of Gtk.MenuItem-derived
     instances. The listview model and current TreeIter will be
     available as attributes "_listview_model" and "_listview_iter" set
     on each menu item to optionally use during the menu item callbacks
@@ -57,9 +57,9 @@ class ChoicesListView(gtk.TreeView):
         self._handle_search = handle_search
         self._get_custom_menu_items = get_custom_menu_items
         self.enable_model_drag_dest(
-            [('text/plain', 0, 0)], gtk.gdk.ACTION_MOVE)
+            [('text/plain', 0, 0)], Gdk.DragAction.MOVE)
         self.enable_model_drag_source(
-            gtk.gdk.BUTTON1_MASK, [('text/plain', 0, 0)], gtk.gdk.ACTION_MOVE)
+            Gdk.ModifierType.BUTTON1_MASK, [('text/plain', 0, 0)], Gdk.DragAction.MOVE)
         self.connect("button-press-event", self._handle_button_press)
         self.connect("drag-data-get", self._handle_drag_get)
         self.connect_after("drag-data-received",
@@ -67,15 +67,15 @@ class ChoicesListView(gtk.TreeView):
         self.set_rules_hint(True)
         self.connect("row-activated", self._handle_activation)
         self.show()
-        col = gtk.TreeViewColumn()
-        if isinstance(title, gtk.Widget):
+        col = Gtk.TreeViewColumn()
+        if isinstance(title, Gtk.Widget):
             col.set_widget(title)
         else:
             col.set_title(title)
-        cell_text = gtk.CellRendererText()
+        cell_text = Gtk.CellRendererText()
         cell_text.set_property('editable', True)
         cell_text.connect('edited', self._handle_edited)
-        col.pack_start(cell_text, expand=True)
+        col.pack_start(cell_text, True, True, 0)
         col.set_cell_data_func(cell_text, self._set_cell_text)
         self.append_column(col)
         self._populate()
@@ -116,8 +116,8 @@ class ChoicesListView(gtk.TreeView):
         model = treeview.get_model()
         if drop_info:
             path, position = drop_info
-            if (position == gtk.TREE_VIEW_DROP_BEFORE or
-                    position == gtk.TREE_VIEW_DROP_INTO_OR_BEFORE):
+            if (position == Gtk.TreeViewDropPosition.BEFORE or
+                    position == Gtk.TreeViewDropPosition.INTO_OR_BEFORE):
                 model.insert(path[0], [sel.data])
             else:
                 model.insert(path[0] + 1, [sel.data])
@@ -156,7 +156,7 @@ class ChoicesListView(gtk.TreeView):
     def _populate(self):
         """Populate the main list view."""
         values = self._get_data()
-        model = gtk.ListStore(str)
+        model = Gtk.ListStore(str)
         if not values:
             values = [rose.config_editor.CHOICE_LABEL_EMPTY]
         for value in values:
@@ -171,9 +171,9 @@ class ChoicesListView(gtk.TreeView):
                               <menuitem action="Remove"/>
                               </popup></ui>"""
         text = rose.config_editor.CHOICE_MENU_REMOVE
-        actions = [("Remove", gtk.STOCK_DELETE, text)]
-        uimanager = gtk.UIManager()
-        actiongroup = gtk.ActionGroup('Popup')
+        actions = [("Remove", Gtk.STOCK_DELETE, text)]
+        uimanager = Gtk.UIManager()
+        actiongroup = Gtk.ActionGroup('Popup')
         actiongroup.add_actions(actions)
         uimanager.insert_action_group(actiongroup, pos=0)
         uimanager.add_ui_from_string(ui_config_string)
@@ -212,7 +212,7 @@ class ChoicesListView(gtk.TreeView):
         self._populate()
 
 
-class ChoicesTreeView(gtk.TreeView):
+class ChoicesTreeView(Gtk.TreeView):
 
     """Class to hold and display a tree of content.
 
@@ -247,26 +247,26 @@ class ChoicesTreeView(gtk.TreeView):
         self.set_headers_visible(True)
         self.set_rules_hint(True)
         self.enable_model_drag_dest(
-            [('text/plain', 0, 0)], gtk.gdk.ACTION_MOVE)
+            [('text/plain', 0, 0)], Gdk.DragAction.MOVE)
         self.enable_model_drag_source(
-            gtk.gdk.BUTTON1_MASK, [('text/plain', 0, 0)], gtk.gdk.ACTION_MOVE)
+            Gdk.ModifierType.BUTTON1_MASK, [('text/plain', 0, 0)], Gdk.DragAction.MOVE)
         self.connect_after("button-release-event", self._handle_button)
         self.connect("drag-begin", self._handle_drag_begin)
         self.connect("drag-data-get", self._handle_drag_get)
         self.connect("drag-end", self._handle_drag_end)
         self._is_dragging = False
-        model = gtk.TreeStore(str, bool, bool)
+        model = Gtk.TreeStore(str, bool, bool)
         self.set_model(model)
-        col = gtk.TreeViewColumn()
-        cell_toggle = gtk.CellRendererToggle()
+        col = Gtk.TreeViewColumn()
+        cell_toggle = Gtk.CellRendererToggle()
         cell_toggle.connect_after("toggled", self._handle_cell_toggle)
-        col.pack_start(cell_toggle, expand=False)
+        col.pack_start(cell_toggle, False, True, 0)
         col.set_cell_data_func(cell_toggle, self._set_cell_state)
         self.append_column(col)
-        col = gtk.TreeViewColumn()
+        col = Gtk.TreeViewColumn()
         col.set_title(title)
-        cell_text = gtk.CellRendererText()
-        col.pack_start(cell_text, expand=True)
+        cell_text = Gtk.CellRendererText()
+        col.pack_start(cell_text, True, True, 0)
         col.set_cell_data_func(cell_text, self._set_cell_text)
         self.append_column(col)
         self.set_expander_column(col)
