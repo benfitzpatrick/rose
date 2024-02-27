@@ -26,8 +26,8 @@ objects should be interacted with. There are also some utility methods.
 
 import copy
 
-import pygtk
-pygtk.require('2.0')
+import gi
+gi.require_version('Gtk', '3.0')
 
 import rose.config_editor.stack
 import rose.gtk.dialog

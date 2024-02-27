@@ -22,10 +22,10 @@ import re
 import time
 import webbrowser
 
-import pygtk
-pygtk.require('2.0')
-import gtk
-import pango
+import gi
+gi.require_version('Gtk', '3.0')
+from gi.repository import Gtk
+from gi.repository import Pango
 
 import rose.config_editor.panelwidget
 import rose.config_editor.pagewidget
@@ -39,7 +39,7 @@ import rose.resource
 import rose.variable
 
 
-class ConfigPage(gtk.VBox):
+class ConfigPage(Gtk.VBox):
 
     """Returns a container for a tab."""
 
@@ -103,20 +103,20 @@ class ConfigPage(gtk.VBox):
     def get_page(self):
         """Generate a container of widgets for page content and a label."""
         self.labelwidget = self.get_label_widget()
-        self.scrolled_main_window = gtk.ScrolledWindow()
-        self.scrolled_main_window.set_policy(gtk.POLICY_AUTOMATIC,
-                                             gtk.POLICY_AUTOMATIC)
-        self.scrolled_vbox = gtk.VBox()
+        self.scrolled_main_window = Gtk.ScrolledWindow()
+        self.scrolled_main_window.set_policy(Gtk.PolicyType.AUTOMATIC,
+                                             Gtk.PolicyType.AUTOMATIC)
+        self.scrolled_vbox = Gtk.VBox()
         self.scrolled_vbox.show()
         self.scrolled_main_window.add_with_viewport(self.scrolled_vbox)
-        self.scrolled_main_window.get_child().set_shadow_type(gtk.SHADOW_NONE)
+        self.scrolled_main_window.get_child().set_shadow_type(Gtk.ShadowType.NONE)
         self.scrolled_main_window.set_border_width(
             rose.config_editor.SPACING_SUB_PAGE)
         self.scrolled_vbox.pack_start(self.main_container,
                                       expand=False, fill=True)
         self.scrolled_main_window.show()
-        self.main_vpaned = gtk.VPaned()
-        self.info_panel = gtk.VBox(homogeneous=False)
+        self.main_vpaned = Gtk.VPaned()
+        self.info_panel = Gtk.VBox(homogeneous=False)
         self.info_panel.show()
         self.update_info()
         second_panel = None
@@ -126,7 +126,7 @@ class ConfigPage(gtk.VBox):
         elif self.sub_data is not None:
             self.generate_sub_data_panel()
             second_panel = self.sub_data_panel
-        self.vpaned = gtk.VPaned()
+        self.vpaned = Gtk.VPaned()
         if self.panel_data:
             self.vpaned.pack1(self.scrolled_main_window, resize=True,
                               shrink=True)
@@ -161,13 +161,13 @@ class ConfigPage(gtk.VBox):
         if is_detached:
             location = self.config_name.lstrip('/').split('/')
             location.reverse()
-            label = gtk.Label(' - '.join([self.label] + location))
+            label = Gtk.Label(label=' - '.join([self.label] + location))
             self.is_detached = True
         else:
-            label = gtk.Label(self.label)
+            label = Gtk.Label(label=self.label)
             self.is_detached = False
         label.show()
-        label_event_box = gtk.EventBox()
+        label_event_box = Gtk.EventBox()
         label_event_box.add(label)
         label_event_box.show()
         if self.help or self.url:
@@ -175,16 +175,16 @@ class ConfigPage(gtk.VBox):
                                     self._handle_enter_label)
             label_event_box.connect("leave-notify-event",
                                     self._handle_leave_label)
-        label_box = gtk.HBox(homogeneous=False)
+        label_box = Gtk.HBox(homogeneous=False)
         if self.icon_path is not None:
-            self.label_icon = gtk.Image()
+            self.label_icon = Gtk.Image()
             self.label_icon.set_from_file(self.icon_path)
             self.label_icon.show()
             label_box.pack_start(self.label_icon, expand=False, fill=False,
                                  padding=rose.config_editor.SPACING_SUB_PAGE)
         close_button = rose.gtk.util.CustomButton(
-            stock_id=gtk.STOCK_CLOSE, size=gtk.ICON_SIZE_MENU, as_tool=True)
-        style = gtk.RcStyle()
+            stock_id=Gtk.STOCK_CLOSE, size=Gtk.IconSize.MENU, as_tool=True)
+        style = Gtk.RcStyle()
         style.xthickness = 0
         style.ythickness = 0
         setattr(style, "inner-border", [0, 0, 0, 0])
@@ -195,7 +195,7 @@ class ConfigPage(gtk.VBox):
         if not is_detached:
             label_box.pack_end(close_button, expand=False, fill=False)
         label_box.show()
-        event_box = gtk.EventBox()
+        event_box = Gtk.EventBox()
         event_box.add(label_box)
         close_button.connect('released', lambda b: self.close_self())
         event_box.connect('button_press_event', self._handle_click_tab)
@@ -208,8 +208,8 @@ class ConfigPage(gtk.VBox):
         label = label_event_box.get_child()
         att_list = label.get_attributes()
         if att_list is None:
-            att_list = pango.AttrList()
-        att_list.insert(pango.AttrUnderline(pango.UNDERLINE_SINGLE,
+            att_list = Pango.AttrList()
+        att_list.insert(Pango.AttrUnderline(Pango.Underline.SINGLE,
                                             start_index=0,
                                             end_index=-1))
         label.set_attributes(att_list)
@@ -218,12 +218,12 @@ class ConfigPage(gtk.VBox):
         label = label_event_box.get_child()
         att_list = label.get_attributes()
         if att_list is None:
-            att_list = pango.AttrList()
+            att_list = Pango.AttrList()
         att_list = att_list.filter(lambda a:
-                                   a.type != pango.ATTR_UNDERLINE)
+                                   a.type != Pango.ATTR_UNDERLINE)
         if att_list is None:
             # This is messy but necessary.
-            att_list = pango.AttrList()
+            att_list = Pango.AttrList()
         label.set_attributes(att_list)
 
     def _set_tab_tooltip(self, event_box, event):
@@ -239,7 +239,7 @@ class ConfigPage(gtk.VBox):
     def _handle_click_tab(self, event_widget, event):
         if event.button == 3:
             return self.launch_tab_menu(event)
-        if self.main_vpaned.flags() & gtk.MAPPED:
+        if self.main_vpaned.get_mapped():
             if self.help:
                 return self.launch_help()
             if self.url:
@@ -258,13 +258,13 @@ class ConfigPage(gtk.VBox):
         ui_config_string_start += """<menuitem action="Info"/>
                                      <menuitem action="Edit"/>"""
         actions = [
-            ('Open', gtk.STOCK_NEW, rose.config_editor.TAB_MENU_OPEN_NEW),
-            ('Info', gtk.STOCK_INFO, rose.config_editor.TAB_MENU_INFO),
-            ('Edit', gtk.STOCK_EDIT, rose.config_editor.TAB_MENU_EDIT),
-            ('Help', gtk.STOCK_HELP, rose.config_editor.TAB_MENU_HELP),
-            ('Web_Help', gtk.STOCK_HOME,
+            ('Open', Gtk.STOCK_NEW, rose.config_editor.TAB_MENU_OPEN_NEW),
+            ('Info', Gtk.STOCK_INFO, rose.config_editor.TAB_MENU_INFO),
+            ('Edit', Gtk.STOCK_EDIT, rose.config_editor.TAB_MENU_EDIT),
+            ('Help', Gtk.STOCK_HELP, rose.config_editor.TAB_MENU_HELP),
+            ('Web_Help', Gtk.STOCK_HOME,
              rose.config_editor.TAB_MENU_WEB_HELP),
-            ('Close', gtk.STOCK_CLOSE, rose.config_editor.TAB_MENU_CLOSE)]
+            ('Close', Gtk.STOCK_CLOSE, rose.config_editor.TAB_MENU_CLOSE)]
         if self.help is not None:
             help_string = """<separator name="helpsep"/>
                              <menuitem action="Help"/>"""
@@ -274,8 +274,8 @@ class ConfigPage(gtk.VBox):
                              <menuitem action="Web_Help"/>"""
             ui_config_string_end = url_string + ui_config_string_end
 
-        uimanager = gtk.UIManager()
-        actiongroup = gtk.ActionGroup('Popup')
+        uimanager = Gtk.UIManager()
+        actiongroup = Gtk.ActionGroup('Popup')
         actiongroup.add_actions(actions)
         uimanager.insert_action_group(actiongroup, pos=0)
         uimanager.add_ui_from_string(ui_config_string_start +
@@ -306,26 +306,26 @@ class ConfigPage(gtk.VBox):
     def reshuffle_for_detached(self, add_button, revert_button, parent):
         """Reshuffle widgets for detached view."""
         focus_child = getattr(self, 'focus_child')
-        button_hbox = gtk.HBox(homogeneous=False, spacing=0)
-        self.tool_hbox = gtk.HBox(homogeneous=False, spacing=0)
-        sep = gtk.VSeparator()
+        button_hbox = Gtk.HBox(homogeneous=False, spacing=0)
+        self.tool_hbox = Gtk.HBox(homogeneous=False, spacing=0)
+        sep = Gtk.VSeparator()
         sep.show()
-        sep_vbox = gtk.VBox()
+        sep_vbox = Gtk.VBox()
         sep_vbox.pack_start(sep, expand=True, fill=True)
         sep_vbox.set_border_width(rose.config_editor.SPACING_SUB_PAGE)
         sep_vbox.show()
         info_button = rose.gtk.util.CustomButton(
-            stock_id=gtk.STOCK_INFO,
+            stock_id=Gtk.STOCK_INFO,
             as_tool=True,
             tip_text=rose.config_editor.TAB_MENU_INFO)
         info_button.connect("clicked", lambda m: self.launch_info())
         help_button = rose.gtk.util.CustomButton(
-            stock_id=gtk.STOCK_HELP,
+            stock_id=Gtk.STOCK_HELP,
             as_tool=True,
             tip_text=rose.config_editor.TAB_MENU_HELP)
         help_button.connect("clicked", self.launch_help)
         url_button = rose.gtk.util.CustomButton(
-            stock_id=gtk.STOCK_HOME,
+            stock_id=Gtk.STOCK_HOME,
             as_tool=True,
             tip_text=rose.config_editor.TAB_MENU_WEB_HELP)
         url_button.connect("clicked", self.launch_url)
@@ -338,21 +338,21 @@ class ConfigPage(gtk.VBox):
         if self.url is not None:
             button_hbox.pack_start(url_button, expand=False, fill=False)
         button_hbox.show()
-        button_frame = gtk.Frame()
-        button_frame.set_shadow_type(gtk.SHADOW_NONE)
+        button_frame = Gtk.Frame()
+        button_frame.set_shadow_type(Gtk.ShadowType.NONE)
         button_frame.add(button_hbox)
         button_frame.show()
         self.tool_hbox.pack_start(button_frame, expand=False, fill=False)
-        label_box = gtk.HBox(homogeneous=False,
+        label_box = Gtk.HBox(homogeneous=False,
                              spacing=rose.config_editor.SPACING_PAGE)
-        label_box.pack_start(self.get_label_widget(is_detached=True))
+        label_box.pack_start(self.get_label_widget(is_detached=True, True, True, 0))
         label_box.show()
         self.tool_hbox.pack_start(
             label_box, expand=True, fill=True, padding=10)
         self.tool_hbox.show()
         self.pack_start(self.tool_hbox, expand=False, fill=False)
         self.reorder_child(self.tool_hbox, 0)
-        if isinstance(parent, gtk.Window):
+        if isinstance(parent, Gtk.Window):
             if parent.get_child() is not None:
                 parent.remove(parent.get_child())
         else:
@@ -371,7 +371,7 @@ class ConfigPage(gtk.VBox):
         """Launch the page help."""
         title = rose.config_editor.DIALOG_HELP_TITLE.format(self.label)
         rose.gtk.dialog.run_hyperlink_dialog(
-            gtk.STOCK_DIALOG_INFO, str(self.help), title)
+            Gtk.STOCK_DIALOG_INFO, str(self.help), title)
 
     def launch_url(self, *args):
         """Launch the page url help."""
@@ -394,13 +394,13 @@ class ConfigPage(gtk.VBox):
 
     def generate_page_info(self, button_list=None, label_list=None, info=None):
         """Generate a widget giving information about sections."""
-        info_container = gtk.VBox(homogeneous=False)
+        info_container = Gtk.VBox(homogeneous=False)
         info_container.show()
         if button_list is None or label_list is None or info is None:
             button_list, label_list, info = self._get_page_info_widgets()
         self._last_info_labels = [l.get_text() for l in label_list]
         for button, label in zip(button_list, label_list):
-            var_hbox = gtk.HBox(homogeneous=False)
+            var_hbox = Gtk.HBox(homogeneous=False)
             var_hbox.pack_start(button, expand=False, fill=False)
             var_hbox.pack_start(label, expand=False, fill=True,
                                 padding=rose.config_editor.SPACING_SUB_PAGE)
@@ -410,18 +410,18 @@ class ConfigPage(gtk.VBox):
         if self.description:
             help_label = rose.gtk.util.get_hyperlink_label(
                 self.description, search_func=self.search_for_id)
-            help_label_window = gtk.ScrolledWindow()
-            help_label_window.set_policy(gtk.POLICY_AUTOMATIC,
-                                         gtk.POLICY_AUTOMATIC)
-            help_label_hbox = gtk.HBox()
+            help_label_window = Gtk.ScrolledWindow()
+            help_label_window.set_policy(Gtk.PolicyType.AUTOMATIC,
+                                         Gtk.PolicyType.AUTOMATIC)
+            help_label_hbox = Gtk.HBox()
             help_label_hbox.pack_start(help_label, expand=False, fill=False)
             help_label_hbox.show()
-            help_label_vbox = gtk.VBox()
+            help_label_vbox = Gtk.VBox()
             help_label_vbox.pack_start(
                 help_label_hbox, expand=False, fill=False)
             help_label_vbox.show()
             help_label_window.add_with_viewport(help_label_vbox)
-            help_label_window.get_child().set_shadow_type(gtk.SHADOW_NONE)
+            help_label_window.get_child().set_shadow_type(Gtk.ShadowType.NONE)
             help_label_window.show()
             width, height = help_label_window.size_request()
             if info == "Blank page - no data":
@@ -431,7 +431,7 @@ class ConfigPage(gtk.VBox):
                 height = min([rose.config_editor.SIZE_WINDOW[1] / 3,
                               help_label.size_request()[1]])
             help_label_window.set_size_request(width, height)
-            help_hbox = gtk.HBox()
+            help_hbox = Gtk.HBox()
             help_hbox.pack_start(help_label_window, expand=True, fill=True,
                                  padding=rose.config_editor.SPACING_SUB_PAGE)
             help_hbox.show()
@@ -527,7 +527,7 @@ class ConfigPage(gtk.VBox):
         add_ui_start = """<ui> <popup name='Popup'>
                          <menu action="Add meta">"""
         add_ui_end = """</menu> </popup> </ui>"""
-        actions = [('Add meta', gtk.STOCK_DIRECTORY,
+        actions = [('Add meta', Gtk.STOCK_DIRECTORY,
                     rose.config_editor.ADD_MENU_META)]
         section_choices = []
         for sect_data in self.sections:
@@ -541,7 +541,7 @@ class ConfigPage(gtk.VBox):
             text = rose.config_editor.ADD_MENU_BLANK
             if len(section_choices) > 1:
                 text = rose.config_editor.ADD_MENU_BLANK_MULTIPLE
-            actions.insert(0, ('Add blank', gtk.STOCK_NEW, text))
+            actions.insert(0, ('Add blank', Gtk.STOCK_NEW, text))
         ghost_list = [v for v in self.ghost_data]
         sorter = rose.config.sort_settings
         ghost_list.sort(lambda v, w: sorter(v.metadata['id'],
@@ -557,8 +557,8 @@ class ConfigPage(gtk.VBox):
             actions.append((variable.metadata['id'], None,
                             "_" + label_text))
         add_ui = add_ui_start + add_ui_end
-        uimanager = gtk.UIManager()
-        actiongroup = gtk.ActionGroup('Popup')
+        uimanager = Gtk.UIManager()
+        actiongroup = Gtk.ActionGroup('Popup')
         actiongroup.add_actions(actions)
         uimanager.insert_action_group(actiongroup, pos=0)
         uimanager.add_ui_from_string(add_ui)
@@ -1051,14 +1051,14 @@ class ConfigPage(gtk.VBox):
 
     def _macro_menu_launch(self, widget, event):
         # Create a menu below the widget for macro actions.
-        menu = gtk.Menu()
+        menu = Gtk.Menu()
         for macro_name, info in sorted(self.custom_macros.items()):
             method, description = info
             if method == rose.macro.TRANSFORM_METHOD:
-                stock_id = gtk.STOCK_CONVERT
+                stock_id = Gtk.STOCK_CONVERT
             else:
-                stock_id = gtk.STOCK_DIALOG_QUESTION
-            macro_menuitem = gtk.ImageMenuItem(stock_id=stock_id)
+                stock_id = Gtk.STOCK_DIALOG_QUESTION
+            macro_menuitem = Gtk.ImageMenuItem(stock_id=stock_id)
             macro_menuitem.set_label(macro_name)
             macro_menuitem.set_tooltip_text(description)
             macro_menuitem.show()
@@ -1107,10 +1107,10 @@ class ConfigPage(gtk.VBox):
             info = rose.config_editor.PAGE_WARNING_NO_CONTENT
             tip = rose.config_editor.PAGE_WARNING_NO_CONTENT_TIP
             error_button = rose.gtk.util.CustomButton(
-                stock_id=gtk.STOCK_INFO,
+                stock_id=Gtk.STOCK_INFO,
                 as_tool=True,
                 tip_text=tip)
-            error_label = gtk.Label()
+            error_label = Gtk.Label()
             error_label.set_text(info)
             error_label.show()
             button_list.append(error_button)
@@ -1121,10 +1121,10 @@ class ConfigPage(gtk.VBox):
                 self.section.name)
             tip = rose.config_editor.PAGE_WARNING_IGNORED_SECTION_TIP
             error_button = rose.gtk.util.CustomButton(
-                stock_id=gtk.STOCK_NO,
+                stock_id=Gtk.STOCK_NO,
                 as_tool=True,
                 tip_text=tip)
-            error_label = gtk.Label()
+            error_label = Gtk.Label()
             error_label.set_text(info)
             error_label.show()
             button_list.append(error_button)
@@ -1134,10 +1134,10 @@ class ConfigPage(gtk.VBox):
             if (self.section is not None and
                     self.section.name.startswith('namelist:')):
                 error_button = rose.gtk.util.CustomButton(
-                    stock_id=gtk.STOCK_DIALOG_WARNING,
+                    stock_id=Gtk.STOCK_DIALOG_WARNING,
                     as_tool=True,
                     tip_text=rose.config_editor.ERROR_ORPHAN_SECTION_TIP)
-                error_label = gtk.Label()
+                error_label = Gtk.Label()
                 info = rose.config_editor.ERROR_ORPHAN_SECTION.format(
                     self.section.name)
                 error_label.set_text(info)
@@ -1155,10 +1155,10 @@ class ConfigPage(gtk.VBox):
         if not has_data:
             # This is a latent namespace page.
             latent_button = rose.gtk.util.CustomButton(
-                stock_id=gtk.STOCK_INFO,
+                stock_id=Gtk.STOCK_INFO,
                 as_tool=True,
                 tip_text=rose.config_editor.TIP_LATENT_PAGE)
-            latent_label = gtk.Label()
+            latent_label = Gtk.Label()
             latent_label.set_text(rose.config_editor.PAGE_WARNING_LATENT)
             latent_label.show()
             button_list.append(latent_button)
@@ -1167,10 +1167,10 @@ class ConfigPage(gtk.VBox):
         for sect_data in self.sections + self.latent_sections:
             for err, info in sect_data.error.items():
                 error_button = rose.gtk.util.CustomButton(
-                    stock_id=gtk.STOCK_DIALOG_ERROR,
+                    stock_id=Gtk.STOCK_DIALOG_ERROR,
                     as_tool=True,
                     tip_text=info)
-                error_label = gtk.Label()
+                error_label = Gtk.Label()
                 error_label.set_text(rose.config_editor.PAGE_WARNING.format(
                     err, sect_data.name))
                 error_label.show()
@@ -1179,13 +1179,13 @@ class ConfigPage(gtk.VBox):
         if self.custom_macros.items():
             macro_button = rose.gtk.util.CustomButton(
                 label=rose.config_editor.LABEL_PAGE_MACRO_BUTTON,
-                stock_id=gtk.STOCK_EXECUTE,
+                stock_id=Gtk.STOCK_EXECUTE,
                 tip_text=rose.config_editor.TIP_MACRO_RUN_PAGE,
                 as_tool=True, icon_at_start=True,
                 has_menu=True)
             macro_button.connect("button-press-event",
                                  self._macro_menu_launch)
-            macro_label = gtk.Label()
+            macro_label = Gtk.Label()
             macro_label.show()
             button_list.append(macro_button)
             label_list.append(macro_label)

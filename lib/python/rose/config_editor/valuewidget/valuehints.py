@@ -18,17 +18,17 @@
 # along with Rose. If not, see <http://www.gnu.org/licenses/>.
 # -----------------------------------------------------------------------------
 
-import gobject
-import pygtk
-pygtk.require('2.0')
-import gtk
+from gi.repository import GObject
+import gi
+gi.require_version('Gtk', '3.0')
+from gi.repository import Gtk
 
 import rose.config_editor.util
 import rose.gtk.util
 import rose.variable
 
 
-class HintsValueWidget(gtk.HBox):
+class HintsValueWidget(Gtk.HBox):
     """This class generates a widget for entering value-hints."""
 
     def __init__(self, value, metadata, set_value, hook, arg_str=None):
@@ -37,13 +37,13 @@ class HintsValueWidget(gtk.HBox):
         self.metadata = metadata
         self.set_value = set_value
         self.hook = hook
-        self.entry = gtk.Entry()
+        self.entry = Gtk.Entry()
         self.entry.set_text(self.value)
         self.entry.connect_after("paste-clipboard", self._setter)
         self.entry.connect_after("key-release-event", self._setter)
         self.entry.connect_after("button-release-event", self._setter)
         self.entry.show()
-        gobject.idle_add(self._set_completion, self.metadata)
+        GObject.idle_add(self._set_completion, self.metadata)
         self.pack_start(self.entry, expand=True, fill=True,
                         padding=0)
         self.entry.connect('focus-in-event',
@@ -68,8 +68,8 @@ class HintsValueWidget(gtk.HBox):
 
     def _set_completion(self, metadata):
         """ Return a predictive text model for value-hints."""
-        completion = gtk.EntryCompletion()
-        model = gtk.ListStore(str)
+        completion = Gtk.EntryCompletion()
+        model = Gtk.ListStore(str)
         var_hints = metadata.get(rose.META_PROP_VALUE_HINTS)
         for hint in var_hints:
             model.append([hint])

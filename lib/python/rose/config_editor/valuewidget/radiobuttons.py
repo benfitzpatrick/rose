@@ -18,14 +18,14 @@
 # along with Rose. If not, see <http://www.gnu.org/licenses/>.
 # -----------------------------------------------------------------------------
 
-import pygtk
-pygtk.require('2.0')
-import gtk
+import gi
+gi.require_version('Gtk', '3.0')
+from gi.repository import Gtk
 
 import rose.config_editor
 
 
-class RadioButtonsValueWidget(gtk.HBox):
+class RadioButtonsValueWidget(Gtk.HBox):
 
     """This is a class to represent a value as radio buttons."""
 
@@ -41,8 +41,8 @@ class RadioButtonsValueWidget(gtk.HBox):
         var_titles = metadata.get(rose.META_PROP_VALUE_TITLES)
 
         if var_titles:
-            vbox = gtk.VBox()
-            self.pack_start(vbox, expand=False)
+            vbox = Gtk.VBox()
+            self.pack_start(vbox, False, True, 0)
             vbox.show()
 
         for k, item in enumerate(var_values):
@@ -50,12 +50,12 @@ class RadioButtonsValueWidget(gtk.HBox):
             if var_titles is not None and var_titles[k]:
                 button_label = var_titles[k]
             if k == 0:
-                radio_button = gtk.RadioButton(group=None,
+                radio_button = Gtk.RadioButton(group=None,
                                                label=button_label,
                                                use_underline=False)
                 radio_button.real_value = item
             else:
-                radio_button = gtk.RadioButton(group=radio_button,
+                radio_button = Gtk.RadioButton(group=radio_button,
                                                label=button_label,
                                                use_underline=False)
                 radio_button.real_value = item

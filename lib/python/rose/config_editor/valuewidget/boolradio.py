@@ -18,9 +18,9 @@
 # along with Rose. If not, see <http://www.gnu.org/licenses/>.
 # -----------------------------------------------------------------------------
 
-import pygtk
-pygtk.require('2.0')
-import gtk
+import gi
+gi.require_version('Gtk', '3.0')
+from gi.repository import Gtk
 
 import rose.config_editor
 import radiobuttons
@@ -58,12 +58,12 @@ class BoolValueWidget(radiobuttons.RadioButtonsValueWidget):
                 button_label = str(item)
                 self.label_dict.update({item: button_label})
             if k == 0:
-                radio_button = gtk.RadioButton(group=None,
+                radio_button = Gtk.RadioButton(group=None,
                                                label=button_label,
                                                use_underline=False)
                 radio_button.real_value = item
             else:
-                radio_button = gtk.RadioButton(group=radio_button,
+                radio_button = Gtk.RadioButton(group=radio_button,
                                                label=button_label,
                                                use_underline=False)
                 radio_button.real_value = item

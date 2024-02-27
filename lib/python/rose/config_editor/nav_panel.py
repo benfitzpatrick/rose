@@ -21,10 +21,10 @@
 import re
 import sys
 
-import pygtk
-pygtk.require('2.0')
-import gtk
-import gobject
+import gi
+gi.require_version('Gtk', '3.0')
+from gi.repository import Gtk
+from gi.repository import GObject
 
 import rose.config
 import rose.config_editor
@@ -33,7 +33,7 @@ import rose.gtk.util
 import rose.resource
 
 
-class PageNavigationPanel(gtk.ScrolledWindow):
+class PageNavigationPanel(Gtk.ScrolledWindow):
 
     """Generate the page launcher panel.
 
@@ -65,18 +65,18 @@ class PageNavigationPanel(gtk.ScrolledWindow):
         self._popup_menu_func = popup_menu_func
         self._ask_can_show_func = ask_can_show_func
         self._ask_is_preview = ask_is_preview
-        self.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
-        self.set_shadow_type(gtk.SHADOW_OUT)
+        self.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
+        self.set_shadow_type(Gtk.ShadowType.OUT)
         self._rec_no_expand_leaves = re.compile(
             rose.config_editor.TREE_PANEL_NO_EXPAND_LEAVES_REGEX)
-        self.panel_top = gtk.TreeViewColumn()
+        self.panel_top = Gtk.TreeViewColumn()
         self.panel_top.set_title(rose.config_editor.TREE_PANEL_TITLE)
-        self.cell_error_icon = gtk.CellRendererPixbuf()
-        self.cell_changed_icon = gtk.CellRendererPixbuf()
-        self.cell_title = gtk.CellRendererText()
-        self.panel_top.pack_start(self.cell_error_icon, expand=False)
-        self.panel_top.pack_start(self.cell_changed_icon, expand=False)
-        self.panel_top.pack_start(self.cell_title, expand=False)
+        self.cell_error_icon = Gtk.CellRendererPixbuf()
+        self.cell_changed_icon = Gtk.CellRendererPixbuf()
+        self.cell_title = Gtk.CellRendererText()
+        self.panel_top.pack_start(self.cell_error_icon, False, True, 0)
+        self.panel_top.pack_start(self.cell_changed_icon, False, True, 0)
+        self.panel_top.pack_start(self.cell_title, False, True, 0)
         self.panel_top.add_attribute(self.cell_error_icon,
                                      attribute='pixbuf',
                                      column=self.COLUMN_ERROR_ICON)
@@ -89,16 +89,16 @@ class PageNavigationPanel(gtk.ScrolledWindow):
         # The columns in self.data_store correspond to: error_icon,
         # change_icon, title, name, error and change totals (4),
         # latent and ignored statuses, main tip text, and change text.
-        self.data_store = gtk.TreeStore(gtk.gdk.Pixbuf, gtk.gdk.Pixbuf,
+        self.data_store = Gtk.TreeStore(GdkPixbuf.Pixbuf, GdkPixbuf.Pixbuf,
                                         str, str, int, int, int, int,
                                         bool, str, str, str)
         resource_loc = rose.resource.ResourceLocator(paths=sys.path)
         image_path = resource_loc.locate('etc/images/rose-config-edit')
-        self.null_icon = gtk.gdk.pixbuf_new_from_file(image_path +
+        self.null_icon = GdkPixbuf.Pixbuf.new_from_file(image_path +
                                                       '/null_icon.xpm')
-        self.changed_icon = gtk.gdk.pixbuf_new_from_file(image_path +
+        self.changed_icon = GdkPixbuf.Pixbuf.new_from_file(image_path +
                                                          '/change_icon.xpm')
-        self.error_icon = gtk.gdk.pixbuf_new_from_file(image_path +
+        self.error_icon = GdkPixbuf.Pixbuf.new_from_file(image_path +
                                                        '/error_icon.xpm')
         self.tree = rose.gtk.util.TooltipTreeView(
             get_tooltip_func=self.get_treeview_tooltip)
@@ -133,8 +133,8 @@ class PageNavigationPanel(gtk.ScrolledWindow):
         return True
 
     def add_cursor_extra(self, widget, event):
-        left = (event.keyval == gtk.keysyms.Left)
-        right = (event.keyval == gtk.keysyms.Right)
+        left = (event.keyval == Gdk.KEY_Left)
+        right = (event.keyval == Gdk.KEY_Right)
         if left or right:
             path = widget.get_cursor()[0]
             if path is not None:
@@ -147,7 +147,7 @@ class PageNavigationPanel(gtk.ScrolledWindow):
     def _handle_cursor_change(self, *args):
         current_path = self.tree.get_cursor()[0]
         if current_path != self._last_tree_activation_path:
-            gobject.timeout_add(rose.config_editor.TREE_PANEL_KBD_TIMEOUT,
+            GObject.timeout_add(rose.config_editor.TREE_PANEL_KBD_TIMEOUT,
                                 self._timeout_launch, current_path)
 
     def _timeout_launch(self, timeout_path):

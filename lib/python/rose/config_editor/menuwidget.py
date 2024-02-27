@@ -18,9 +18,9 @@
 # along with Rose. If not, see <http://www.gnu.org/licenses/>.
 # -----------------------------------------------------------------------------
 
-import pygtk
-pygtk.require('2.0')
-import gtk
+import gi
+gi.require_version('Gtk', '3.0')
+from gi.repository import Gtk
 
 import rose.config_editor
 import rose.config_editor.util
@@ -28,7 +28,7 @@ import rose.gtk.dialog
 import rose.gtk.util
 
 
-class MenuWidget(gtk.HBox):
+class MenuWidget(Gtk.HBox):
 
     """This class generates a button with a menu for variable actions."""
 
@@ -64,23 +64,23 @@ class MenuWidget(gtk.HBox):
                            <menuitem action='Remove'/>
                            </popup> </ui>"""
         actions = [('Options', 'rose-gtk-gnome-package-system', ''),
-                   ('Info', gtk.STOCK_INFO,
+                   ('Info', Gtk.STOCK_INFO,
                     rose.config_editor.VAR_MENU_INFO),
-                   ('Help', gtk.STOCK_HELP,
+                   ('Help', Gtk.STOCK_HELP,
                     rose.config_editor.VAR_MENU_HELP),
-                   ('Web Help', gtk.STOCK_HOME,
+                   ('Web Help', Gtk.STOCK_HOME,
                     rose.config_editor.VAR_MENU_URL),
-                   ('Edit', gtk.STOCK_EDIT,
+                   ('Edit', Gtk.STOCK_EDIT,
                     rose.config_editor.VAR_MENU_EDIT_COMMENTS),
-                   ('Fix Ignore', gtk.STOCK_CONVERT,
+                   ('Fix Ignore', Gtk.STOCK_CONVERT,
                     rose.config_editor.VAR_MENU_FIX_IGNORE),
-                   ('Ignore', gtk.STOCK_NO,
+                   ('Ignore', Gtk.STOCK_NO,
                     rose.config_editor.VAR_MENU_IGNORE),
-                   ('Enable', gtk.STOCK_YES,
+                   ('Enable', Gtk.STOCK_YES,
                     rose.config_editor.VAR_MENU_ENABLE),
-                   ('Remove', gtk.STOCK_DELETE,
+                   ('Remove', Gtk.STOCK_DELETE,
                     rose.config_editor.VAR_MENU_REMOVE),
-                   ('Add', gtk.STOCK_ADD,
+                   ('Add', Gtk.STOCK_ADD,
                     rose.config_editor.VAR_MENU_ADD)]
         menu_icon_id = 'rose-gtk-gnome-package-system'
         is_comp = (self.my_variable.metadata.get(rose.META_PROP_COMPULSORY) ==
@@ -108,7 +108,7 @@ class MenuWidget(gtk.HBox):
                 option_ui_middle += (
                     "<menuitem action='Warn_" + warn_name + "'/>")
                 w_string = "(" + warn.replace("_", "__") + ")"
-                actions.append(("Warn_" + warn_name, gtk.STOCK_DIALOG_INFO,
+                actions.append(("Warn_" + warn_name, Gtk.STOCK_DIALOG_INFO,
                                 w_string))
             option_ui_middle += "<separator name='sepWarning'/>" + old_middle
         if variable.error:
@@ -123,7 +123,7 @@ class MenuWidget(gtk.HBox):
                 option_ui_middle += ("<menuitem action='Error_" + err_name +
                                      "'/>")
                 e_string = "(" + err.replace("_", "__") + ")"
-                actions.append(("Error_" + err_name, gtk.STOCK_DIALOG_WARNING,
+                actions.append(("Error_" + err_name, Gtk.STOCK_DIALOG_WARNING,
                                 e_string))
             option_ui_middle += "<separator name='sepError'/>" + old_middle
         if self.is_ghost:
@@ -138,7 +138,7 @@ class MenuWidget(gtk.HBox):
         option_ui = option_ui_start + option_ui_middle + option_ui_end
         self.button = rose.gtk.util.CustomButton(
             stock_id=menu_icon_id,
-            size=gtk.ICON_SIZE_MENU,
+            size=Gtk.IconSize.MENU,
             as_tool=True)
         self._set_hover_over(variable)
         self.option_ui = option_ui
@@ -155,7 +155,7 @@ class MenuWidget(gtk.HBox):
                 self.option_ui,
                 self.actions,
                 1,
-                gtk.gdk.Event(gtk.gdk.KEY_PRESS).time))
+                Gdk.Event(Gdk.KEY_PRESS).time))
         self.button.connect(
             "enter-notify-event",
             lambda b, e: self._set_hover_over(variable))
@@ -197,10 +197,10 @@ class MenuWidget(gtk.HBox):
         self.var_ops.add_var(self.my_variable)
 
     def _popup_option_menu(self, option_ui, actions, button, time):
-        actiongroup = gtk.ActionGroup('Popup')
+        actiongroup = Gtk.ActionGroup('Popup')
         actiongroup.set_translation_domain('')
         actiongroup.add_actions(actions)
-        uimanager = gtk.UIManager()
+        uimanager = Gtk.UIManager()
         uimanager.insert_action_group(actiongroup, pos=0)
         uimanager.add_ui_from_string(option_ui)
         remove_item = uimanager.get_widget('/Options/Remove')
@@ -224,7 +224,7 @@ class MenuWidget(gtk.HBox):
             err_item.set_tooltip_text(self.my_variable.error[error])
             err_item.connect(
                 "activate",
-                lambda e: dialog_func(gtk.STOCK_DIALOG_WARNING,
+                lambda e: dialog_func(Gtk.STOCK_DIALOG_WARNING,
                                       self.my_variable.error[error],
                                       title, search_function))
         for warning in warnings:
@@ -237,7 +237,7 @@ class MenuWidget(gtk.HBox):
             warn_item.set_tooltip_text(self.my_variable.warning[warning])
             warn_item.connect(
                 "activate",
-                lambda e: dialog_func(gtk.STOCK_DIALOG_INFO,
+                lambda e: dialog_func(Gtk.STOCK_DIALOG_INFO,
                                       self.my_variable.warning[warning],
                                       title, search_function))
         ignore_item = None
@@ -327,7 +327,7 @@ class CheckedMenuWidget(MenuWidget):
                        "<separator name='sepAdd'/>",
                        "<menuitem action='Remove'/>"]:
             self.option_ui = self.option_ui.replace(string, "")
-        self.checkbutton = gtk.CheckButton()
+        self.checkbutton = Gtk.CheckButton()
         self.checkbutton.set_active(not self.is_ghost)
         meta = self.my_variable.metadata
         if not self.is_ghost and meta.get(

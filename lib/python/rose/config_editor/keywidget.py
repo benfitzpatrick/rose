@@ -20,10 +20,10 @@
 
 import re
 
-import pango
-import pygtk
-pygtk.require('2.0')
-import gtk
+from gi.repository import Pango
+import gi
+gi.require_version('Gtk', '3.0')
+from gi.repository import Gtk
 
 import rose.config_editor
 import rose.gtk.dialog
@@ -31,17 +31,17 @@ import rose.gtk.util
 import rose.variable
 
 
-class KeyWidget(gtk.VBox):
+class KeyWidget(Gtk.VBox):
 
     """This class generates a label or entry box for a variable name."""
 
     FLAG_ICON_MAP = {
-        rose.config_editor.FLAG_TYPE_DEFAULT: gtk.STOCK_INFO,
-        rose.config_editor.FLAG_TYPE_ERROR: gtk.STOCK_DIALOG_WARNING,
-        rose.config_editor.FLAG_TYPE_FIXED: gtk.STOCK_DIALOG_AUTHENTICATION,
-        rose.config_editor.FLAG_TYPE_OPT_CONF: gtk.STOCK_INDEX,
-        rose.config_editor.FLAG_TYPE_OPTIONAL: gtk.STOCK_ABOUT,
-        rose.config_editor.FLAG_TYPE_NO_META: gtk.STOCK_DIALOG_QUESTION,
+        rose.config_editor.FLAG_TYPE_DEFAULT: Gtk.STOCK_INFO,
+        rose.config_editor.FLAG_TYPE_ERROR: Gtk.STOCK_DIALOG_WARNING,
+        rose.config_editor.FLAG_TYPE_FIXED: Gtk.STOCK_DIALOG_AUTHENTICATION,
+        rose.config_editor.FLAG_TYPE_OPT_CONF: Gtk.STOCK_INDEX,
+        rose.config_editor.FLAG_TYPE_OPTIONAL: Gtk.STOCK_ABOUT,
+        rose.config_editor.FLAG_TYPE_NO_META: Gtk.STOCK_DIALOG_QUESTION,
     }
 
     MODIFIED_COLOUR = rose.gtk.util.color_parse(
@@ -53,7 +53,7 @@ class KeyWidget(gtk.VBox):
                  show_modes):
         super(KeyWidget, self).__init__(homogeneous=False, spacing=0)
         self.my_variable = variable
-        self.hbox = gtk.HBox()
+        self.hbox = Gtk.HBox()
         self.hbox.show()
         self.pack_start(self.hbox, expand=False, fill=False)
         self.var_ops = var_ops
@@ -63,23 +63,23 @@ class KeyWidget(gtk.VBox):
         self.show_modes = show_modes
         self.var_flags = []
         self._last_var_comments = None
-        self.ignored_label = gtk.Label()
+        self.ignored_label = Gtk.Label()
         self.ignored_label.show()
         self.hbox.pack_start(self.ignored_label, expand=False, fill=False)
         self.set_ignored()
         if self.my_variable.name != '':
-            self.entry = gtk.Label()
+            self.entry = Gtk.Label()
             self.entry.set_alignment(
                 self.LABEL_X_OFFSET,
                 self.entry.get_alignment()[1])
             self.entry.set_text(self.my_variable.name)
         else:
-            self.entry = gtk.Entry()
-            self.entry.modify_text(gtk.STATE_NORMAL,
+            self.entry = Gtk.Entry()
+            self.entry.modify_text(Gtk.StateType.NORMAL,
                                    self.MODIFIED_COLOUR)
             self.entry.connect("focus-out-event",
                                lambda w, e: self._setter(w, variable))
-        event_box = gtk.EventBox()
+        event_box = Gtk.EventBox()
         event_box.add(self.entry)
         event_box.connect('enter-notify-event',
                           lambda b, w: self._handle_enter(b))
@@ -87,7 +87,7 @@ class KeyWidget(gtk.VBox):
                           lambda b, w: self._handle_leave(b))
         self.hbox.pack_start(event_box, expand=True, fill=True,
                              padding=0)
-        self.comments_box = gtk.HBox()
+        self.comments_box = Gtk.HBox()
         self.hbox.pack_start(self.comments_box, expand=False, fill=False)
         self.grab_focus = self.entry.grab_focus
         self.set_sensitive(True)
@@ -113,9 +113,9 @@ class KeyWidget(gtk.VBox):
             return
         self.var_flags.append(flag_type)
         stock_id = self.FLAG_ICON_MAP[flag_type]
-        event_box = gtk.EventBox()
+        event_box = Gtk.EventBox()
         event_box._flag_type = flag_type
-        image = gtk.image_new_from_stock(stock_id, gtk.ICON_SIZE_MENU)
+        image = Gtk.Image.new_from_stock(stock_id, Gtk.IconSize.MENU)
         image.set_tooltip_text(tooltip_text)
         image.show()
         event_box.add(image)
@@ -130,7 +130,7 @@ class KeyWidget(gtk.VBox):
 
     def handle_launch_help(self, widget, event):
         """Handle launching help."""
-        if event.type == gtk.gdk.BUTTON_PRESS and event.button != 3:
+        if event.type == Gdk.EventType.BUTTON_PRESS and event.button != 3:
             url_mode = (rose.META_PROP_HELP not in self.meta)
             self.launch_help(url_mode=url_mode)
 
@@ -150,7 +150,7 @@ class KeyWidget(gtk.VBox):
     def remove_flag(self, flag_type):
         """Remove the flag from the widget."""
         for widget in self.get_children():
-            if (isinstance(widget, gtk.EventBox) and
+            if (isinstance(widget, Gtk.EventBox) and
                     getattr(widget, "_flag_type", None) == flag_type):
                 self.remove(widget)
         if flag_type in self.var_flags:
@@ -171,11 +171,11 @@ class KeyWidget(gtk.VBox):
     def set_modified(self, is_modified):
         """Set the display of modified status in the text."""
         if is_modified:
-            if isinstance(self.entry, gtk.Label):
+            if isinstance(self.entry, Gtk.Label):
                 att_list = self.entry.get_attributes()
                 if att_list is None:
-                    att_list = pango.AttrList()
-                att_list.insert(pango.AttrForeground(
+                    att_list = Pango.AttrList()
+                att_list.insert(Pango.AttrForeground(
                     self.MODIFIED_COLOUR.red,
                     self.MODIFIED_COLOUR.green,
                     self.MODIFIED_COLOUR.blue,
@@ -183,14 +183,14 @@ class KeyWidget(gtk.VBox):
                     end_index=-1))
                 self.entry.set_attributes(att_list)
         else:
-            if isinstance(self.entry, gtk.Label):
+            if isinstance(self.entry, Gtk.Label):
                 att_list = self.entry.get_attributes()
                 if att_list is not None:
                     att_list = att_list.filter(
-                        lambda a: a.type != pango.ATTR_FOREGROUND)
+                        lambda a: a.type != Pango.ATTR_FOREGROUND)
 
                 if att_list is None:
-                    att_list = pango.AttrList()
+                    att_list = Pango.AttrList()
                 self.entry.set_attributes(att_list)
 
     def set_show_mode(self, show_mode, should_show_mode):
@@ -251,9 +251,9 @@ class KeyWidget(gtk.VBox):
             if comment_widgets:
                 comment_widgets[0].set_tooltip_text(tooltip_text)
             else:
-                edit_eb = gtk.EventBox()
+                edit_eb = Gtk.EventBox()
                 edit_eb.show()
-                edit_label = gtk.Label("#")
+                edit_label = Gtk.Label(label="#")
                 edit_label.show()
                 edit_eb.add(edit_label)
                 edit_eb.set_tooltip_text(tooltip_text)
@@ -321,7 +321,7 @@ class KeyWidget(gtk.VBox):
             mode_text = rose.config_editor.VAR_FLAG_MARKUP.format(mode_text)
             label = rose.gtk.util.get_hyperlink_label(mode_text, search_func)
             label.show()
-            hbox = gtk.HBox()
+            hbox = Gtk.HBox()
             hbox.show()
             hbox.pack_start(label, expand=False, fill=False)
             hbox.set_sensitive(self.entry.get_property("sensitive"))
@@ -341,7 +341,7 @@ class KeyWidget(gtk.VBox):
                     break
         else:
             for widget in self.get_children():
-                if (isinstance(widget, gtk.HBox) and
+                if (isinstance(widget, Gtk.HBox) and
                         hasattr(widget, "_show_mode") and
                         widget._show_mode == mode):
                     self.remove(widget)
@@ -368,12 +368,12 @@ class KeyWidget(gtk.VBox):
             if (hasattr(widget, "_flag_type") and
                     widget._flag_type == flag_type):
                 return self.remove(widget)
-        label = gtk.Label()
+        label = Gtk.Label()
         markup = rose.gtk.util.safe_str(text)
         markup = rose.config_editor.VAR_FLAG_MARKUP.format(markup)
         label.set_markup(markup)
         label.show()
-        hbox = gtk.HBox()
+        hbox = Gtk.HBox()
         hbox._flag_type = flag_type
         hbox.pack_start(label, expand=False, fill=False)
         hbox.set_sensitive(self.entry.get_property("sensitive"))
@@ -432,7 +432,7 @@ class KeyWidget(gtk.VBox):
             # This is not very nice.
             self.meta.update({rose.META_PROP_URL: new_url})
         if rose.META_PROP_HELP in self.meta or rose.META_PROP_URL in self.meta:
-            if isinstance(self.entry, gtk.Label):
+            if isinstance(self.entry, Gtk.Label):
                 self._set_underline(self.entry, underline=True)
         return False
 
@@ -440,21 +440,21 @@ class KeyWidget(gtk.VBox):
         # Set an underline in a label widget.
         att_list = label.get_attributes()
         if att_list is None:
-            att_list = pango.AttrList()
+            att_list = Pango.AttrList()
         if underline:
-            att_list.insert(pango.AttrUnderline(pango.UNDERLINE_SINGLE,
+            att_list.insert(Pango.AttrUnderline(Pango.Underline.SINGLE,
                                                 start_index=0,
                                                 end_index=-1))
         else:
             att_list = att_list.filter(lambda a:
-                                       a.type != pango.ATTR_UNDERLINE)
+                                       a.type != Pango.ATTR_UNDERLINE)
             if att_list is None:
-                att_list = pango.AttrList()
+                att_list = Pango.AttrList()
         label.set_attributes(att_list)
 
     def _handle_leave(self, event_box):
         event_box.set_tooltip_text(None)
-        if isinstance(self.entry, gtk.Label):
+        if isinstance(self.entry, Gtk.Label):
             self._set_underline(self.entry, underline=False)
         return False
 

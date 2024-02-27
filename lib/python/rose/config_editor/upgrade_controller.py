@@ -21,10 +21,10 @@
 import copy
 import os
 
-import pygtk
-pygtk.require('2.0')
-import gtk
-import gobject
+import gi
+gi.require_version('Gtk', '3.0')
+from gi.repository import Gtk
+from gi.repository import GObject
 
 import rose.gtk.util
 import rose.macro
@@ -37,10 +37,10 @@ class UpgradeController(object):
 
     def __init__(self, app_config_dict, handle_transform_func,
                  parent_window=None, upgrade_inspector=None):
-        buttons = (gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT,
-                   gtk.STOCK_APPLY, gtk.RESPONSE_ACCEPT)
-        self.window = gtk.Dialog(buttons=buttons)
-        self.window.set_transient_for(parent_window)
+        buttons = (Gtk.STOCK_CANCEL, Gtk.ResponseType.REJECT,
+                   Gtk.STOCK_APPLY, Gtk.ResponseType.ACCEPT)
+        self.window = Gtk.Dialog(buttons=buttons)
+        self.set_transient_for(parent_window)
         self.window.set_title(rose.config_editor.DIALOG_TITLE_UPGRADE)
         self.config_dict = {}
         self.config_directory_dict = {}
@@ -48,7 +48,7 @@ class UpgradeController(object):
         config_names = sorted(app_config_dict.keys())
         self._config_version_model_dict = {}
         self.use_all_versions = False
-        self.treemodel = gtk.TreeStore(str, str, str, bool)
+        self.treemodel = Gtk.TreeStore(str, str, str, bool)
         self.treeview = rose.gtk.util.TooltipTreeView(
             get_tooltip_func=self._get_tooltip)
         self.treeview.show()
@@ -73,20 +73,20 @@ class UpgradeController(object):
         os.chdir(old_pwd)
         self.treeview.set_model(self.treemodel)
         self.treeview.set_rules_hint(True)
-        self.treewindow = gtk.ScrolledWindow()
+        self.treewindow = Gtk.ScrolledWindow()
         self.treewindow.show()
-        self.treewindow.set_policy(gtk.POLICY_NEVER,
-                                   gtk.POLICY_NEVER)
+        self.treewindow.set_policy(Gtk.PolicyType.NEVER,
+                                   Gtk.PolicyType.NEVER)
         columns = rose.config_editor.DIALOG_COLUMNS_UPGRADE
         for i, title in enumerate(columns):
-            column = gtk.TreeViewColumn()
+            column = Gtk.TreeViewColumn()
             column.set_title(title)
-            if self.treemodel.get_column_type(i) == gobject.TYPE_BOOLEAN:
-                cell = gtk.CellRendererToggle()
+            if self.treemodel.get_column_type(i) == GObject.TYPE_BOOLEAN:
+                cell = Gtk.CellRendererToggle()
                 cell.connect("toggled", self._handle_toggle_upgrade, i)
                 cell.set_property("activatable", True)
             elif i == 2:
-                self._combo_cell = gtk.CellRendererCombo()
+                self._combo_cell = Gtk.CellRendererCombo()
                 self._combo_cell.set_property("has-entry", False)
                 self._combo_cell.set_property("editable", True)
                 try:
@@ -98,11 +98,11 @@ class UpgradeController(object):
                                              self._handle_change_version, 2)
                 cell = self._combo_cell
             else:
-                cell = gtk.CellRendererText()
+                cell = Gtk.CellRendererText()
             if i == len(columns) - 1:
-                column.pack_start(cell, expand=True)
+                column.pack_start(cell, True, True, 0)
             else:
-                column.pack_start(cell, expand=False)
+                column.pack_start(cell, False, True, 0)
             column.set_cell_data_func(cell, self._set_cell_data, i)
             self.treeview.append_column(column)
         self.treeview.connect("cursor-changed", self._handle_change_cursor)
@@ -110,13 +110,13 @@ class UpgradeController(object):
         self.window.vbox.pack_start(
             self.treewindow, expand=True, fill=True,
             padding=rose.config_editor.SPACING_PAGE)
-        label = gtk.Label(rose.config_editor.DIALOG_LABEL_UPGRADE)
+        label = Gtk.Label(label=rose.config_editor.DIALOG_LABEL_UPGRADE)
         label.show()
         self.window.vbox.pack_start(
-            label, padding=rose.config_editor.SPACING_PAGE)
-        button_hbox = gtk.HBox()
+            label, True, True, rose.config_editor.SPACING_PAGE)
+        button_hbox = Gtk.HBox()
         button_hbox.show()
-        all_versions_toggle_button = gtk.CheckButton(
+        all_versions_toggle_button = Gtk.CheckButton(
             label=rose.config_editor.DIALOG_LABEL_UPGRADE_ALL,
             use_underline=False)
         all_versions_toggle_button.set_active(self.use_all_versions)
@@ -137,11 +137,11 @@ class UpgradeController(object):
         extra = 2 * rose.config_editor.SPACING_PAGE
         for i in [0, 1]:
             new_size[i] = min([my_size[i] + extra, max_size[i]])
-        self.treewindow.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
+        self.treewindow.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
         self.window.set_default_size(*new_size)
         response = self.window.run()
         old_pwd = os.getcwd()
-        if response == gtk.RESPONSE_ACCEPT:
+        if response == Gtk.ResponseType.ACCEPT:
             iter_ = self.treemodel.get_iter_first()
             while iter_ is not None:
                 config_name = self.treemodel.get_value(iter_, 0)
@@ -222,7 +222,7 @@ class UpgradeController(object):
 
     def _handle_toggle_all_versions(self, button):
         self.use_all_versions = button.get_active()
-        self.treemodel = gtk.TreeStore(str, str, str, bool)
+        self.treemodel = Gtk.TreeStore(str, str, str, bool)
         self._config_version_model_dict.clear()
         for config_name in sorted(self.config_dict.keys()):
             self._update_treemodel_data(config_name)
@@ -250,7 +250,7 @@ class UpgradeController(object):
         self.ok_button.set_sensitive(any_upgrades_toggled)
 
     def _set_cell_data(self, column, cell, model, r_iter, col_index):
-        if model.get_column_type(col_index) == gobject.TYPE_BOOLEAN:
+        if model.get_column_type(col_index) == GObject.TYPE_BOOLEAN:
             cell.set_property("active", model.get_value(r_iter, col_index))
             if model.get_value(r_iter, 1) == model.get_value(r_iter, 2):
                 model.set_value(r_iter, col_index, False)
@@ -277,7 +277,7 @@ class UpgradeController(object):
         else:
             self.treemodel.append(
                 None, [config_name, current_tag, next_tag, True])
-        listmodel = gtk.ListStore(str)
+        listmodel = Gtk.ListStore(str)
         tags = manager.get_tags(only_named=not self.use_all_versions)
         if not tags:
             tags = [manager.tag]

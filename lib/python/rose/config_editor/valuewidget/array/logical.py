@@ -18,15 +18,15 @@
 # along with Rose. If not, see <http://www.gnu.org/licenses/>.
 # -----------------------------------------------------------------------------
 
-import pygtk
-pygtk.require('2.0')
-import gtk
+import gi
+gi.require_version('Gtk', '3.0')
+from gi.repository import Gtk
 
 import rose.gtk.util
 import rose.variable
 
 
-class LogicalArrayValueWidget(gtk.HBox):
+class LogicalArrayValueWidget(Gtk.HBox):
 
     """This is a class to represent an array of logical or boolean types."""
 
@@ -64,12 +64,12 @@ class LogicalArrayValueWidget(gtk.HBox):
                 rose.TYPE_LOGICAL_VALUE_TRUE:
                 rose.TYPE_LOGICAL_TRUE_TITLE}
 
-        imgs = [(gtk.STOCK_MEDIA_STOP, gtk.ICON_SIZE_MENU),
-                (gtk.STOCK_APPLY, gtk.ICON_SIZE_MENU)]
-        self.make_log_image = lambda i: gtk.image_new_from_stock(*imgs[i])
+        imgs = [(Gtk.STOCK_MEDIA_STOP, Gtk.IconSize.MENU),
+                (Gtk.STOCK_APPLY, Gtk.IconSize.MENU)]
+        self.make_log_image = lambda i: Gtk.Image.new_from_stock(*imgs[i])
         self.chars_width = max([len(v) for v in value_array] + [1]) + 1
         self.num_allowed_columns = 3
-        self.entry_table = gtk.Table(rows=1,
+        self.entry_table = Gtk.Table(rows=1,
                                      columns=self.num_allowed_columns,
                                      homogeneous=True)
         self.entry_table.connect('focus-in-event',
@@ -100,40 +100,40 @@ class LogicalArrayValueWidget(gtk.HBox):
 
     def generate_buttons(self):
         """Create the add button."""
-        add_image = gtk.image_new_from_stock(gtk.STOCK_ADD, gtk.ICON_SIZE_MENU)
+        add_image = Gtk.Image.new_from_stock(Gtk.STOCK_ADD, Gtk.IconSize.MENU)
         add_image.show()
-        self.add_button = gtk.EventBox()
+        self.add_button = Gtk.EventBox()
         self.add_button.set_tooltip_text(self.TIP_ADD)
         self.add_button.add(add_image)
         self.add_button.connect('button-release-event',
                                 lambda b, e: self.add_entry())
         self.add_button.connect('enter-notify-event',
-                                lambda b, e: b.set_state(gtk.STATE_ACTIVE))
+                                lambda b, e: b.set_state(Gtk.StateType.ACTIVE))
         self.add_button.connect('leave-notify-event',
-                                lambda b, e: b.set_state(gtk.STATE_NORMAL))
-        del_image = gtk.image_new_from_stock(gtk.STOCK_REMOVE,
-                                             gtk.ICON_SIZE_MENU)
+                                lambda b, e: b.set_state(Gtk.StateType.NORMAL))
+        del_image = Gtk.Image.new_from_stock(Gtk.STOCK_REMOVE,
+                                             Gtk.IconSize.MENU)
         del_image.show()
-        self.del_button = gtk.EventBox()
+        self.del_button = Gtk.EventBox()
         self.del_button.set_tooltip_text(self.TIP_ADD)
         self.del_button.add(del_image)
         self.del_button.show()
         self.del_button.connect('button-release-event',
                                 self.remove_entry)
         self.del_button.connect('enter-notify-event',
-                                lambda b, e: b.set_state(gtk.STATE_ACTIVE))
+                                lambda b, e: b.set_state(Gtk.StateType.ACTIVE))
         self.del_button.connect('leave-notify-event',
-                                lambda b, e: b.set_state(gtk.STATE_NORMAL))
-        self.button_box = gtk.VBox()
+                                lambda b, e: b.set_state(Gtk.StateType.NORMAL))
+        self.button_box = Gtk.VBox()
         self.button_box.show()
         self.button_box.pack_start(self.add_button, expand=False, fill=False)
         self.button_box.pack_start(self.del_button, expand=False, fill=False)
 
     def get_entry(self, value_item):
         """Create a widget for this array element."""
-        bad_img = gtk.image_new_from_stock(gtk.STOCK_DIALOG_WARNING,
-                                           gtk.ICON_SIZE_MENU)
-        button = gtk.ToggleButton()
+        bad_img = Gtk.Image.new_from_stock(Gtk.STOCK_DIALOG_WARNING,
+                                           Gtk.IconSize.MENU)
+        button = Gtk.ToggleButton()
         button.options = [rose.TYPE_LOGICAL_VALUE_FALSE,
                           rose.TYPE_LOGICAL_VALUE_TRUE]
         button.labels = [rose.TYPE_LOGICAL_FALSE_TITLE,
@@ -192,16 +192,16 @@ class LogicalArrayValueWidget(gtk.HBox):
             for col, label in enumerate(self.metadata['element-titles']):
                 if col >= len(table_widgets):
                     break
-                widget = gtk.HBox()
-                label = gtk.Label(self.metadata['element-titles'][col])
+                widget = Gtk.HBox()
+                label = Gtk.Label(label=self.metadata['element-titles'][col])
                 label.show()
                 widget.pack_start(label, expand=True, fill=True)
                 widget.show()
                 self.entry_table.attach(widget,
                                         col, col + 1,
                                         0, 1,
-                                        xoptions=gtk.FILL,
-                                        yoptions=gtk.SHRINK)
+                                        xoptions=Gtk.AttachOptions.FILL,
+                                        yoptions=Gtk.AttachOptions.SHRINK)
 
         for i, widget in enumerate(table_widgets):
             row = i // self.num_allowed_columns
@@ -211,8 +211,8 @@ class LogicalArrayValueWidget(gtk.HBox):
             self.entry_table.attach(widget,
                                     column, column + 1,
                                     row, row + 1,
-                                    xoptions=gtk.FILL,
-                                    yoptions=gtk.SHRINK)
+                                    xoptions=Gtk.AttachOptions.FILL,
+                                    yoptions=Gtk.AttachOptions.SHRINK)
         self.grab_focus = lambda: self.hook.get_focus(self.entries[-1])
         self.check_resize()
 

@@ -18,10 +18,10 @@
 # along with Rose. If not, see <http://www.gnu.org/licenses/>.
 # -----------------------------------------------------------------------------
 
-import pygtk
-pygtk.require('2.0')
-import gtk
-import pango
+import gi
+gi.require_version('Gtk', '3.0')
+from gi.repository import Gtk
+from gi.repository import Pango
 
 import rose.config
 import rose.config_editor
@@ -29,7 +29,7 @@ import rose.config_editor.util
 import rose.gtk.util
 
 
-class BaseSummaryDataPanel(gtk.VBox):
+class BaseSummaryDataPanel(Gtk.VBox):
 
     """A base class for summarising data across many namespaces.
 
@@ -78,8 +78,8 @@ class BaseSummaryDataPanel(gtk.VBox):
                            self._handle_button_press_event)
         self._view.connect("key-press-event",
                            self._handle_key_press_event)
-        self._window = gtk.ScrolledWindow()
-        self._window.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
+        self._window = Gtk.ScrolledWindow()
+        self._window.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
         self.update()
         self._window.add(self._view)
         self._window.show()
@@ -89,7 +89,7 @@ class BaseSummaryDataPanel(gtk.VBox):
     def add_cell_renderer_for_value(self, column, column_title):
         """Add a cell renderer to represent the model value.
 
-        column is the gtk.TreeColumn to pack the cell in.
+        column is the Gtk.TreeColumn to pack the cell in.
         column_title is the title of column.
 
         You may want to use column.set_cell_data_func.
@@ -107,7 +107,7 @@ class BaseSummaryDataPanel(gtk.VBox):
         raise NotImplementedError()
 
     def get_section_column_index(self):
-        """Return the section name column index from the gtk.TreeView.
+        """Return the section name column index from the Gtk.TreeView.
 
         This may change based on the grouping (self.group_index).
 
@@ -117,10 +117,10 @@ class BaseSummaryDataPanel(gtk.VBox):
     def set_tree_cell_status(self, column, cell, model, row_iter):
         """Add status markup to the cell - e.g. error notification.
 
-        column is the gtk.TreeColumn where the cell is
-        cell is the gtk.CellRendererText to add markup to
-        model is the gtk.TreeModel-derived data store
-        row_iter is the gtk.TreeIter pointing to the cell's row
+        column is the Gtk.TreeColumn where the cell is
+        cell is the Gtk.CellRendererText to add markup to
+        model is the Gtk.TreeModel-derived data store
+        row_iter is the Gtk.TreeIter pointing to the cell's row
 
         """
         raise NotImplementedError()
@@ -128,11 +128,11 @@ class BaseSummaryDataPanel(gtk.VBox):
     def set_tree_tip(self, treeview, row_iter, col_index, tip):
         """Add the hover-over text for a cell to 'tip'.
 
-        treeview is the gtk.TreeView object
-        row_iter is the gtk.TreeIter for the row
-        col_index is the index of the gtk.TreeColumn in
+        treeview is the Gtk.TreeView object
+        row_iter is the Gtk.TreeIter for the row
+        col_index is the index of the Gtk.TreeColumn in
         e.g. treeview.get_columns()
-        tip is the gtk.Tooltip object that the text needs to be set in.
+        tip is the Gtk.Tooltip object that the text needs to be set in.
 
         """
         raise NotImplementedError()
@@ -140,30 +140,30 @@ class BaseSummaryDataPanel(gtk.VBox):
     def _get_custom_menu_items(self, path, column, event):
         """Override this method to add to the right click menu.
 
-        This should return a list of gtk.MenuItem subclass instances.
+        This should return a list of Gtk.MenuItem subclass instances.
 
         """
         return []
 
     def _get_control_widget_hbox(self):
-        filter_label = gtk.Label(
+        filter_label = Gtk.Label(label=
             rose.config_editor.SUMMARY_DATA_PANEL_FILTER_LABEL)
         filter_label.show()
-        self._filter_widget = gtk.Entry()
+        self._filter_widget = Gtk.Entry()
         self._filter_widget.set_width_chars(
             rose.config_editor.SUMMARY_DATA_PANEL_FILTER_MAX_CHAR)
         self._filter_widget.connect("changed", self._refilter)
         self._filter_widget.show()
-        group_label = gtk.Label(
+        group_label = Gtk.Label(label=
             rose.config_editor.SUMMARY_DATA_PANEL_GROUP_LABEL)
         group_label.show()
-        self._group_widget = gtk.ComboBox()
-        cell = gtk.CellRendererText()
-        self._group_widget.pack_start(cell, expand=True)
+        self._group_widget = Gtk.ComboBox()
+        cell = Gtk.CellRendererText()
+        self._group_widget.pack_start(cell, True, True, 0)
         self._group_widget.add_attribute(cell, 'text', 0)
         self._group_widget.connect("changed", self._handle_group_change)
         self._group_widget.show()
-        filter_hbox = gtk.HBox()
+        filter_hbox = Gtk.HBox()
         filter_hbox.pack_start(group_label, expand=False, fill=False)
         filter_hbox.pack_start(self._group_widget, expand=False, fill=False)
         filter_hbox.pack_start(filter_label, expand=False, fill=False,
@@ -192,7 +192,7 @@ class BaseSummaryDataPanel(gtk.VBox):
             # We need to construct a new TreeModel.
             if self._prev_sort_model is not None:
                 prev_sort_id = self._prev_sort_model.get_sort_column_id()
-            store = gtk.TreeStore(*col_types)
+            store = Gtk.TreeStore(*col_types)
             self._prev_store = store
         else:
             store = self._prev_store
@@ -217,7 +217,7 @@ class BaseSummaryDataPanel(gtk.VBox):
         if need_new_store:
             filter_model = store.filter_new()
             filter_model.set_visible_func(self._filter_visible)
-            sort_model = gtk.TreeModelSort(filter_model)
+            sort_model = Gtk.TreeModelSort(filter_model)
             for i in range(len(self.column_names)):
                 sort_model.set_sort_func(i, self.sort_util.sort_column, i)
             if (self._prev_sort_model is not None and
@@ -264,7 +264,7 @@ class BaseSummaryDataPanel(gtk.VBox):
                     current_group = None
                     if current_model is not None:
                         current_group = current_model().get_value(iter_, 0)
-                group_model = gtk.TreeStore(str)
+                group_model = Gtk.TreeStore(str)
                 group_model.append(None, [""])
                 start_index = 0
                 for i, name in enumerate(self.column_names):
@@ -292,10 +292,10 @@ class BaseSummaryDataPanel(gtk.VBox):
     def add_new_columns(self, treeview, column_names):
         """Create new columns."""
         for i, column_name in enumerate(column_names):
-            col = gtk.TreeViewColumn()
+            col = Gtk.TreeViewColumn()
             col.set_title(column_name.replace("_", "__"))
-            cell_for_status = gtk.CellRendererText()
-            col.pack_start(cell_for_status, expand=False)
+            cell_for_status = Gtk.CellRendererText()
+            col.pack_start(cell_for_status, False, True, 0)
             col.set_cell_data_func(cell_for_status,
                                    self.set_tree_cell_status)
             self.add_cell_renderer_for_value(col, column_name)
@@ -428,12 +428,12 @@ class BaseSummaryDataPanel(gtk.VBox):
 
     def _popup_tree_multi_menu(self, event):
         """Launch a menu for these main treeview rows (multi-selection)."""
-        menu = gtk.Menu()
+        menu = Gtk.Menu()
         menu.show()
         shortcuts = []
 
         # Ignore all.
-        ign_menuitem = gtk.ImageMenuItem(stock_id=gtk.STOCK_NO)
+        ign_menuitem = Gtk.ImageMenuItem(stock_id=Gtk.STOCK_NO)
         ign_menuitem.set_label(
             rose.config_editor.SUMMARY_DATA_PANEL_MENU_IGNORE_MULTI)
         ign_menuitem.connect("activate", self._ignore_selected_sections, True)
@@ -442,7 +442,7 @@ class BaseSummaryDataPanel(gtk.VBox):
         shortcuts.append((rose.config_editor.ACCEL_IGNORE,
                           ign_menuitem))
         # Enable all.
-        ign_menuitem = gtk.ImageMenuItem(stock_id=gtk.STOCK_YES)
+        ign_menuitem = Gtk.ImageMenuItem(stock_id=Gtk.STOCK_YES)
         ign_menuitem.set_label(
             rose.config_editor.SUMMARY_DATA_PANEL_MENU_ENABLE_MULTI)
         ign_menuitem.connect("activate", self._ignore_selected_sections, False)
@@ -451,7 +451,7 @@ class BaseSummaryDataPanel(gtk.VBox):
         shortcuts.append((rose.config_editor.ACCEL_IGNORE,
                           ign_menuitem))
         # Remove all.
-        rem_menuitem = gtk.ImageMenuItem(stock_id=gtk.STOCK_REMOVE)
+        rem_menuitem = Gtk.ImageMenuItem(stock_id=Gtk.STOCK_REMOVE)
         rem_menuitem.set_label(
             rose.config_editor.SUMMARY_DATA_PANEL_MENU_REMOVE_MULTI)
         rem_menuitem.connect("activate", self._remove_selected_sections)
@@ -460,16 +460,16 @@ class BaseSummaryDataPanel(gtk.VBox):
         shortcuts.append((rose.config_editor.ACCEL_REMOVE, rem_menuitem))
 
         # list shortcut keys
-        accel = gtk.AccelGroup()
+        accel = Gtk.AccelGroup()
         menu.set_accel_group(accel)
         for key_press, menuitem in shortcuts:
-            key, mod = gtk.accelerator_parse(key_press)
+            key, mod = Gtk.accelerator_parse(key_press)
             menuitem.add_accelerator(
                 'activate',
                 accel,
                 key,
                 mod,
-                gtk.ACCEL_VISIBLE
+                Gtk.AccelFlags.VISIBLE
             )
 
         menu.popup(None, None, None, event.button, event.time)
@@ -478,7 +478,7 @@ class BaseSummaryDataPanel(gtk.VBox):
     def _popup_tree_menu(self, path, col, event):
         """Launch a menu for this main treeview row (single selection)."""
         shortcuts = []
-        menu = gtk.Menu()
+        menu = Gtk.Menu()
         menu.show()
         model = self._view.get_model()
         row_iter = model.get_iter(path)
@@ -486,7 +486,7 @@ class BaseSummaryDataPanel(gtk.VBox):
         this_section = model.get_value(row_iter, sect_index)
         if this_section is not None:
             # Jump to section.
-            menuitem = gtk.ImageMenuItem(stock_id=gtk.STOCK_JUMP_TO)
+            menuitem = Gtk.ImageMenuItem(stock_id=Gtk.STOCK_JUMP_TO)
             label = rose.config_editor.SUMMARY_DATA_PANEL_MENU_GO_TO.format(
                 this_section.replace("_", "__"))
             menuitem.set_label(label)
@@ -495,7 +495,7 @@ class BaseSummaryDataPanel(gtk.VBox):
                              lambda i: self.search_function(i._section))
             menuitem.show()
             menu.append(menuitem)
-            sep = gtk.SeparatorMenuItem()
+            sep = Gtk.SeparatorMenuItem()
             sep.show()
             menu.append(sep)
         extra_menuitems = self._get_custom_menu_items(path, col, event)
@@ -503,14 +503,14 @@ class BaseSummaryDataPanel(gtk.VBox):
             for extra_menuitem in extra_menuitems:
                 menu.append(extra_menuitem)
             if this_section is not None:
-                sep = gtk.SeparatorMenuItem()
+                sep = Gtk.SeparatorMenuItem()
                 sep.show()
                 menu.append(sep)
         if self.is_duplicate:
             # A section is currently selected
             if this_section is not None:
                 # Add section.
-                add_menuitem = gtk.ImageMenuItem(stock_id=gtk.STOCK_ADD)
+                add_menuitem = Gtk.ImageMenuItem(stock_id=Gtk.STOCK_ADD)
                 add_menuitem.set_label(
                     rose.config_editor.SUMMARY_DATA_PANEL_MENU_ADD)
                 add_menuitem.connect("activate",
@@ -518,7 +518,7 @@ class BaseSummaryDataPanel(gtk.VBox):
                 add_menuitem.show()
                 menu.append(add_menuitem)
                 # Copy section.
-                copy_menuitem = gtk.ImageMenuItem(stock_id=gtk.STOCK_COPY)
+                copy_menuitem = Gtk.ImageMenuItem(stock_id=Gtk.STOCK_COPY)
                 copy_menuitem.set_label(
                     rose.config_editor.SUMMARY_DATA_PANEL_MENU_COPY)
                 copy_menuitem.connect(
@@ -528,7 +528,7 @@ class BaseSummaryDataPanel(gtk.VBox):
                 if (rose.variable.IGNORED_BY_USER in
                         self.sections[this_section].ignored_reason):
                     # Enable section.
-                    enab_menuitem = gtk.ImageMenuItem(stock_id=gtk.STOCK_YES)
+                    enab_menuitem = Gtk.ImageMenuItem(stock_id=Gtk.STOCK_YES)
                     enab_menuitem.set_label(
                         rose.config_editor.SUMMARY_DATA_PANEL_MENU_ENABLE)
                     enab_menuitem.connect(
@@ -541,7 +541,7 @@ class BaseSummaryDataPanel(gtk.VBox):
                                       enab_menuitem))
                 else:
                     # Ignore section.
-                    ign_menuitem = gtk.ImageMenuItem(stock_id=gtk.STOCK_NO)
+                    ign_menuitem = Gtk.ImageMenuItem(stock_id=Gtk.STOCK_NO)
                     ign_menuitem.set_label(
                         rose.config_editor.SUMMARY_DATA_PANEL_MENU_IGNORE)
                     ign_menuitem.connect(
@@ -553,7 +553,7 @@ class BaseSummaryDataPanel(gtk.VBox):
                     shortcuts.append((rose.config_editor.ACCEL_IGNORE,
                                       ign_menuitem))
                 # Remove section.
-                rem_menuitem = gtk.ImageMenuItem(stock_id=gtk.STOCK_REMOVE)
+                rem_menuitem = Gtk.ImageMenuItem(stock_id=Gtk.STOCK_REMOVE)
                 rem_menuitem.set_label(
                     rose.config_editor.SUMMARY_DATA_PANEL_MENU_REMOVE)
                 rem_menuitem.connect(
@@ -564,7 +564,7 @@ class BaseSummaryDataPanel(gtk.VBox):
                                   rem_menuitem))
             else:  # A group is currently selected.
                 # Ignore all
-                ign_menuitem = gtk.ImageMenuItem(stock_id=gtk.STOCK_NO)
+                ign_menuitem = Gtk.ImageMenuItem(stock_id=Gtk.STOCK_NO)
                 ign_menuitem.set_label(
                     rose.config_editor.SUMMARY_DATA_PANEL_MENU_IGNORE)
                 ign_menuitem.connect("activate",
@@ -575,7 +575,7 @@ class BaseSummaryDataPanel(gtk.VBox):
                 shortcuts.append((rose.config_editor.ACCEL_IGNORE,
                                   ign_menuitem))
                 # Enable all
-                ign_menuitem = gtk.ImageMenuItem(stock_id=gtk.STOCK_YES)
+                ign_menuitem = Gtk.ImageMenuItem(stock_id=Gtk.STOCK_YES)
                 ign_menuitem.set_label(
                     rose.config_editor.SUMMARY_DATA_PANEL_MENU_ENABLE)
                 ign_menuitem.connect("activate",
@@ -586,7 +586,7 @@ class BaseSummaryDataPanel(gtk.VBox):
                 shortcuts.append((rose.config_editor.ACCEL_IGNORE,
                                   ign_menuitem))
                 # Delete all.
-                rem_menuitem = gtk.ImageMenuItem(stock_id=gtk.STOCK_REMOVE)
+                rem_menuitem = Gtk.ImageMenuItem(stock_id=Gtk.STOCK_REMOVE)
                 rem_menuitem.set_label(
                     rose.config_editor.SUMMARY_DATA_PANEL_MENU_REMOVE)
                 rem_menuitem.connect(
@@ -597,16 +597,16 @@ class BaseSummaryDataPanel(gtk.VBox):
                                   rem_menuitem))
 
             # list shortcut keys
-            accel = gtk.AccelGroup()
+            accel = Gtk.AccelGroup()
             menu.set_accel_group(accel)
             for key_press, menuitem in shortcuts:
-                key, mod = gtk.accelerator_parse(key_press)
+                key, mod = Gtk.accelerator_parse(key_press)
                 menuitem.add_accelerator(
                     'activate',
                     accel,
                     key,
                     mod,
-                    gtk.ACCEL_VISIBLE
+                    Gtk.AccelFlags.VISIBLE
                 )
 
         menu.popup(None, None, None, event.button, event.time)
@@ -640,13 +640,13 @@ class BaseSummaryDataPanel(gtk.VBox):
         self.scroll_to_section(new_section)
 
     def _handle_key_press_event(self, treeview, event):
-        if event.keyval == gtk.keysyms.Delete:
+        if event.keyval == Gdk.KEY_Delete:
             # `Delete` - remove section(s)
             self._remove_selected_sections()
         # detect key combination
-        elif 'GDK_CONTROL_MASK' in event.state.value_names:
+        elif 'GDK_CONTROL_MASK' in event.get_state().value_names:
             # `Ctrl + ?`
-            if event.keyval == gtk.keysyms.i:
+            if event.keyval == Gdk.KEY_i:
                 # `Ctrl + i` - ignore section(s)
                 self._ignore_selected_sections(None)
 
@@ -690,7 +690,7 @@ class BaseSummaryDataPanel(gtk.VBox):
             self._view.set_cursor(path)
 
     def get_section_iter(self, section):
-        """Get the gtk.TreeIter of this section."""
+        """Get the Gtk.TreeIter of this section."""
         iters = []
         sect_index = self.get_section_column_index()
         self._view.get_model().foreach(self._check_value_iter,
@@ -753,8 +753,8 @@ class StandardSummaryDataPanel(BaseSummaryDataPanel):
 
     def add_cell_renderer_for_value(self, col, col_title):
         """Add a CellRendererText for the column."""
-        cell_for_value = gtk.CellRendererText()
-        col.pack_start(cell_for_value, expand=True)
+        cell_for_value = Gtk.CellRendererText()
+        col.pack_start(cell_for_value, True, True, 0)
         col.set_cell_data_func(cell_for_value,
                                self._set_tree_cell_value)
 
@@ -813,7 +813,7 @@ class StandardSummaryDataPanel(BaseSummaryDataPanel):
         max_len = rose.config_editor.SUMMARY_DATA_PANEL_MAX_LEN
         if value is not None and len(value) > max_len and col_index != 0:
             cell.set_property("width-chars", max_len)
-            cell.set_property("ellipsize", pango.ELLIPSIZE_END)
+            cell.set_property("ellipsize", Pango.EllipsizeMode.END)
         sect_index = self.get_section_column_index()
         if (value is not None and col_index == sect_index and
                 self.is_duplicate):

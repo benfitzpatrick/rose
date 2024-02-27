@@ -18,14 +18,14 @@
 # along with Rose. If not, see <http://www.gnu.org/licenses/>.
 # -----------------------------------------------------------------------------
 
-import pygtk
-pygtk.require('2.0')
-import gtk
+import gi
+gi.require_version('Gtk', '3.0')
+from gi.repository import Gtk
 
 import rose.config_editor
 
 
-class ComboBoxValueWidget(gtk.HBox):
+class ComboBoxValueWidget(Gtk.HBox):
 
     """This is a class to add a combo box for a set of variable values.
 
@@ -42,11 +42,11 @@ class ComboBoxValueWidget(gtk.HBox):
         self.metadata = metadata
         self.set_value = set_value
         self.hook = hook
-        comboboxentry = gtk.ComboBox()
-        liststore = gtk.ListStore(str)
-        cell = gtk.CellRendererText()
+        comboboxentry = Gtk.ComboBox()
+        liststore = Gtk.ListStore(str)
+        cell = Gtk.CellRendererText()
         cell.xalign = self.FRAC_X_ALIGN
-        comboboxentry.pack_start(cell)
+        comboboxentry.pack_start(cell, True, True, 0)
         comboboxentry.add_attribute(cell, 'text', 0)
 
         var_values = self.metadata[rose.META_PROP_VALUES]
@@ -67,7 +67,7 @@ class ComboBoxValueWidget(gtk.HBox):
         self.pack_start(comboboxentry, False, False, 0)
         self.grab_focus = lambda: self.hook.get_focus(comboboxentry)
         self.set_contains_error = (lambda e:
-                                   comboboxentry.modify_bg(gtk.STATE_NORMAL,
+                                   comboboxentry.modify_bg(Gtk.StateType.NORMAL,
                                                            self.bad_colour))
 
     def setter(self, widget):

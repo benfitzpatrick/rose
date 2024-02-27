@@ -22,9 +22,9 @@ import os
 import re
 import webbrowser
 
-import pygtk
-pygtk.require('2.0')
-import gtk
+import gi
+gi.require_version('Gtk', '3.0')
+from gi.repository import Gtk
 
 import rose.config
 import rose.gtk.dialog
@@ -56,16 +56,16 @@ class MetadataTable(object):
             self.previous.destroy()
 
         # rows, cols
-        table = gtk.Table(len(self.paths), 2)
+        table = Gtk.Table(len(self.paths), 2)
 
         # table rows
         for i, path in enumerate(self.paths):
-            label = gtk.Label(path)
+            label = Gtk.Label(label=path)
             label.set_alignment(xalign=0., yalign=0.5)
             # component, col_from, col_to, row_from, row_to
-            table.attach(label, 0, 1, i, i + 1, xoptions=gtk.FILL, xpadding=15)
+            table.attach(label, 0, 1, i, i + 1, xoptions=Gtk.AttachOptions.FILL, xpadding=15)
             label.show()
-            button = gtk.Button('Remove')
+            button = Gtk.Button('Remove')
             button.data = path
             # component, col_from, col_to, row_from, row_to
             table.attach(button, 1, 2, i, i + 1)
@@ -73,7 +73,7 @@ class MetadataTable(object):
             button.show()
 
         # append table
-        self.parent.pack_start(table)
+        self.parent.pack_start(table, True, True, 0)
         self.parent.reorder_child(table, 2)
         table.show()
 
@@ -98,33 +98,33 @@ class MainWindow(object):
              nav_panel=None, status_bar=None, notebook=None,
              page_change_func=rose.config_editor.false_function,
              save_func=rose.config_editor.false_function):
-        self.window = gtk.Window()
+        self.window = Gtk.Window()
         self.window.set_title(name + ' - ' +
                               rose.config_editor.LAUNCH_COMMAND)
         self.util = rose.config_editor.util.Lookup()
         self.window.set_icon(rose.gtk.util.get_icon())
-        gtk.window_set_default_icon_list(self.window.get_icon())
+        Gtk.window_set_default_icon_list(self.window.get_icon())
         self.window.set_default_size(*rose.config_editor.SIZE_WINDOW)
         self.window.set_destroy_with_parent(False)
         self.save_func = save_func
-        self.top_vbox = gtk.VBox()
+        self.top_vbox = Gtk.VBox()
         self.log_window = None  # The stack viewer.
         self.window.add(self.top_vbox)
         # Load the menu bar
         if menu is not None:
             menu.show()
-            self.top_vbox.pack_start(menu, expand=False)
+            self.top_vbox.pack_start(menu, False, True, 0)
         if accelerators is not None:
             self.window.add_accel_group(accelerators)
         if toolbar is not None:
             toolbar.show()
-            self.top_vbox.pack_start(toolbar, expand=False)
+            self.top_vbox.pack_start(toolbar, False, True, 0)
         # Load the nav_panel and notebook
         for signal in ['switch-page', 'focus-tab', 'select-page',
                        'change-current-page']:
             notebook.connect_after(signal, page_change_func)
         self.generate_main_hbox(nav_panel, notebook)
-        self.top_vbox.pack_start(self.main_hbox, expand=True)
+        self.top_vbox.pack_start(self.main_hbox, True, True, 0)
         self.top_vbox.pack_start(status_bar, expand=False, fill=False)
         self.top_vbox.show()
         self.window.show()
@@ -137,7 +137,7 @@ class MainWindow(object):
         This contains the tree panel and notebook.
 
         """
-        self.main_hbox = gtk.HPaned()
+        self.main_hbox = Gtk.HPaned()
         self.main_hbox.pack1(nav_panel, resize=False, shrink=False)
         self.main_hbox.show()
         self.main_hbox.pack2(notebook, resize=True, shrink=True)
@@ -161,27 +161,27 @@ class MainWindow(object):
 
     def launch_add_dialog(self, names, add_choices, section_help):
         """Launch a dialog asking for a section name."""
-        add_dialog = gtk.Dialog(title=rose.config_editor.DIALOG_TITLE_ADD,
+        add_dialog = Gtk.Dialog(title=rose.config_editor.DIALOG_TITLE_ADD,
                                 parent=self.window,
-                                buttons=(gtk.STOCK_CANCEL,
-                                         gtk.RESPONSE_REJECT,
-                                         gtk.STOCK_OK,
-                                         gtk.RESPONSE_ACCEPT))
+                                buttons=(Gtk.STOCK_CANCEL,
+                                         Gtk.ResponseType.REJECT,
+                                         Gtk.STOCK_OK,
+                                         Gtk.ResponseType.ACCEPT))
         ok_button = add_dialog.action_area.get_children()[0]
-        config_label = gtk.Label(rose.config_editor.DIALOG_BODY_ADD_CONFIG)
+        config_label = Gtk.Label(label=rose.config_editor.DIALOG_BODY_ADD_CONFIG)
         config_label.show()
-        label = gtk.Label(rose.config_editor.DIALOG_BODY_ADD_SECTION)
+        label = Gtk.Label(label=rose.config_editor.DIALOG_BODY_ADD_SECTION)
         label.show()
-        config_name_box = gtk.combo_box_new_text()
+        config_name_box = Gtk.ComboBoxText()
         for name in names:
             config_name_box.append_text(name.lstrip("/"))
         config_name_box.show()
         config_name_box.set_active(0)
-        section_box = gtk.Entry()
+        section_box = Gtk.Entry()
         if section_help is not None:
             section_box.set_text(section_help)
-        section_completion = gtk.EntryCompletion()
-        liststore = gtk.ListStore(str)
+        section_completion = Gtk.EntryCompletion()
+        liststore = Gtk.ListStore(str)
         section_completion.set_model(liststore)
         section_box.set_completion(section_completion)
         section_completion.set_text_column(0)
@@ -192,27 +192,27 @@ class MainWindow(object):
             lambda c: self._reload_choices(
                 liststore, names[c.get_active()], add_choices))
         section_box.connect("activate",
-                            lambda s: add_dialog.response(gtk.RESPONSE_OK))
+                            lambda s: add_dialog.response(Gtk.ResponseType.OK))
         section_box.connect(
             "changed",
             lambda s: ok_button.set_sensitive(bool(s.get_text())))
-        vbox = gtk.VBox(spacing=10)
+        vbox = Gtk.VBox(spacing=10)
         vbox.pack_start(config_label, expand=False, fill=False, padding=5)
         vbox.pack_start(config_name_box, expand=False, fill=False, padding=5)
         vbox.pack_start(label, expand=False, fill=False, padding=5)
         vbox.pack_start(section_box, expand=False, fill=False, padding=5)
         vbox.show()
-        hbox = gtk.HBox(spacing=10)
+        hbox = Gtk.HBox(spacing=10)
         hbox.pack_start(vbox, expand=True, fill=True, padding=10)
         hbox.show()
-        add_dialog.vbox.pack_start(hbox)
+        add_dialog.vbox.pack_start(hbox, True, True, 0)
         section_box.grab_focus()
         section_box.set_position(-1)
         section_completion.complete()
         ok_button.set_sensitive(bool(section_box.get_text()))
         response = add_dialog.run()
-        if response in [gtk.RESPONSE_OK, gtk.RESPONSE_YES,
-                        gtk.RESPONSE_ACCEPT]:
+        if response in [Gtk.ResponseType.OK, Gtk.ResponseType.YES,
+                        Gtk.ResponseType.ACCEPT]:
             config_name_entered = names[config_name_box.get_active()]
             section_name_entered = section_box.get_text()
             add_dialog.destroy()
@@ -223,24 +223,24 @@ class MainWindow(object):
     def launch_exit_warning_dialog(self):
         """Launch a 'really want to quit' dialog."""
         text = 'Save changes before closing?'
-        exit_dialog = gtk.MessageDialog(buttons=gtk.BUTTONS_NONE,
+        exit_dialog = Gtk.MessageDialog(buttons=Gtk.ButtonsType.NONE,
                                         message_format=text,
                                         parent=self.window)
-        exit_dialog.add_buttons(gtk.STOCK_NO, gtk.RESPONSE_REJECT,
-                                gtk.STOCK_CANCEL, gtk.RESPONSE_CLOSE,
-                                gtk.STOCK_YES, gtk.RESPONSE_ACCEPT)
+        exit_dialog.add_buttons(Gtk.STOCK_NO, Gtk.ResponseType.REJECT,
+                                Gtk.STOCK_CANCEL, Gtk.ResponseType.CLOSE,
+                                Gtk.STOCK_YES, Gtk.ResponseType.ACCEPT)
         exit_dialog.set_title(rose.config_editor.DIALOG_TITLE_SAVE_CHANGES)
         exit_dialog.set_modal(True)
         exit_dialog.set_keep_above(True)
         exit_dialog.action_area.get_children()[1].grab_focus()
         response = exit_dialog.run()
         exit_dialog.destroy()
-        if response == gtk.RESPONSE_REJECT:
-            gtk.main_quit()
-        elif response == gtk.RESPONSE_ACCEPT:
+        if response == Gtk.ResponseType.REJECT:
+            Gtk.main_quit()
+        elif response == Gtk.ResponseType.ACCEPT:
             save_ok = self.save_func()
             if save_ok:
-                gtk.main_quit()
+                Gtk.main_quit()
         return False
 
     def launch_graph_dialog(self, name_section_dict):
@@ -295,18 +295,18 @@ class MainWindow(object):
     def _launch_choose_section_dialog(
             self, name_section_dict, prefs, dialog_title, config_title,
             section_title, null_section_choice=False, do_target_section=False):
-        chooser_dialog = gtk.Dialog(
+        chooser_dialog = Gtk.Dialog(
             title=dialog_title,
             parent=self.window,
-            buttons=(gtk.STOCK_CANCEL,
-                     gtk.RESPONSE_REJECT,
-                     gtk.STOCK_OK,
-                     gtk.RESPONSE_ACCEPT))
-        config_label = gtk.Label(config_title)
+            buttons=(Gtk.STOCK_CANCEL,
+                     Gtk.ResponseType.REJECT,
+                     Gtk.STOCK_OK,
+                     Gtk.ResponseType.ACCEPT))
+        config_label = Gtk.Label(label=config_title)
         config_label.show()
-        section_label = gtk.Label(section_title)
+        section_label = Gtk.Label(label=section_title)
         section_label.show()
-        config_name_box = gtk.combo_box_new_text()
+        config_name_box = Gtk.ComboBoxText()
         name_keys = name_section_dict.keys()
         name_keys.sort()
         for k, name in enumerate(name_keys):
@@ -316,9 +316,9 @@ class MainWindow(object):
         if config_name_box.get_active() == -1:
             config_name_box.set_active(0)
         config_name_box.show()
-        section_box = gtk.VBox()
+        section_box = Gtk.VBox()
         section_box.show()
-        null_section_checkbutton = gtk.CheckButton(
+        null_section_checkbutton = Gtk.CheckButton(
             rose.config_editor.DIALOG_LABEL_NULL_SECTION)
         null_section_checkbutton.connect(
             "toggled",
@@ -338,14 +338,14 @@ class MainWindow(object):
                 section_box,
                 name_section_dict[name_keys[c.get_active()]],
                 prefs.get(name_keys[c.get_active()], [])))
-        vbox = gtk.VBox(spacing=rose.config_editor.SPACING_PAGE)
+        vbox = Gtk.VBox(spacing=rose.config_editor.SPACING_PAGE)
         vbox.pack_start(config_label, expand=False, fill=False)
         vbox.pack_start(config_name_box, expand=False, fill=False)
         vbox.pack_start(section_label, expand=False, fill=False)
         vbox.pack_start(null_section_checkbutton, expand=False, fill=False)
         vbox.pack_start(section_box, expand=False, fill=False)
         if do_target_section:
-            target_section_entry = gtk.Entry()
+            target_section_entry = Gtk.Entry()
             self._reload_target_section_entry(
                 section_combo, target_section_entry,
                 name_keys[config_name_box.get_active()], name_section_dict
@@ -361,16 +361,16 @@ class MainWindow(object):
             target_section_entry.show()
             vbox.pack_start(target_section_entry, expand=False, fill=False)
         vbox.show()
-        hbox = gtk.HBox()
+        hbox = Gtk.HBox()
         hbox.pack_start(vbox, expand=True, fill=True,
                         padding=rose.config_editor.SPACING_PAGE)
         hbox.show()
         chooser_dialog.vbox.pack_start(
-            hbox, padding=rose.config_editor.SPACING_PAGE)
+            hbox, True, True, rose.config_editor.SPACING_PAGE)
         section_box.grab_focus()
         response = chooser_dialog.run()
-        if response in [gtk.RESPONSE_OK, gtk.RESPONSE_YES,
-                        gtk.RESPONSE_ACCEPT]:
+        if response in [Gtk.ResponseType.OK, Gtk.ResponseType.YES,
+                        Gtk.ResponseType.ACCEPT]:
             config_name_entered = name_keys[config_name_box.get_active()]
             if null_section_checkbutton.get_active():
                 chooser_dialog.destroy()
@@ -399,7 +399,7 @@ class MainWindow(object):
         for child in vbox.get_children():
             vbox.remove(child)
         sections.sort(rose.config.sort_settings)
-        section_chooser = gtk.combo_box_new_text()
+        section_chooser = Gtk.ComboBoxText()
         for k, section in enumerate(sections):
             section_chooser.append_text(section)
             if section in prefs:
@@ -435,15 +435,15 @@ class MainWindow(object):
         dialog, container, name_entry = rose.gtk.dialog.get_naming_dialog(
             label, checker_function, ok_tip_text, err_tip_text)
         dialog.set_title(rose.config_editor.DIALOG_TITLE_CONFIG_CREATE)
-        meta_hbox = gtk.HBox()
-        meta_label = gtk.Label(
+        meta_hbox = Gtk.HBox()
+        meta_label = Gtk.Label(label=
             rose.config_editor.DIALOG_LABEL_CONFIG_CHOOSE_META)
         meta_label.show()
-        meta_entry = gtk.Entry()
+        meta_entry = Gtk.Entry()
         tip_text = rose.config_editor.TIP_CONFIG_CHOOSE_META
         meta_entry.set_tooltip_text(tip_text)
         meta_entry.connect(
-            "activate", lambda b: dialog.response(gtk.RESPONSE_ACCEPT))
+            "activate", lambda b: dialog.response(Gtk.ResponseType.ACCEPT))
         meta_entry.show()
         meta_hbox.pack_start(meta_label, expand=False, fill=False,
                              padding=rose.config_editor.SPACING_SUB_PAGE)
@@ -460,30 +460,30 @@ class MainWindow(object):
         if meta_entry.get_text():
             meta = meta_entry.get_text().strip()
         dialog.destroy()
-        if response == gtk.RESPONSE_ACCEPT:
+        if response == Gtk.ResponseType.ACCEPT:
             return name, meta
         return None, None
 
     def launch_open_dirname_dialog(self):
         """Launch a FileChooserDialog and return a directory, or None."""
-        open_dialog = gtk.FileChooserDialog(
+        open_dialog = Gtk.FileChooserDialog(
             title=rose.config_editor.DIALOG_TITLE_OPEN,
-            action=gtk.FILE_CHOOSER_ACTION_OPEN,
-            buttons=(gtk.STOCK_CANCEL,
-                     gtk.RESPONSE_CANCEL,
-                     gtk.STOCK_OPEN,
-                     gtk.RESPONSE_OK))
+            action=Gtk.FileChooserAction.OPEN,
+            buttons=(Gtk.STOCK_CANCEL,
+                     Gtk.ResponseType.CANCEL,
+                     Gtk.STOCK_OPEN,
+                     Gtk.ResponseType.OK))
         open_dialog.set_transient_for(self.window)
         open_dialog.set_icon(self.window.get_icon())
-        open_dialog.set_default_response(gtk.RESPONSE_OK)
-        config_filter = gtk.FileFilter()
+        open_dialog.set_default_response(Gtk.ResponseType.OK)
+        config_filter = Gtk.FileFilter()
         config_filter.add_pattern(rose.TOP_CONFIG_NAME)
         config_filter.add_pattern(rose.SUB_CONFIG_NAME)
         config_filter.add_pattern(rose.INFO_CONFIG_NAME)
         open_dialog.set_filter(config_filter)
         response = open_dialog.run()
-        if response in [gtk.RESPONSE_OK, gtk.RESPONSE_ACCEPT,
-                        gtk.RESPONSE_YES]:
+        if response in [Gtk.ResponseType.OK, Gtk.ResponseType.ACCEPT,
+                        Gtk.ResponseType.YES]:
             config_directory = os.path.dirname(open_dialog.get_filename())
             open_dialog.destroy()
             return config_directory
@@ -492,19 +492,19 @@ class MainWindow(object):
 
     def launch_load_metadata_dialog(self):
         """ Launches a dialoge for selecting a metadata path. """
-        open_dialog = gtk.FileChooserDialog(
+        open_dialog = Gtk.FileChooserDialog(
             title=rose.config_editor.DIALOG_TITLE_LOAD_METADATA,
-            action=gtk.FILE_CHOOSER_ACTION_SELECT_FOLDER,
-            buttons=(gtk.STOCK_CLOSE,
-                     gtk.RESPONSE_CANCEL,
-                     gtk.STOCK_ADD,
-                     gtk.RESPONSE_OK))
+            action=Gtk.FileChooserAction.SELECT_FOLDER,
+            buttons=(Gtk.STOCK_CLOSE,
+                     Gtk.ResponseType.CANCEL,
+                     Gtk.STOCK_ADD,
+                     Gtk.ResponseType.OK))
         open_dialog.set_transient_for(self.window)
         open_dialog.set_icon(self.window.get_icon())
-        open_dialog.set_default_response(gtk.RESPONSE_OK)
+        open_dialog.set_default_response(Gtk.ResponseType.OK)
         response = open_dialog.run()
-        if response in [gtk.RESPONSE_OK, gtk.RESPONSE_ACCEPT,
-                        gtk.RESPONSE_YES]:
+        if response in [Gtk.ResponseType.OK, Gtk.ResponseType.ACCEPT,
+                        Gtk.ResponseType.YES]:
             config_directory = open_dialog.get_filename()
             open_dialog.destroy()
             return config_directory
@@ -516,38 +516,38 @@ class MainWindow(object):
         Launches a dialogue where users may add or remove custom meta data
         paths.
         """
-        dialog = gtk.Dialog(
+        dialog = Gtk.Dialog(
             title=rose.config_editor.DIALOG_TITLE_MANAGE_METADATA,
-            buttons=(gtk.STOCK_CANCEL,
-                     gtk.RESPONSE_CANCEL,
-                     gtk.STOCK_OK,
-                     gtk.RESPONSE_OK)
+            buttons=(Gtk.STOCK_CANCEL,
+                     Gtk.ResponseType.CANCEL,
+                     Gtk.STOCK_OK,
+                     Gtk.ResponseType.OK)
         )
 
         # add description
-        label = gtk.Label('Specify metadata paths to override the default '
+        label = Gtk.Label(label='Specify metadata paths to override the default '
                           'metadata.\n')
-        dialog.vbox.pack_start(label)
+        dialog.vbox.pack_start(label, True, True, 0)
         label.show()
 
         # create table of paths
         table = MetadataTable(paths, dialog.vbox)
 
         # create add path button
-        button = gtk.Button('Add Path')
+        button = Gtk.Button('Add Path')
 
         def add_path():
             _path = self.launch_load_metadata_dialog()
             if _path:
                 table.add_row(_path)
         button.connect('clicked', lambda b: add_path())
-        dialog.vbox.pack_start(button)
+        dialog.vbox.pack_start(button, True, True, 0)
         button.show()
 
         # open the dialogue
         response = dialog.run()
-        if response in [gtk.RESPONSE_OK, gtk.RESPONSE_ACCEPT,
-                        gtk.RESPONSE_YES]:
+        if response in [Gtk.ResponseType.OK, Gtk.ResponseType.ACCEPT,
+                        Gtk.ResponseType.YES]:
             # if user clicked 'ok'
             dialog.destroy()
             return table.paths
@@ -601,7 +601,7 @@ class MainWindow(object):
         self.log_window.set_transient_for(self.window)
 
 
-class MacroChangesDialog(gtk.Dialog):
+class MacroChangesDialog(Gtk.Dialog):
 
     """Class to hold a dialog summarising macro results."""
 
@@ -625,11 +625,11 @@ class MacroChangesDialog(gtk.Dialog):
         self.search_func = search_func
         if self.for_validate:
             title = rose.config_editor.DIALOG_TITLE_MACRO_VALIDATE
-            button_list = [gtk.STOCK_OK, gtk.RESPONSE_ACCEPT]
+            button_list = [Gtk.STOCK_OK, Gtk.ResponseType.ACCEPT]
         else:
             title = rose.config_editor.DIALOG_TITLE_MACRO_TRANSFORM
-            button_list = [gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT,
-                           gtk.STOCK_APPLY, gtk.RESPONSE_ACCEPT]
+            button_list = [Gtk.STOCK_CANCEL, Gtk.ResponseType.REJECT,
+                           Gtk.STOCK_APPLY, Gtk.ResponseType.ACCEPT]
         title = title.format(self.short_macro_name, self.short_config_name)
         button_list = tuple(button_list)
         super(MacroChangesDialog, self).__init__(buttons=button_list,
@@ -637,37 +637,37 @@ class MacroChangesDialog(gtk.Dialog):
         if not self.for_transform:
             self.set_modal(False)
         self.set_title(title.format(macro_name))
-        self.label = gtk.Label()
+        self.label = Gtk.Label()
         self.label.show()
         if self.for_validate:
-            stock_id = gtk.STOCK_DIALOG_WARNING
+            stock_id = Gtk.STOCK_DIALOG_WARNING
         else:
-            stock_id = gtk.STOCK_CONVERT
-        image = gtk.image_new_from_stock(stock_id, gtk.ICON_SIZE_LARGE_TOOLBAR)
+            stock_id = Gtk.STOCK_CONVERT
+        image = Gtk.Image.new_from_stock(stock_id, Gtk.IconSize.LARGE_TOOLBAR)
         image.show()
-        hbox = gtk.HBox()
+        hbox = Gtk.HBox()
         hbox.pack_start(image, expand=False, fill=False,
                         padding=rose.config_editor.SPACING_PAGE)
         hbox.pack_start(self.label, expand=False, fill=False,
                         padding=rose.config_editor.SPACING_PAGE)
         hbox.show()
-        self.treewindow = gtk.ScrolledWindow()
+        self.treewindow = Gtk.ScrolledWindow()
         self.treewindow.show()
-        self.treewindow.set_policy(gtk.POLICY_NEVER, gtk.POLICY_NEVER)
+        self.treewindow.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.NEVER)
         self.treeview = rose.gtk.util.TooltipTreeView(
             get_tooltip_func=self._get_tooltip)
         self.treeview.show()
-        self.treemodel = gtk.TreeStore(str, str, str, str, str)
+        self.treemodel = Gtk.TreeStore(str, str, str, str, str)
 
         self.treeview.set_model(self.treemodel)
         for i, title in enumerate(self.COLUMNS):
-            column = gtk.TreeViewColumn()
+            column = Gtk.TreeViewColumn()
             column.set_title(title)
-            cell = gtk.CellRendererText()
+            cell = Gtk.CellRendererText()
             if i == len(self.COLUMNS) - 1:
-                column.pack_start(cell, expand=True)
+                column.pack_start(cell, True, True, 0)
             else:
-                column.pack_start(cell, expand=False)
+                column.pack_start(cell, False, True, 0)
             if title == "Type":
                 column.set_cell_data_func(cell, self._set_type_markup, i)
             else:
@@ -734,12 +734,12 @@ class MacroChangesDialog(gtk.Dialog):
         new_size = [-1, -1]
         for i in [0, 1]:
             new_size[i] = min([my_size[i], max_size[i]])
-        self.treewindow.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
+        self.treewindow.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
         self.set_default_size(*new_size)
         if self.for_transform:
             response = self.run()
             self.destroy()
-            return (response == gtk.RESPONSE_ACCEPT)
+            return (response == Gtk.ResponseType.ACCEPT)
         else:
             self.show()
             self.action_area.get_children()[0].connect(

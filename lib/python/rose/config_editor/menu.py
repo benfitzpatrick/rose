@@ -26,9 +26,9 @@ import subprocess
 import sys
 import traceback
 
-import pygtk
-pygtk.require('2.0')
-import gtk
+import gi
+gi.require_version('Gtk', '3.0')
+from gi.repository import Gtk
 
 import rose.config
 import rose.config_editor
@@ -138,95 +138,95 @@ class MenuBar(object):
     action_details = [
         ('File', None,
          rose.config_editor.TOP_MENU_FILE),
-        ('Open...', gtk.STOCK_OPEN,
+        ('Open...', Gtk.STOCK_OPEN,
          rose.config_editor.TOP_MENU_FILE_OPEN,
          rose.config_editor.ACCEL_OPEN),
-        ('Save', gtk.STOCK_SAVE,
+        ('Save', Gtk.STOCK_SAVE,
          rose.config_editor.TOP_MENU_FILE_SAVE,
          rose.config_editor.ACCEL_SAVE),
-        ('Check and save', gtk.STOCK_SPELL_CHECK,
+        ('Check and save', Gtk.STOCK_SPELL_CHECK,
          rose.config_editor.TOP_MENU_FILE_CHECK_AND_SAVE),
-        ('Load All Apps', gtk.STOCK_CDROM,
+        ('Load All Apps', Gtk.STOCK_CDROM,
          rose.config_editor.TOP_MENU_FILE_LOAD_APPS),
-        ('Quit', gtk.STOCK_QUIT,
+        ('Quit', Gtk.STOCK_QUIT,
          rose.config_editor.TOP_MENU_FILE_QUIT,
          rose.config_editor.ACCEL_QUIT),
         ('Edit', None,
          rose.config_editor.TOP_MENU_EDIT),
-        ('Undo', gtk.STOCK_UNDO,
+        ('Undo', Gtk.STOCK_UNDO,
          rose.config_editor.TOP_MENU_EDIT_UNDO,
          rose.config_editor.ACCEL_UNDO),
-        ('Redo', gtk.STOCK_REDO,
+        ('Redo', Gtk.STOCK_REDO,
          rose.config_editor.TOP_MENU_EDIT_REDO,
          rose.config_editor.ACCEL_REDO),
-        ('Stack', gtk.STOCK_INFO,
+        ('Stack', Gtk.STOCK_INFO,
          rose.config_editor.TOP_MENU_EDIT_STACK),
-        ('Find', gtk.STOCK_FIND,
+        ('Find', Gtk.STOCK_FIND,
          rose.config_editor.TOP_MENU_EDIT_FIND,
          rose.config_editor.ACCEL_FIND),
-        ('Find Next', gtk.STOCK_FIND,
+        ('Find Next', Gtk.STOCK_FIND,
          rose.config_editor.TOP_MENU_EDIT_FIND_NEXT,
          rose.config_editor.ACCEL_FIND_NEXT),
-        ('Preferences', gtk.STOCK_PREFERENCES,
+        ('Preferences', Gtk.STOCK_PREFERENCES,
          rose.config_editor.TOP_MENU_EDIT_PREFERENCES),
         ('View', None,
          rose.config_editor.TOP_MENU_VIEW),
         ('Page', None,
          rose.config_editor.TOP_MENU_PAGE),
-        ('Add variable', gtk.STOCK_ADD,
+        ('Add variable', Gtk.STOCK_ADD,
          rose.config_editor.TOP_MENU_PAGE_ADD),
-        ('Revert', gtk.STOCK_REVERT_TO_SAVED,
+        ('Revert', Gtk.STOCK_REVERT_TO_SAVED,
          rose.config_editor.TOP_MENU_PAGE_REVERT),
-        ('Page Info', gtk.STOCK_INFO,
+        ('Page Info', Gtk.STOCK_INFO,
          rose.config_editor.TOP_MENU_PAGE_INFO),
-        ('Page Help', gtk.STOCK_HELP,
+        ('Page Help', Gtk.STOCK_HELP,
          rose.config_editor.TOP_MENU_PAGE_HELP),
-        ('Page Web Help', gtk.STOCK_HOME,
+        ('Page Web Help', Gtk.STOCK_HOME,
          rose.config_editor.TOP_MENU_PAGE_WEB_HELP),
         ('Metadata', None,
          rose.config_editor.TOP_MENU_METADATA),
-        ('Reload metadata', gtk.STOCK_REFRESH,
+        ('Reload metadata', Gtk.STOCK_REFRESH,
          rose.config_editor.TOP_MENU_METADATA_REFRESH,
          rose.config_editor.ACCEL_METADATA_REFRESH),
-        ('Load custom metadata', gtk.STOCK_DIRECTORY,
+        ('Load custom metadata', Gtk.STOCK_DIRECTORY,
          rose.config_editor.TOP_MENU_METADATA_LOAD),
-        ('Prefs', gtk.STOCK_PREFERENCES,
+        ('Prefs', Gtk.STOCK_PREFERENCES,
          rose.config_editor.TOP_MENU_METADATA_PREFERENCES),
-        ('Upgrade', gtk.STOCK_GO_UP,
+        ('Upgrade', Gtk.STOCK_GO_UP,
          rose.config_editor.TOP_MENU_METADATA_UPGRADE),
-        ('All V', gtk.STOCK_DIALOG_QUESTION,
+        ('All V', Gtk.STOCK_DIALOG_QUESTION,
          rose.config_editor.TOP_MENU_METADATA_MACRO_ALL_V),
-        ('Autofix', gtk.STOCK_CONVERT,
+        ('Autofix', Gtk.STOCK_CONVERT,
          rose.config_editor.TOP_MENU_METADATA_MACRO_AUTOFIX),
-        ('Extra checks', gtk.STOCK_DIALOG_QUESTION,
+        ('Extra checks', Gtk.STOCK_DIALOG_QUESTION,
          rose.config_editor.TOP_MENU_METADATA_CHECK),
-        ('Graph', gtk.STOCK_SORT_ASCENDING,
+        ('Graph', Gtk.STOCK_SORT_ASCENDING,
          rose.config_editor.TOP_MENU_METADATA_GRAPH),
         ('Tools', None,
          rose.config_editor.TOP_MENU_TOOLS),
-        ('Run Suite', gtk.STOCK_MEDIA_PLAY,
+        ('Run Suite', Gtk.STOCK_MEDIA_PLAY,
          rose.config_editor.TOP_MENU_TOOLS_SUITE_RUN),
-        ('Run Suite default', gtk.STOCK_MEDIA_PLAY,
+        ('Run Suite default', Gtk.STOCK_MEDIA_PLAY,
          rose.config_editor.TOP_MENU_TOOLS_SUITE_RUN_DEFAULT,
          rose.config_editor.ACCEL_SUITE_RUN),
-        ('Run Suite custom', gtk.STOCK_EDIT,
+        ('Run Suite custom', Gtk.STOCK_EDIT,
          rose.config_editor.TOP_MENU_TOOLS_SUITE_RUN_CUSTOM),
-        ('Browser', gtk.STOCK_DIRECTORY,
+        ('Browser', Gtk.STOCK_DIRECTORY,
          rose.config_editor.TOP_MENU_TOOLS_BROWSER,
          rose.config_editor.ACCEL_BROWSER),
-        ('Terminal', gtk.STOCK_EXECUTE,
+        ('Terminal', Gtk.STOCK_EXECUTE,
          rose.config_editor.TOP_MENU_TOOLS_TERMINAL,
          rose.config_editor.ACCEL_TERMINAL),
-        ('View Output', gtk.STOCK_DIRECTORY,
+        ('View Output', Gtk.STOCK_DIRECTORY,
          rose.config_editor.TOP_MENU_TOOLS_VIEW_OUTPUT),
         ('Open Suite GControl', "rose-gtk-scheduler",
          rose.config_editor.TOP_MENU_TOOLS_OPEN_SUITE_GCONTROL),
         ('Help', None,
          rose.config_editor.TOP_MENU_HELP),
-        ('Documentation', gtk.STOCK_HELP,
+        ('Documentation', Gtk.STOCK_HELP,
          rose.config_editor.TOP_MENU_HELP_GUI,
          rose.config_editor.ACCEL_HELP_GUI),
-        ('About', gtk.STOCK_DIALOG_INFO,
+        ('About', Gtk.STOCK_DIALOG_INFO,
          rose.config_editor.TOP_MENU_HELP_ABOUT)]
 
     toggle_action_details = [
@@ -262,8 +262,8 @@ class MenuBar(object):
          rose.config_editor.TOP_MENU_METADATA_SWITCH_OFF)]
 
     def __init__(self):
-        self.uimanager = gtk.UIManager()
-        self.actiongroup = gtk.ActionGroup('MenuBar')
+        self.uimanager = Gtk.UIManager()
+        self.actiongroup = Gtk.ActionGroup('MenuBar')
         self.actiongroup.add_actions(self.action_details)
         self.actiongroup.add_toggle_actions(self.toggle_action_details)
         self.uimanager.insert_action_group(self.actiongroup, pos=0)
@@ -272,14 +272,14 @@ class MenuBar(object):
 
     def set_accelerators(self, accel_dict):
         """Add the keyboard accelerators."""
-        self.accelerators = gtk.AccelGroup()
+        self.accelerators = Gtk.AccelGroup()
         self.accelerators.lookup = {}  # Unfortunately, this is necessary.
         for key_press, accel_func in accel_dict.items():
-            key, mod = gtk.accelerator_parse(key_press)
+            key, mod = Gtk.accelerator_parse(key_press)
             self.accelerators.lookup[str(key) + str(mod)] = accel_func
             self.accelerators.connect_group(
                 key, mod,
-                gtk.ACCEL_VISIBLE,
+                Gtk.AccelFlags.VISIBLE,
                 lambda a, c, k, m: self.accelerators.lookup[str(k) + str(m)]())
 
     def clear_macros(self):
@@ -307,7 +307,7 @@ class MenuBar(object):
         if config_item is None:
             actiongroup = self.uimanager.get_action_groups()[0]
             if actiongroup.get_action(config_menu_name) is None:
-                actiongroup.add_action(gtk.Action(config_menu_name,
+                actiongroup.add_action(Gtk.Action(config_menu_name,
                                                   label,
                                                   None, None))
             new_ui = """<ui><menubar name="TopMenuBar">
@@ -317,17 +317,17 @@ class MenuBar(object):
             self.macro_ids.append(self.uimanager.add_ui_from_string(new_ui))
             config_item = self.uimanager.get_widget(config_address)
             if image_path is not None:
-                image = gtk.image_new_from_file(image_path)
+                image = Gtk.image_new_from_file(image_path)
                 config_item.set_image(image)
         if config_item.get_submenu() is None:
-            config_item.set_submenu(gtk.Menu())
+            config_item.set_submenu(Gtk.Menu())
         macro_fullname = ".".join([modulename, classname, methodname])
         macro_fullname = macro_fullname.replace("_", "__")
         if methodname == rose.macro.VALIDATE_METHOD:
-            stock_id = gtk.STOCK_DIALOG_QUESTION
+            stock_id = Gtk.STOCK_DIALOG_QUESTION
         else:
-            stock_id = gtk.STOCK_CONVERT
-        macro_item = gtk.ImageMenuItem(stock_id=stock_id)
+            stock_id = Gtk.STOCK_CONVERT
+        macro_item = Gtk.ImageMenuItem(stock_id=stock_id)
         macro_item.set_label(macro_fullname)
         macro_item.set_tooltip_text(help_)
         macro_item.show()
@@ -340,7 +340,7 @@ class MenuBar(object):
             for item in config_item.get_submenu().get_children():
                 if hasattr(item, "_rose_all_validators"):
                     return False
-            all_item = gtk.ImageMenuItem(gtk.STOCK_DIALOG_QUESTION)
+            all_item = Gtk.ImageMenuItem(Gtk.STOCK_DIALOG_QUESTION)
             all_item._rose_all_validators = True
             all_item.set_label(rose.config_editor.MACRO_MENU_ALL_VALIDATORS)
             all_item.set_tooltip_text(
@@ -384,7 +384,7 @@ class MainMenuHandler(object):
 
     def get_orphan_container(self, page):
         """Return a container with the page object inside."""
-        box = gtk.VBox()
+        box = Gtk.VBox()
         box.pack_start(page, expand=True, fill=True)
         box.show()
         return box
@@ -401,9 +401,9 @@ class MainMenuHandler(object):
                 self.mainwindow.launch_exit_warning_dialog()
                 return True
         try:
-            gtk.main_quit()
+            Gtk.main_quit()
         except RuntimeError:
-            # This can occur before gtk.main() is called, during the load.
+            # This can occur before Gtk.main() is called, during the load.
             sys.exit()
 
     def check_all_extra(self):
@@ -537,9 +537,9 @@ class MainMenuHandler(object):
             this_is_valid = True
             try:
                 new_val = ast.literal_eval(entry.get_text())
-                entry.modify_text(gtk.STATE_NORMAL, None)
+                entry.modify_text(Gtk.StateType.NORMAL, None)
             except (ValueError, EOFError, SyntaxError):
-                entry.modify_text(gtk.STATE_NORMAL, self.bad_colour)
+                entry.modify_text(Gtk.StateType.NORMAL, self.bad_colour)
                 is_valid = False
                 this_is_valid = False
             if not this_is_valid or new_val != optionals[k]:
@@ -547,7 +547,7 @@ class MainMenuHandler(object):
                 labels[k].set_markup(lab)
             else:
                 labels[k].set_text(str(k) + ":")
-        dialog.set_response_sensitive(gtk.RESPONSE_OK, is_valid)
+        dialog.set_response_sensitive(Gtk.ResponseType.OK, is_valid)
         return
 
     def handle_macro_entry_activate(self, entry_widget, dialog, entries):
@@ -557,7 +557,7 @@ class MainMenuHandler(object):
             except (ValueError, EOFError, SyntaxError):
                 break
         else:
-            dialog.response(gtk.RESPONSE_OK)
+            dialog.response(Gtk.ResponseType.OK)
 
     def override_macro_defaults(self, optionals, methname):
         """Launch a dialog to handle capture of any override args to macro"""
@@ -567,20 +567,20 @@ class MainMenuHandler(object):
         # create the text input field
         entries = {}
         labels = {}
-        dialog = gtk.MessageDialog(
+        dialog = Gtk.MessageDialog(
             None,
-            gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
-            gtk.MESSAGE_QUESTION,
-            gtk.BUTTONS_OK_CANCEL,
+            Gtk.DialogFlags.MODAL | Gtk.DialogFlags.DESTROY_WITH_PARENT,
+            Gtk.MessageType.QUESTION,
+            Gtk.ButtonsType.OK_CANCEL,
             None)
         dialog.set_markup('Specify overrides for macro arguments:')
         dialog.set_title(methname)
-        table = gtk.Table(len(optionals.items()), 2, False)
+        table = Gtk.Table(len(optionals.items()), 2, False)
         dialog.vbox.add(table)
         for i in range(len(optionals.items())):
             key, value = optionals.items()[i]
-            label = gtk.Label(str(key) + ":")
-            entry = gtk.Entry()
+            label = Gtk.Label(label=str(key) + ":")
+            entry = Gtk.Entry()
             if isinstance(value, str):
                 entry.set_text("'" + value + "'")
             else:
@@ -592,12 +592,12 @@ class MainMenuHandler(object):
             entries[key] = entry
             labels[key] = label
             table.attach(entry, 1, 2, i, i + 1)
-            hbox = gtk.HBox()
-            hbox.pack_start(label, expand=False)
+            hbox = Gtk.HBox()
+            hbox.pack_start(label, False, True, 0)
             table.attach(hbox, 0, 1, i, i + 1)
         dialog.show_all()
         response = dialog.run()
-        if response == gtk.RESPONSE_CANCEL or response == gtk.RESPONSE_CLOSE:
+        if response == Gtk.ResponseType.CANCEL or response == Gtk.ResponseType.CLOSE:
             res = optionals
             dialog.destroy()
         else:

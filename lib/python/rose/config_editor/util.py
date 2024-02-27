@@ -25,9 +25,9 @@ one to import custom plugins.
 
 """
 
-import pygtk
-pygtk.require("2.0")
-import gtk
+import gi
+gi.require_version("Gtk", "3.0")
+from gi.repository import Gtk
 
 import rose
 import rose.gtk.dialog
@@ -137,7 +137,7 @@ def launch_node_info_dialog(node, changes, search_function):
         text += _pretty_format_data(att_val, global_indent=indent0,
                                     width=lenval)
         text += "\n"
-    rose.gtk.dialog.run_hyperlink_dialog(gtk.STOCK_DIALOG_INFO, text, title,
+    rose.gtk.dialog.run_hyperlink_dialog(Gtk.STOCK_DIALOG_INFO, text, title,
                                          search_function)
 
 

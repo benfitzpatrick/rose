@@ -20,9 +20,9 @@
 
 import shlex
 
-import pygtk
-pygtk.require('2.0')
-import gtk
+import gi
+gi.require_version('Gtk', '3.0')
+from gi.repository import Gtk
 
 import rose.config
 import rose.config_editor.util
@@ -31,7 +31,7 @@ import rose.formats
 import rose.variable
 
 
-class PageTable(gtk.Table):
+class PageTable(Gtk.Table):
 
     """Return a widget table generated from panel_data.
 
@@ -263,7 +263,7 @@ class PageArrayTable(PageTable):
         self.array_length = max([max_meta_length, max_values_length])
 
 
-class PageLatentTable(gtk.Table):
+class PageLatentTable(Gtk.Table):
 
     """Return a widget table generated from panel_data.
 

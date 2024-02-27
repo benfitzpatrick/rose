@@ -21,9 +21,9 @@
 
 import shlex
 
-import pygtk
-pygtk.require('2.0')
-import gtk
+import gi
+gi.require_version('Gtk', '3.0')
+from gi.repository import Gtk
 
 import rose.config
 import rose.config_editor
@@ -31,7 +31,7 @@ import rose.formats
 import rose.gtk.choice
 
 
-class SourceValueWidget(gtk.HBox):
+class SourceValueWidget(Gtk.HBox):
 
     """This class generates a special widget for the file source variable.
 
@@ -55,19 +55,19 @@ class SourceValueWidget(gtk.HBox):
         if self.formats_ok is None:
             content_sections = self._get_available_sections()
             self.formats_ok = bool(content_sections)
-        vbox = gtk.VBox()
+        vbox = Gtk.VBox()
         vbox.show()
-        formats_check_button = gtk.CheckButton(
+        formats_check_button = Gtk.CheckButton(
             rose.config_editor.FILE_CONTENT_PANEL_FORMAT_LABEL)
         formats_check_button.set_active(not self.formats_ok)
         formats_check_button.connect("toggled", self._toggle_formats)
         formats_check_button.show()
-        formats_check_hbox = gtk.HBox()
+        formats_check_hbox = Gtk.HBox()
         formats_check_hbox.show()
         formats_check_hbox.pack_end(formats_check_button, expand=False,
                                     fill=False)
         vbox.pack_start(formats_check_hbox, expand=False, fill=False)
-        treeviews_hbox = gtk.HPaned()
+        treeviews_hbox = Gtk.HPaned()
         treeviews_hbox.show()
         self._listview = rose.gtk.choice.ChoicesListView(
             self._set_listview,
@@ -77,17 +77,17 @@ class SourceValueWidget(gtk.HBox):
         )
         self._listview.set_tooltip_text(
             rose.config_editor.FILE_CONTENT_PANEL_TIP)
-        frame = gtk.Frame()
+        frame = Gtk.Frame()
         frame.show()
         frame.add(self._listview)
-        value_vbox = gtk.VBox()
+        value_vbox = Gtk.VBox()
         value_vbox.show()
         value_vbox.pack_start(frame, expand=False, fill=False)
-        value_eb = gtk.EventBox()
+        value_eb = Gtk.EventBox()
         value_eb.show()
         value_vbox.pack_start(value_eb, expand=True, fill=True)
 
-        self._available_frame = gtk.Frame()
+        self._available_frame = Gtk.Frame()
         self._generate_available_treeview()
         adder_value = ""
         adder_metadata = {}
@@ -105,7 +105,7 @@ class SourceValueWidget(gtk.HBox):
         vbox.pack_start(treeviews_hbox, expand=True, fill=True)
         vbox.pack_start(self._adder, expand=True, fill=True)
         self.grab_focus = lambda: self.hook.get_focus(self._listview)
-        self.pack_start(vbox)
+        self.pack_start(vbox, True, True, 0)
 
     def _toggle_formats(self, widget):
         """Toggle the show/hide of the available format sections."""
@@ -137,10 +137,10 @@ class SourceValueWidget(gtk.HBox):
 
     def _get_custom_menu_items(self):
         """Return some custom menuitems for use in the list view."""
-        menuitem = gtk.ImageMenuItem(
+        menuitem = Gtk.ImageMenuItem(
             rose.config_editor.FILE_CONTENT_PANEL_MENU_OPTIONAL)
-        image = gtk.image_new_from_stock(
-            gtk.STOCK_DIALOG_QUESTION, gtk.ICON_SIZE_MENU)
+        image = Gtk.Image.new_from_stock(
+            Gtk.STOCK_DIALOG_QUESTION, Gtk.IconSize.MENU)
         menuitem.set_image(image)
         menuitem.connect(
             "button-press-event", self._toggle_menu_optional_status)

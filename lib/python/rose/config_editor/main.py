@@ -52,8 +52,8 @@ warnings.filterwarnings('ignore',
                         'gdk',
                         Warning)
 
-import pygtk
-pygtk.require('2.0')
+import gi
+gi.require_version('Gtk', '3.0')
 import gtk  # Only used to run the main gtk loop.
 
 import rose.config
@@ -332,25 +332,25 @@ class MainController(object):
         """Link in the toolbar functionality."""
         self.toolbar = rose.gtk.util.ToolBar(
             widgets=[
-                (rose.config_editor.TOOLBAR_OPEN, 'gtk.STOCK_OPEN'),
-                (rose.config_editor.TOOLBAR_SAVE, 'gtk.STOCK_SAVE'),
+                (rose.config_editor.TOOLBAR_OPEN, 'Gtk.STOCK_OPEN'),
+                (rose.config_editor.TOOLBAR_SAVE, 'Gtk.STOCK_SAVE'),
                 (rose.config_editor.TOOLBAR_CHECK_AND_SAVE,
-                 'gtk.STOCK_SPELL_CHECK'),
-                (rose.config_editor.TOOLBAR_LOAD_APPS, 'gtk.STOCK_CDROM'),
-                (rose.config_editor.TOOLBAR_BROWSE, 'gtk.STOCK_DIRECTORY'),
-                (rose.config_editor.TOOLBAR_UNDO, 'gtk.STOCK_UNDO'),
-                (rose.config_editor.TOOLBAR_REDO, 'gtk.STOCK_REDO'),
-                (rose.config_editor.TOOLBAR_ADD, 'gtk.STOCK_ADD'),
+                 'Gtk.STOCK_SPELL_CHECK'),
+                (rose.config_editor.TOOLBAR_LOAD_APPS, 'Gtk.STOCK_CDROM'),
+                (rose.config_editor.TOOLBAR_BROWSE, 'Gtk.STOCK_DIRECTORY'),
+                (rose.config_editor.TOOLBAR_UNDO, 'Gtk.STOCK_UNDO'),
+                (rose.config_editor.TOOLBAR_REDO, 'Gtk.STOCK_REDO'),
+                (rose.config_editor.TOOLBAR_ADD, 'Gtk.STOCK_ADD'),
                 (rose.config_editor.TOOLBAR_REVERT,
-                 'gtk.STOCK_REVERT_TO_SAVED'),
-                (rose.config_editor.TOOLBAR_FIND, 'gtk.Entry'),
-                (rose.config_editor.TOOLBAR_FIND_NEXT, 'gtk.STOCK_FIND'),
+                 'Gtk.STOCK_REVERT_TO_SAVED'),
+                (rose.config_editor.TOOLBAR_FIND, 'Gtk.Entry'),
+                (rose.config_editor.TOOLBAR_FIND_NEXT, 'Gtk.STOCK_FIND'),
                 (rose.config_editor.TOOLBAR_VALIDATE,
-                 'gtk.STOCK_DIALOG_QUESTION'),
+                 'Gtk.STOCK_DIALOG_QUESTION'),
                 (rose.config_editor.TOOLBAR_TRANSFORM,
-                 'gtk.STOCK_CONVERT'),
+                 'Gtk.STOCK_CONVERT'),
                 (rose.config_editor.TOOLBAR_VIEW_OUTPUT,
-                 'gtk.STOCK_DIRECTORY'),
+                 'Gtk.STOCK_DIRECTORY'),
                 (rose.config_editor.TOOLBAR_SUITE_GCONTROL,
                  'rose-gtk-scheduler')
             ],
@@ -392,8 +392,8 @@ class MainController(object):
         add_icon.connect('button_press_event', self.add_page_variable)
         custom_text = rose.config_editor.TOOLBAR_SUITE_RUN_MENU
         self._toolbar_run_button = rose.gtk.util.CustomMenuButton(
-            stock_id=gtk.STOCK_MEDIA_PLAY,
-            menu_items=[(custom_text, gtk.STOCK_MEDIA_PLAY)],
+            stock_id=Gtk.STOCK_MEDIA_PLAY,
+            menu_items=[(custom_text, Gtk.STOCK_MEDIA_PLAY)],
             menu_funcs=[self.main_handle.get_run_suite_args],
             tip_text=rose.config_editor.TOOLBAR_SUITE_RUN)
         self._toolbar_run_button.connect("clicked", self.main_handle.run_suite)
@@ -880,7 +880,7 @@ class MainController(object):
     def _handle_detach_request(self, page, old_window=None):
         """Open tab (or 'page') in a window and manage close page events."""
         if old_window is None:
-            tab_window = gtk.Window()
+            tab_window = Gtk.Window()
             tab_window.set_icon(self.mainwindow.window.get_icon())
             tab_window.add_accel_group(self.menubar.accelerators)
             tab_window.set_default_size(*rose.config_editor.SIZE_PAGE_DETACH)
@@ -891,15 +891,15 @@ class MainController(object):
         else:
             tab_window = old_window
         add_button = rose.gtk.util.CustomButton(
-            stock_id=gtk.STOCK_ADD,
+            stock_id=Gtk.STOCK_ADD,
             tip_text=rose.config_editor.TIP_ADD_TO_PAGE,
-            size=gtk.ICON_SIZE_LARGE_TOOLBAR,
+            size=Gtk.IconSize.LARGE_TOOLBAR,
             as_tool=True
         )
         revert_button = rose.gtk.util.CustomButton(
-            stock_id=gtk.STOCK_REVERT_TO_SAVED,
+            stock_id=Gtk.STOCK_REVERT_TO_SAVED,
             tip_text=rose.config_editor.TIP_REVERT_PAGE,
-            size=gtk.ICON_SIZE_LARGE_TOOLBAR,
+            size=Gtk.IconSize.LARGE_TOOLBAR,
             as_tool=True
         )
         add_button.connect('button_press_event', self.add_page_variable)
@@ -1200,11 +1200,11 @@ class MainController(object):
                 errors = self.nav_panel.get_change_error_totals(
                     config_name=short_config_name)[1]
                 if errors > 0:
-                    dialog = gtk.MessageDialog(
+                    dialog = Gtk.MessageDialog(
                         None,
-                        gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
-                        gtk.MESSAGE_INFO,
-                        gtk.BUTTONS_YES_NO,
+                        Gtk.DialogFlags.MODAL | Gtk.DialogFlags.DESTROY_WITH_PARENT,
+                        Gtk.MessageType.INFO,
+                        Gtk.ButtonsType.YES_NO,
                         None
                     )
                     dialog.set_markup(
@@ -1213,7 +1213,7 @@ class MainController(object):
                         ))
                     res = dialog.run()
                     dialog.destroy()
-                    if res == gtk.RESPONSE_NO:
+                    if res == Gtk.ResponseType.NO:
                         continue
 
             # Dump the configuration.
@@ -1538,7 +1538,7 @@ class MainController(object):
                     parent = page.get_parent()
                     if parent is not None:
                         parent.remove(page)
-                        parent.pack_start(new_page)
+                        parent.pack_start(new_page, True, True, 0)
                     self.orphan_pages.remove(page)
                     self.orphan_pages.append(new_page)
             else:
@@ -1577,7 +1577,7 @@ class MainController(object):
                 text = rose.config_editor.WARNING_NOT_FOUND
                 try:  # Needs PyGTK >= 2.16
                     self.find_entry.set_icon_from_stock(
-                        0, gtk.STOCK_DIALOG_WARNING)
+                        0, Gtk.STOCK_DIALOG_WARNING)
                     self.find_entry.set_icon_tooltip_text(0, text)
                 except AttributeError:
                     rose.gtk.dialog.run_dialog(
@@ -1845,7 +1845,7 @@ def spawn_window(config_directory_path=None, debug_mode=False,
                  load_all_apps=False, load_no_apps=False, metadata_off=False,
                  initial_namespaces=None, opt_meta_paths=None,
                  no_warn=None):
-    """Create a window and load the configuration into it. Run gtk."""
+    """Create a window and load the configuration into it. Run Gtk."""
     if opt_meta_paths is None:
         opt_meta_paths = []
     if not debug_mode:
@@ -1918,12 +1918,12 @@ def spawn_window(config_directory_path=None, debug_mode=False,
             if path:
                 ctrl.nav_panel.tree.expand_to_path(path)
 
-    gtk.settings_get_default().set_long_property("gtk-button-images",
+    Gtk.Settings.get_default().set_long_property("gtk-button-images",
                                                  True, "main")
-    gtk.settings_get_default().set_long_property("gtk-menu-images",
+    Gtk.Settings.get_default().set_long_property("gtk-menu-images",
                                                  True, "main")
     splash_screen.stop()
-    gtk.main()
+    Gtk.main()
 
 
 def spawn_subprocess_window(config_directory_path=None):
@@ -1955,9 +1955,9 @@ def get_number_of_configs(config_directory_path=None):
 
 def main():
     """Launch from the command line."""
-    if (gtk.pygtk_version[0] < rose.config_editor.MIN_PYGTK_VERSION[0] or
-            gtk.pygtk_version[1] < rose.config_editor.MIN_PYGTK_VERSION[1]):
-        this_version = '{0}.{1}.{2}'.format(*gtk.pygtk_version)
+    if (Gtk.pygtk_version[0] < rose.config_editor.MIN_PYGTK_VERSION[0] or
+            Gtk.pygtk_version[1] < rose.config_editor.MIN_PYGTK_VERSION[1]):
+        this_version = '{0}.{1}.{2}'.format(*Gtk.pygtk_version)
         required_version = '{0}.{1}.{2}'.format(
             *rose.config_editor.MIN_PYGTK_VERSION)
         rose.gtk.dialog.run_dialog(

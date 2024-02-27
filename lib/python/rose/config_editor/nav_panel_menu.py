@@ -22,9 +22,9 @@ import os
 import time
 import webbrowser
 
-import pygtk
-pygtk.require('2.0')
-import gtk
+import gi
+gi.require_version('Gtk', '3.0')
+from gi.repository import Gtk
 
 import rose.config
 import rose.config_editor.util
@@ -305,31 +305,31 @@ class NavPanelHandler(object):
             namespace = "/" + base_ns.lstrip("/")
 
         ui_config_string = """<ui> <popup name='Popup'>"""
-        actions = [('New', gtk.STOCK_NEW,
+        actions = [('New', Gtk.STOCK_NEW,
                     rose.config_editor.TREE_PANEL_NEW_CONFIG),
-                   ('Add', gtk.STOCK_ADD,
+                   ('Add', Gtk.STOCK_ADD,
                     rose.config_editor.TREE_PANEL_ADD_GENERIC),
-                   ('Autofix', gtk.STOCK_CONVERT,
+                   ('Autofix', Gtk.STOCK_CONVERT,
                     rose.config_editor.TREE_PANEL_AUTOFIX_CONFIG),
-                   ('Clone', gtk.STOCK_COPY,
+                   ('Clone', Gtk.STOCK_COPY,
                     rose.config_editor.TREE_PANEL_CLONE_SECTION),
-                   ('Edit', gtk.STOCK_EDIT,
+                   ('Edit', Gtk.STOCK_EDIT,
                     rose.config_editor.TREE_PANEL_EDIT_SECTION),
-                   ('Enable', gtk.STOCK_YES,
+                   ('Enable', Gtk.STOCK_YES,
                     rose.config_editor.TREE_PANEL_ENABLE_GENERIC),
-                   ('Graph', gtk.STOCK_SORT_ASCENDING,
+                   ('Graph', Gtk.STOCK_SORT_ASCENDING,
                     rose.config_editor.TREE_PANEL_GRAPH_SECTION),
-                   ('Ignore', gtk.STOCK_NO,
+                   ('Ignore', Gtk.STOCK_NO,
                     rose.config_editor.TREE_PANEL_IGNORE_GENERIC),
-                   ('Info', gtk.STOCK_INFO,
+                   ('Info', Gtk.STOCK_INFO,
                     rose.config_editor.TREE_PANEL_INFO_SECTION),
-                   ('Help', gtk.STOCK_HELP,
+                   ('Help', Gtk.STOCK_HELP,
                     rose.config_editor.TREE_PANEL_HELP_SECTION),
-                   ('URL', gtk.STOCK_HOME,
+                   ('URL', Gtk.STOCK_HOME,
                     rose.config_editor.TREE_PANEL_URL_SECTION),
-                   ('Remove', gtk.STOCK_DELETE,
+                   ('Remove', Gtk.STOCK_DELETE,
                     rose.config_editor.TREE_PANEL_REMOVE_GENERIC),
-                   ('Rename', gtk.STOCK_COPY,
+                   ('Rename', Gtk.STOCK_COPY,
                     rose.config_editor.TREE_PANEL_RENAME_GENERIC)]
         url = None
         help_ = None
@@ -353,7 +353,7 @@ class NavPanelHandler(object):
                     ui_config_string += '<menuitem action="{0}"/>'.format(
                         action_name)
                     actions.append(
-                        (action_name, gtk.STOCK_ADD,
+                        (action_name, Gtk.STOCK_ADD,
                          rose.config_editor.TREE_PANEL_ADD_SECTION.format(
                              section.replace("_", "__")))
                     )
@@ -397,8 +397,8 @@ class NavPanelHandler(object):
             ui_config_string += """<separator name="newconfigsep"/>
                                    <menuitem action="New"/>"""
         ui_config_string += """</popup> </ui>"""
-        uimanager = gtk.UIManager()
-        actiongroup = gtk.ActionGroup('Popup')
+        uimanager = Gtk.UIManager()
+        actiongroup = Gtk.ActionGroup('Popup')
         actiongroup.add_actions(actions)
         uimanager.insert_action_group(actiongroup, pos=0)
         uimanager.add_ui_from_string(ui_config_string)
@@ -452,7 +452,7 @@ class NavPanelHandler(object):
                 help_item.connect(
                     "activate",
                     lambda b: rose.gtk.dialog.run_hyperlink_dialog(
-                        gtk.STOCK_DIALOG_INFO, help_, help_title,
+                        Gtk.STOCK_DIALOG_INFO, help_, help_title,
                         search_function))
             if url is not None:
                 url_item = uimanager.get_widget('/Popup/URL')

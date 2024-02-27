@@ -18,14 +18,14 @@
 # along with Rose. If not, see <http://www.gnu.org/licenses/>.
 # -----------------------------------------------------------------------------
 
-import pygtk
-pygtk.require('2.0')
-import gtk
+import gi
+gi.require_version('Gtk', '3.0')
+from gi.repository import Gtk
 
 import rose
 
 
-class BoolToggleValueWidget(gtk.HBox):
+class BoolToggleValueWidget(Gtk.HBox):
 
     """Produces a 'true' and 'false' labelled toggle button."""
 
@@ -57,13 +57,13 @@ class BoolToggleValueWidget(gtk.HBox):
                 rose.TYPE_LOGICAL_VALUE_TRUE:
                 rose.TYPE_LOGICAL_TRUE_TITLE}
 
-        imgs = [gtk.image_new_from_stock(gtk.STOCK_MEDIA_STOP,
-                                         gtk.ICON_SIZE_MENU),
-                gtk.image_new_from_stock(gtk.STOCK_APPLY, gtk.ICON_SIZE_MENU)]
+        imgs = [Gtk.Image.new_from_stock(Gtk.STOCK_MEDIA_STOP,
+                                         Gtk.IconSize.MENU),
+                Gtk.Image.new_from_stock(Gtk.STOCK_APPLY, Gtk.IconSize.MENU)]
         self.image_dict = dict(zip(self.allowed_values, imgs))
-        bad_img = gtk.image_new_from_stock(gtk.STOCK_DIALOG_WARNING,
-                                           gtk.ICON_SIZE_MENU)
-        self.button = gtk.ToggleButton(label=self.value)
+        bad_img = Gtk.Image.new_from_stock(Gtk.STOCK_DIALOG_WARNING,
+                                           Gtk.IconSize.MENU)
+        self.button = Gtk.ToggleButton(label=self.value)
         if self.value in self.allowed_values:
             self.button.set_active(self.allowed_values.index(self.value))
             self.button.set_label(self.label_dict[self.value])

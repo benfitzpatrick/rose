@@ -20,9 +20,9 @@
 
 import re
 
-import pygtk
-pygtk.require('2.0')
-import gtk
+import gi
+gi.require_version('Gtk', '3.0')
+from gi.repository import Gtk
 
 import rose.config_editor
 
@@ -58,7 +58,7 @@ class StackItem(object):
                 ", ".join([str(u) for u in self.undo_args]))
 
 
-class StackViewer(gtk.Window):
+class StackViewer(Gtk.Window):
 
     """Window to dynamically display the internal stack."""
 
@@ -87,13 +87,13 @@ class StackViewer(gtk.Window):
         self.undo_stack = undo_stack
         self.redo_stack = redo_stack
         self.set_border_width(rose.config_editor.SPACING_SUB_PAGE)
-        self.main_vbox = gtk.VPaned()
-        accelerators = gtk.AccelGroup()
-        accel_key, accel_mods = gtk.accelerator_parse("<Ctrl>Z")
-        accelerators.connect_group(accel_key, accel_mods, gtk.ACCEL_VISIBLE,
+        self.main_vbox = Gtk.VPaned()
+        accelerators = Gtk.AccelGroup()
+        accel_key, accel_mods = Gtk.accelerator_parse("<Ctrl>Z")
+        accelerators.connect_group(accel_key, accel_mods, Gtk.AccelFlags.VISIBLE,
                                    lambda a, b, c, d: self.undo_from_log())
-        accel_key, accel_mods = gtk.accelerator_parse("<Ctrl><Shift>Z")
-        accelerators.connect_group(accel_key, accel_mods, gtk.ACCEL_VISIBLE,
+        accel_key, accel_mods = Gtk.accelerator_parse("<Ctrl><Shift>Z")
+        accelerators.connect_group(accel_key, accel_mods, Gtk.AccelFlags.VISIBLE,
                                    lambda a, b, c, d:
                                    self.undo_from_log(redo_mode_on=True))
         self.add_accel_group(accelerators)
@@ -116,15 +116,15 @@ class StackViewer(gtk.Window):
     def get_stack_view_box(self, log_buffer, redo_mode_on=False):
         """Return a frame containing a scrolled text view."""
         text_view = log_buffer
-        text_scroller = gtk.ScrolledWindow()
-        text_scroller.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_ALWAYS)
-        text_scroller.set_shadow_type(gtk.SHADOW_IN)
+        text_scroller = Gtk.ScrolledWindow()
+        text_scroller.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.ALWAYS)
+        text_scroller.set_shadow_type(Gtk.ShadowType.IN)
         text_scroller.add(text_view)
         vadj = text_scroller.get_vadjustment()
         vadj.set_value(vadj.upper - 0.9 * vadj.page_size)
         text_scroller.show()
-        vbox = gtk.VBox()
-        label = gtk.Label()
+        vbox = Gtk.VBox()
+        label = Gtk.Label()
         if redo_mode_on:
             label.set_text('REDO STACK')
             self.redo_text_view = text_view
@@ -147,7 +147,7 @@ class StackViewer(gtk.Window):
     def get_stack_view(self, redo_mode_on=False):
         """Return a tree view with information from a stack."""
         stack_model = self.get_stack_model(redo_mode_on, make_new_model=True)
-        stack_view = gtk.TreeView(stack_model)
+        stack_view = Gtk.TreeView(stack_model)
         columns = {}
         cell_text = {}
         for title in [rose.config_editor.STACK_COL_NS,
@@ -155,10 +155,10 @@ class StackViewer(gtk.Window):
                       rose.config_editor.STACK_COL_NAME,
                       rose.config_editor.STACK_COL_VALUE,
                       rose.config_editor.STACK_COL_OLD_VALUE]:
-            columns[title] = gtk.TreeViewColumn()
+            columns[title] = Gtk.TreeViewColumn()
             columns[title].set_title(title)
-            cell_text[title] = gtk.CellRendererText()
-            columns[title].pack_start(cell_text[title], expand=True)
+            cell_text[title] = Gtk.CellRendererText()
+            columns[title].pack_start(cell_text[title], True, True, 0)
             columns[title].add_attribute(cell_text[title], attribute='markup',
                                          column=len(columns.keys()) - 1)
             stack_view.append_column(columns[title])
@@ -166,10 +166,10 @@ class StackViewer(gtk.Window):
         return stack_view
 
     def get_stack_model(self, redo_mode_on=False, make_new_model=False):
-        """Return a gtk.ListStore generated from a stack."""
+        """Return a Gtk.ListStore generated from a stack."""
         stack = [self.undo_stack, self.redo_stack][redo_mode_on]
         if make_new_model:
-            model = gtk.ListStore(str, str, str, str, str, bool)
+            model = Gtk.ListStore(str, str, str, str, str, bool)
         else:
             model = [self.undo_view.get_model(),
                      self.redo_view.get_model()][redo_mode_on]

@@ -18,14 +18,14 @@
 # along with Rose. If not, see <http://www.gnu.org/licenses/>.
 # -----------------------------------------------------------------------------
 
-import pygtk
-pygtk.require('2.0')
-import gtk
+import gi
+gi.require_version('Gtk', '3.0')
+from gi.repository import Gtk
 
 import rose.config
 
 
-class FormatsChooserValueWidget(gtk.HBox):
+class FormatsChooserValueWidget(Gtk.HBox):
 
     """This class allows the addition of section names to a variable value."""
 
@@ -43,23 +43,23 @@ class FormatsChooserValueWidget(gtk.HBox):
         else:
             self.values_getter = lambda: meta.get('values', [])
         num_entries = len(value.split(' '))
-        self.entry_table = gtk.Table(rows=num_entries + 1, columns=1)
+        self.entry_table = Gtk.Table(rows=num_entries + 1, columns=1)
         self.entry_table.show()
         self.entries = []
         for format_name in value.split():
             entry = self.get_entry(format_name)
             self.entries.append(entry)
-        self.add_box = gtk.HBox()
+        self.add_box = Gtk.HBox()
         self.add_box.show()
-        image = gtk.Image()
-        image.set_from_stock(gtk.STOCK_ADD, gtk.ICON_SIZE_MENU)
+        image = Gtk.Image()
+        image.set_from_stock(Gtk.STOCK_ADD, Gtk.IconSize.MENU)
         image.show()
-        image_event = gtk.EventBox()
+        image_event = Gtk.EventBox()
         image_event.add(image)
         image_event.show()
         self.add_box.pack_start(
             image_event, expand=False, fill=False, padding=5)
-        self.data_chooser = gtk.combo_box_new_text()
+        self.data_chooser = Gtk.ComboBoxText()
         self.data_chooser.connect('focus-in-event',
                                   lambda d, e: self.load_data_chooser())
         self.data_chooser.connect('changed', lambda d: self.add_new_section())
@@ -76,7 +76,7 @@ class FormatsChooserValueWidget(gtk.HBox):
 
     def get_entry(self, format_name):
         """Create an entry box for a format name."""
-        entry = gtk.Entry()
+        entry = Gtk.Entry()
         entry.set_text(format_name)
         entry.connect('focus-in-event', self.hook.trigger_scroll)
         entry.connect('changed', self.entry_change_handler)
@@ -91,7 +91,7 @@ class FormatsChooserValueWidget(gtk.HBox):
         self.entry_table.resize(rows=len(self.entries) + 1, columns=1)
         for i, widget in enumerate(self.entries + [self.add_box]):
             self.entry_table.attach(
-                widget, 0, 1, i, i + 1, xoptions=gtk.FILL)
+                widget, 0, 1, i, i + 1, xoptions=Gtk.AttachOptions.FILL)
         self.grab_focus = lambda: self.hook.get_focus(self.entries[-1])
 
     def add_new_section(self):
@@ -127,7 +127,7 @@ class FormatsChooserValueWidget(gtk.HBox):
         return False
 
     def load_data_chooser(self):
-        data_model = gtk.ListStore(str)
+        data_model = Gtk.ListStore(str)
         options = self.values_getter()
         options.sort(rose.config.sort_settings)
         for value in options:

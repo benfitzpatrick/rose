@@ -20,9 +20,9 @@
 
 import ast
 
-import pygtk
-pygtk.require('2.0')
-import gtk
+import gi
+gi.require_version('Gtk', '3.0')
+from gi.repository import Gtk
 
 from . import entry
 import rose.config_editor.util
@@ -30,7 +30,7 @@ import rose.gtk.util
 import rose.variable
 
 
-class PythonListValueWidget(gtk.HBox):
+class PythonListValueWidget(Gtk.HBox):
 
     """This is a class to represent a Python-compatible list format."""
 
@@ -54,7 +54,7 @@ class PythonListValueWidget(gtk.HBox):
         self.last_selected_src = None
         # Designate the number of allowed columns - 10 for 4 chars width
         self.num_allowed_columns = 3
-        self.entry_table = gtk.Table(rows=1,
+        self.entry_table = Gtk.Table(rows=1,
                                      columns=self.num_allowed_columns,
                                      homogeneous=True)
         self.entry_table.connect('focus-in-event', self.hook.trigger_scroll)
@@ -122,7 +122,7 @@ class PythonListValueWidget(gtk.HBox):
             text += prefix + val
 
     def generate_entries(self, value_array=None):
-        """Create the gtk.Entry objects for elements in the array."""
+        """Create the Gtk.Entry objects for elements in the array."""
         if value_array is None:
             value_array = python_array_split(self.value)
         entries = []
@@ -137,9 +137,9 @@ class PythonListValueWidget(gtk.HBox):
 
     def generate_buttons(self):
         """Create the left-right movement arrows and add button."""
-        left_arrow = gtk.Arrow(gtk.ARROW_LEFT, gtk.SHADOW_IN)
+        left_arrow = Gtk.Arrow(Gtk.ArrowType.LEFT, Gtk.ShadowType.IN)
         left_arrow.show()
-        left_event_box = gtk.EventBox()
+        left_event_box = Gtk.EventBox()
         left_event_box.add(left_arrow)
         left_event_box.show()
         left_event_box.connect('button-press-event',
@@ -147,9 +147,9 @@ class PythonListValueWidget(gtk.HBox):
         left_event_box.connect('enter-notify-event', self._handle_arrow_enter)
         left_event_box.connect('leave-notify-event', self._handle_arrow_leave)
         left_event_box.set_tooltip_text(self.TIP_LEFT)
-        right_arrow = gtk.Arrow(gtk.ARROW_RIGHT, gtk.SHADOW_IN)
+        right_arrow = Gtk.Arrow(Gtk.ArrowType.RIGHT, Gtk.ShadowType.IN)
         right_arrow.show()
-        right_event_box = gtk.EventBox()
+        right_event_box = Gtk.EventBox()
         right_event_box.show()
         right_event_box.add(right_arrow)
         right_event_box.connect(
@@ -157,40 +157,40 @@ class PythonListValueWidget(gtk.HBox):
         right_event_box.connect('enter-notify-event', self._handle_arrow_enter)
         right_event_box.connect('leave-notify-event', self._handle_arrow_leave)
         right_event_box.set_tooltip_text(self.TIP_RIGHT)
-        self.arrow_box = gtk.HBox()
+        self.arrow_box = Gtk.HBox()
         self.arrow_box.show()
         self.arrow_box.pack_start(left_event_box, expand=False, fill=False)
         self.arrow_box.pack_end(right_event_box, expand=False, fill=False)
         self.set_arrow_sensitive(False, False)
-        del_image = gtk.image_new_from_stock(gtk.STOCK_REMOVE,
-                                             gtk.ICON_SIZE_MENU)
+        del_image = Gtk.Image.new_from_stock(Gtk.STOCK_REMOVE,
+                                             Gtk.IconSize.MENU)
         del_image.show()
-        self.del_button = gtk.EventBox()
+        self.del_button = Gtk.EventBox()
         self.del_button.set_tooltip_text(self.TIP_DEL)
         self.del_button.add(del_image)
         self.del_button.show()
         self.del_button.connect('button-release-event',
                                 lambda b, e: self.remove_entry())
         self.del_button.connect('enter-notify-event',
-                                lambda b, e: b.set_state(gtk.STATE_ACTIVE))
+                                lambda b, e: b.set_state(Gtk.StateType.ACTIVE))
         self.del_button.connect('leave-notify-event',
-                                lambda b, e: b.set_state(gtk.STATE_NORMAL))
-        self.button_box = gtk.HBox()
+                                lambda b, e: b.set_state(Gtk.StateType.NORMAL))
+        self.button_box = Gtk.HBox()
         self.button_box.show()
         self.button_box.pack_start(self.arrow_box, expand=False, fill=True)
-        add_image = gtk.image_new_from_stock(gtk.STOCK_ADD, gtk.ICON_SIZE_MENU)
+        add_image = Gtk.Image.new_from_stock(Gtk.STOCK_ADD, Gtk.IconSize.MENU)
         add_image.show()
-        self.add_button = gtk.EventBox()
+        self.add_button = Gtk.EventBox()
         self.add_button.set_tooltip_text(self.TIP_ADD)
         self.add_button.add(add_image)
         self.add_button.show()
         self.add_button.connect('button-release-event',
                                 lambda b, e: self.add_entry())
         self.add_button.connect('enter-notify-event',
-                                lambda b, e: b.set_state(gtk.STATE_ACTIVE))
+                                lambda b, e: b.set_state(Gtk.StateType.ACTIVE))
         self.add_button.connect('leave-notify-event',
-                                lambda b, e: b.set_state(gtk.STATE_NORMAL))
-        self.add_del_button_box = gtk.VBox()
+                                lambda b, e: b.set_state(Gtk.StateType.NORMAL))
+        self.add_del_button_box = Gtk.VBox()
         self.add_del_button_box.pack_start(
             self.add_button, expand=False, fill=False)
         self.add_del_button_box.pack_start(
@@ -198,12 +198,12 @@ class PythonListValueWidget(gtk.HBox):
         self.add_del_button_box.show()
 
     def _handle_arrow_enter(self, arrow_event_box, event):
-        if arrow_event_box.get_child().state != gtk.STATE_INSENSITIVE:
-            arrow_event_box.set_state(gtk.STATE_ACTIVE)
+        if arrow_event_box.get_child().state != Gtk.StateType.INSENSITIVE:
+            arrow_event_box.set_state(Gtk.StateType.ACTIVE)
 
     def _handle_arrow_leave(self, arrow_event_box, event):
-        if arrow_event_box.get_child().state != gtk.STATE_INSENSITIVE:
-            arrow_event_box.set_state(gtk.STATE_NORMAL)
+        if arrow_event_box.get_child().state != Gtk.StateType.INSENSITIVE:
+            arrow_event_box.set_state(Gtk.StateType.NORMAL)
 
     def set_arrow_sensitive(self, is_left_sensitive, is_right_sensitive):
         """Control the sensitivity of the movement buttons."""
@@ -211,7 +211,7 @@ class PythonListValueWidget(gtk.HBox):
         for i, event_box in enumerate(self.arrow_box.get_children()):
             event_box.get_child().set_sensitive(sens_tuple[i])
             if not sens_tuple[i]:
-                event_box.set_state(gtk.STATE_NORMAL)
+                event_box.set_state(Gtk.StateType.NORMAL)
 
     def move_element(self, num_places_right):
         """Move the entry left or right."""
@@ -229,7 +229,7 @@ class PythonListValueWidget(gtk.HBox):
 
     def get_entry(self, value_item):
         """Create a gtk Entry for this array element."""
-        widget = gtk.Entry()
+        widget = Gtk.Entry()
         widget.set_text(value_item)
         widget.connect('focus-in-event', self._handle_focus_on_entry)
         widget.connect("button-release-event", self._handle_middle_click_paste)
@@ -249,7 +249,7 @@ class PythonListValueWidget(gtk.HBox):
         table_children = self.entry_table.get_children()
         if focus_widget is None:
             for child in table_children:
-                if child.is_focus() and isinstance(child, gtk.Entry):
+                if child.is_focus() and isinstance(child, Gtk.Entry):
                     focus_widget = child
                     position = focus_widget.get_position()
         else:
@@ -289,19 +289,19 @@ class PythonListValueWidget(gtk.HBox):
             for col, label in enumerate(self.metadata['element-titles']):
                 if col >= len(table_widgets) - 1:
                     break
-                widget = gtk.HBox()
-                label = gtk.Label(self.metadata['element-titles'][col])
+                widget = Gtk.HBox()
+                label = Gtk.Label(label=self.metadata['element-titles'][col])
                 label.show()
                 widget.pack_start(label, expand=True, fill=True)
                 widget.show()
                 self.entry_table.attach(widget,
                                         col, col + 1,
                                         0, 1,
-                                        xoptions=gtk.FILL,
-                                        yoptions=gtk.SHRINK)
+                                        xoptions=Gtk.AttachOptions.FILL,
+                                        yoptions=Gtk.AttachOptions.SHRINK)
 
         for i, widget in enumerate(table_widgets):
-            if isinstance(widget, gtk.Entry):
+            if isinstance(widget, Gtk.Entry):
                 widget.set_tooltip_text(self.TIP_ELEMENT.format((i + 1)))
             row = i // self.num_allowed_columns
             if self.has_titles:
@@ -310,8 +310,8 @@ class PythonListValueWidget(gtk.HBox):
             self.entry_table.attach(widget,
                                     column, column + 1,
                                     row, row + 1,
-                                    xoptions=gtk.FILL,
-                                    yoptions=gtk.SHRINK)
+                                    xoptions=Gtk.AttachOptions.FILL,
+                                    yoptions=Gtk.AttachOptions.SHRINK)
         if focus_widget is not None:
             focus_widget.grab_focus()
             focus_widget.set_position(position)

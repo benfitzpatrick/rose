@@ -21,9 +21,9 @@
 import ast
 import shlex
 
-import pygtk
-pygtk.require('2.0')
-import gtk
+import gi
+gi.require_version('Gtk', '3.0')
+from gi.repository import Gtk
 
 import rose.config_editor
 import rose.gtk.choice
@@ -32,7 +32,7 @@ import rose.opt_parse
 import rose.variable
 
 
-class ChoicesValueWidget(gtk.HBox):
+class ChoicesValueWidget(Gtk.HBox):
 
     """This represents a value as actual/available choices.
 
@@ -121,19 +121,19 @@ class ChoicesValueWidget(gtk.HBox):
         self.hints = list(args)
 
         self.should_show_kinship = self._calc_should_show_kinship()
-        list_vbox = gtk.VBox()
+        list_vbox = Gtk.VBox()
         list_vbox.show()
         self._listview = rose.gtk.choice.ChoicesListView(
             self._set_value_listview,
             self._get_value_values,
             self._handle_search)
         self._listview.show()
-        list_frame = gtk.Frame()
+        list_frame = Gtk.Frame()
         list_frame.show()
         list_frame.add(self._listview)
         list_vbox.pack_start(list_frame, expand=False, fill=False)
         self.pack_start(list_vbox, expand=True, fill=True)
-        tree_vbox = gtk.VBox()
+        tree_vbox = Gtk.VBox()
         tree_vbox.show()
         self._treeview = rose.gtk.choice.ChoicesTreeView(
             self._set_value_treeview,
@@ -142,7 +142,7 @@ class ChoicesValueWidget(gtk.HBox):
             self._get_groups,
             self._get_is_implicit)
         self._treeview.show()
-        tree_frame = gtk.Frame()
+        tree_frame = Gtk.Frame()
         tree_frame.show()
         tree_frame.add(self._treeview)
         tree_vbox.pack_start(tree_frame, expand=True, fill=True)
@@ -160,10 +160,10 @@ class ChoicesValueWidget(gtk.HBox):
         return False
 
     def _get_add_widget(self):
-        add_hbox = gtk.HBox()
-        add_entry = gtk.ComboBoxEntry()
+        add_hbox = Gtk.HBox()
+        add_entry = Gtk.ComboBoxEntry()
         add_entry.connect("changed", self._handle_combo_choice)
-        add_entry.child.connect(
+        add_entry.get_child().connect(
             "key-press-event",
             lambda w, e: self._handle_text_choice(add_entry, e))
         add_entry.set_tooltip_text(rose.config_editor.CHOICE_TIP_ENTER_CUSTOM)
@@ -174,7 +174,7 @@ class ChoicesValueWidget(gtk.HBox):
         return add_hbox
 
     def _set_available_hints(self, comboboxentry):
-        model = gtk.ListStore(str)
+        model = Gtk.ListStore(str)
         values = self._get_value_values()
         for hint in self.hints:
             if hint not in values:
@@ -189,13 +189,13 @@ class ChoicesValueWidget(gtk.HBox):
         self._add_custom_choice(comboboxentry, comboboxentry.get_active_text())
 
     def _handle_text_choice(self, comboboxentry, event):
-        if gtk.gdk.keyval_name(event.keyval) in ["Return", "KP_Enter"]:
+        if Gdk.keyval_name(event.keyval) in ["Return", "KP_Enter"]:
             self._add_custom_choice(comboboxentry,
-                                    comboboxentry.child.get_text())
+                                    comboboxentry.get_child().get_text())
         return False
 
     def _add_custom_choice(self, comboboxentry, new_name):
-        entry = comboboxentry.child
+        entry = comboboxentry.get_child()
         if not new_name:
             text = rose.config_editor.ERROR_BAD_NAME.format("''")
             title = rose.config_editor.DIALOG_TITLE_ERROR

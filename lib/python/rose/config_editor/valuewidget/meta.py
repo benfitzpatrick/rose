@@ -18,12 +18,12 @@
 # along with Rose. If not, see <http://www.gnu.org/licenses/>.
 # -----------------------------------------------------------------------------
 
-import pygtk
-pygtk.require('2.0')
-import gtk
+import gi
+gi.require_version('Gtk', '3.0')
+from gi.repository import Gtk
 
 
-class MetaValueWidget(gtk.HBox):
+class MetaValueWidget(Gtk.HBox):
 
     """This class generates an entry and button for a metadata flag value."""
 
@@ -33,9 +33,9 @@ class MetaValueWidget(gtk.HBox):
         self.metadata = metadata
         self.set_value = set_value
         self.hook = hook
-        self.entry = gtk.Entry()
-        self.normal_colour = self.entry.style.text[gtk.STATE_NORMAL]
-        self.insens_colour = self.entry.style.text[gtk.STATE_INSENSITIVE]
+        self.entry = Gtk.Entry()
+        self.normal_colour = self.entry.style.text[Gtk.StateType.NORMAL]
+        self.insens_colour = self.entry.style.text[Gtk.StateType.INSENSITIVE]
         self.entry.set_text(self.value)
         self.entry.connect("button-release-event",
                            self._handle_middle_click_paste)
@@ -45,7 +45,7 @@ class MetaValueWidget(gtk.HBox):
         self.entry.connect("activate", self._setter)
         self.entry.connect("focus-out-event", self._setter)
         self.entry.show()
-        self.button = gtk.Button(stock=gtk.STOCK_APPLY)
+        self.button = Gtk.Button(stock=Gtk.STOCK_APPLY)
         self.button.connect("clicked", self._setter)
         self.button.set_sensitive(False)
         self.button.show()
@@ -60,10 +60,10 @@ class MetaValueWidget(gtk.HBox):
     def _check_diff(self, *args):
         text = self.entry.get_text()
         if text == self.value:
-            self.entry.modify_text(gtk.STATE_NORMAL, self.normal_colour)
+            self.entry.modify_text(Gtk.StateType.NORMAL, self.normal_colour)
             self.button.set_sensitive(False)
         else:
-            self.entry.modify_text(gtk.STATE_NORMAL, self.insens_colour)
+            self.entry.modify_text(Gtk.StateType.NORMAL, self.insens_colour)
             self.button.set_sensitive(True)
         if not text:
             self.button.set_sensitive(False)

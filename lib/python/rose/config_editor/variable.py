@@ -22,9 +22,9 @@ import copy
 import difflib
 import re
 
-import pygtk
-pygtk.require('2.0')
-import gtk
+import gi
+gi.require_version('Gtk', '3.0')
+from gi.repository import Gtk
 
 import rose.config_editor.keywidget
 import rose.config_editor.menuwidget
@@ -59,7 +59,7 @@ class VariableWidget(object):
         if show_modes is None:
             show_modes = {}
         self.show_modes = show_modes
-        self.insensitive_colour = gtk.Style().bg[0]
+        self.insensitive_colour = Gtk.Style().bg[0]
         self.bad_colour = rose.gtk.util.color_parse(
             rose.config_editor.COLOUR_VARIABLE_TEXT_ERROR)
         self.hidden_colour = rose.gtk.util.color_parse(
@@ -73,7 +73,7 @@ class VariableWidget(object):
         self.menuwidget = self.get_menuwidget(variable)
         self.generate_labelwidget()
         self.generate_contentwidget()
-        self.yoptions = gtk.FILL
+        self.yoptions = Gtk.AttachOptions.FILL
         self.force_signal_ids = []
         self.is_modified = False
         for child_widget in self.get_children():
@@ -99,33 +99,33 @@ class VariableWidget(object):
 
     def generate_labelwidget(self):
         """Creates the label widget, a composite of key and menu widgets."""
-        self.labelwidget = gtk.VBox()
+        self.labelwidget = Gtk.VBox()
         self.labelwidget.show()
         self.labelwidget.set_ignored = self.keywidget.set_ignored
         menu_offset = self.menuwidget.size_request()[1] / 2
         key_offset = self.keywidget.get_centre_height() / 2
-        menu_vbox = gtk.VBox()
+        menu_vbox = Gtk.VBox()
         menu_vbox.pack_start(self.menuwidget, expand=False, fill=False,
                              padding=max([(key_offset - menu_offset), 0]))
         menu_vbox.show()
-        key_vbox = gtk.VBox()
+        key_vbox = Gtk.VBox()
         key_vbox.pack_start(self.keywidget, expand=False, fill=False,
                             padding=max([(menu_offset - key_offset) / 2, 0]))
         key_vbox.show()
-        label_content_hbox = gtk.HBox()
+        label_content_hbox = Gtk.HBox()
         label_content_hbox.pack_start(menu_vbox, expand=False, fill=False)
         label_content_hbox.pack_start(key_vbox, expand=False, fill=False)
         label_content_hbox.show()
-        event_box = gtk.EventBox()
+        event_box = Gtk.EventBox()
         event_box.show()
         self.labelwidget.pack_start(label_content_hbox, expand=True, fill=True)
         self.labelwidget.pack_start(event_box, expand=True, fill=True)
 
     def generate_contentwidget(self):
         """Create the content widget, a vbox-packed valuewidget."""
-        self.contentwidget = gtk.VBox()
+        self.contentwidget = Gtk.VBox()
         self.contentwidget.show()
-        content_event_box = gtk.EventBox()
+        content_event_box = Gtk.EventBox()
         content_event_box.show()
         self.contentwidget.pack_start(
             self.valuewidget, expand=False, fill=False)
@@ -207,14 +207,14 @@ class VariableWidget(object):
         self.generate_valuewidget(variable, override_custom=True)
 
     def handle_focus_in(self, widget, event):
-        widget._first_colour = widget.style.base[gtk.STATE_NORMAL]
+        widget._first_colour = widget.style.base[Gtk.StateType.NORMAL]
         new_colour = rose.gtk.util.color_parse(
             rose.config_editor.COLOUR_VALUEWIDGET_BASE_SELECTED)
-        widget.modify_base(gtk.STATE_NORMAL, new_colour)
+        widget.modify_base(Gtk.StateType.NORMAL, new_colour)
 
     def handle_focus_out(self, widget, event):
         if hasattr(widget, "_first_colour"):
-            widget.modify_base(gtk.STATE_NORMAL, widget._first_colour)
+            widget.modify_base(Gtk.StateType.NORMAL, widget._first_colour)
 
     def get_menuwidget(self, variable, menuclass=None):
         """Create the menuwidget attribute, an option menu button."""
@@ -233,31 +233,31 @@ class VariableWidget(object):
         """Inserts the child widgets of an instance into the 'container'.
 
         As PyGTK is not that introspective, we need arguments specifying where
-        the correct area within the widget is - in the case of gtk.Table
+        the correct area within the widget is - in the case of Gtk.Table
         instances, we need the number of columns and the row index.
         These arguments are generically named x_info and y_info.
 
         """
         if not hasattr(container, 'num_removes'):
             setattr(container, 'num_removes', 0)
-        if isinstance(container, gtk.Table):
+        if isinstance(container, Gtk.Table):
             row_index = y_info
             key_col = 0
             container.attach(self.labelwidget,
                              key_col, key_col + 1,
                              row_index, row_index + 1,
-                             xoptions=gtk.FILL,
-                             yoptions=gtk.FILL)
+                             xoptions=Gtk.AttachOptions.FILL,
+                             yoptions=Gtk.AttachOptions.FILL)
             container.attach(self.contentwidget,
                              key_col + 1, key_col + 2,
                              row_index, row_index + 1,
                              xpadding=5,
-                             xoptions=gtk.EXPAND | gtk.FILL,
+                             xoptions=Gtk.AttachOptions.EXPAND | Gtk.AttachOptions.FILL,
                              yoptions=self.yoptions)
             self.valuewidget.trigger_scroll = (
                 lambda b, e: self.force_scroll(b, container))
             setattr(self, 'get_parent', lambda: container)
-        elif isinstance(container, gtk.VBox):
+        elif isinstance(container, Gtk.VBox):
             container.pack_start(self.labelwidget, expand=False, fill=True,
                                  padding=5)
             container.pack_start(self.contentwidget, expand=True, fill=True,
@@ -276,7 +276,7 @@ class VariableWidget(object):
         scroll_container = container.get_parent()
         if scroll_container is None:
             return False
-        while not isinstance(scroll_container, gtk.ScrolledWindow):
+        while not isinstance(scroll_container, Gtk.ScrolledWindow):
             scroll_container = scroll_container.get_parent()
         vadj = scroll_container.get_vadjustment()
         if vadj.upper == 1.0 or y_coordinate == -1:
@@ -303,7 +303,7 @@ class VariableWidget(object):
         """Removes the child widgets of an instance from the 'container'."""
         container.num_removes += 1
         self.var_ops.remove_var(self.variable)
-        if isinstance(container, gtk.Table):
+        if isinstance(container, Gtk.Table):
             for widget_child in self.get_children():
                 for child in container.get_children():
                     if child == widget_child:
@@ -375,7 +375,7 @@ class VariableWidget(object):
             return False
         self.is_modified = is_modified
         self.keywidget.set_modified(is_modified)
-        if not is_modified and isinstance(self.keywidget.entry, gtk.Entry):
+        if not is_modified and isinstance(self.keywidget.entry, Gtk.Entry):
             # This variable should now be displayed as a normal variable.
             self.valuewidget.trigger_refresh(self.variable.metadata['id'])
 
@@ -387,15 +387,15 @@ class VariableWidget(object):
 
     def grab_focus(self, focus_container=None, scroll_bottom=False,
                    index=None):
-        """Method similar to gtk.Widget - get the keyboard focus."""
+        """Method similar to Gtk.Widget - get the keyboard focus."""
         if hasattr(self, 'valuewidget'):
             self.valuewidget.grab_focus()
             if (index is not None and
                     hasattr(self.valuewidget, 'set_focus_index')):
                 self.valuewidget.set_focus_index(index)
             for child in self.valuewidget.get_children():
-                if (gtk.SENSITIVE & child.flags() and
-                        gtk.PARENT_SENSITIVE & child.flags()):
+                if (Gtk.SENSITIVE & child.flags() and
+                        Gtk.PARENT_SENSITIVE & child.flags()):
                     break
             else:
                 if hasattr(self, 'menuwidget'):
@@ -443,34 +443,34 @@ class VariableWidget(object):
         ns = self.variable.metadata["full_ns"]
         search_function = lambda i: self.var_ops.search_for_var(ns, i)
         rose.gtk.dialog.run_hyperlink_dialog(
-            gtk.STOCK_DIALOG_INFO, help_text, title, search_function)
+            Gtk.STOCK_DIALOG_INFO, help_text, title, search_function)
         return False
 
     def _set_inconsistent(self, valuewidget, variable):
-        valuewidget.modify_base(gtk.STATE_NORMAL, self.bad_colour)
+        valuewidget.modify_base(Gtk.StateType.NORMAL, self.bad_colour)
         self.is_inconsistent = True
         widget_list = valuewidget.get_children()
         while widget_list:
             widget = widget_list.pop()
-            widget.modify_text(gtk.STATE_NORMAL, self.bad_colour)
+            widget.modify_text(Gtk.StateType.NORMAL, self.bad_colour)
             if hasattr(widget, 'set_inconsistent'):
                 widget.set_inconsistent(True)
-            if isinstance(widget, gtk.RadioButton):
+            if isinstance(widget, Gtk.RadioButton):
                 widget.set_active(False)
             if (hasattr(widget, 'get_group') and
                     hasattr(widget.get_group(), 'set_inconsistent')):
                 widget.get_group().set_inconsistent(True)
-            if isinstance(widget, gtk.Entry):
-                widget.modify_fg(gtk.STATE_NORMAL, self.bad_colour)
-            if isinstance(widget, gtk.SpinButton):
+            if isinstance(widget, Gtk.Entry):
+                widget.modify_fg(Gtk.StateType.NORMAL, self.bad_colour)
+            if isinstance(widget, Gtk.SpinButton):
                 try:
                     v_value = float(variable.value)
                     w_value = float(widget.get_value())
                 except (TypeError, ValueError):
-                    widget.modify_text(gtk.STATE_NORMAL, self.hidden_colour)
+                    widget.modify_text(Gtk.StateType.NORMAL, self.hidden_colour)
                 else:
                     if w_value != v_value:
-                        widget.modify_text(gtk.STATE_NORMAL,
+                        widget.modify_text(Gtk.StateType.NORMAL,
                                            self.hidden_colour)
             if hasattr(widget, 'get_children'):
                 widget_list.extend(widget.get_children())
@@ -478,18 +478,18 @@ class VariableWidget(object):
                 widget_list.append(widget.get_child())
 
     def _set_consistent(self, valuewidget, variable):
-        normal_style = gtk.Style()
-        normal_base = normal_style.base[gtk.STATE_NORMAL]
-        normal_fg = normal_style.fg[gtk.STATE_NORMAL]
-        normal_text = normal_style.text[gtk.STATE_NORMAL]
-        valuewidget.modify_base(gtk.STATE_NORMAL, normal_base)
+        normal_style = Gtk.Style()
+        normal_base = normal_style.base[Gtk.StateType.NORMAL]
+        normal_fg = normal_style.fg[Gtk.StateType.NORMAL]
+        normal_text = normal_style.text[Gtk.StateType.NORMAL]
+        valuewidget.modify_base(Gtk.StateType.NORMAL, normal_base)
         self.is_inconsistent = True
         for widget in valuewidget.get_children():
-            widget.modify_text(gtk.STATE_NORMAL, normal_text)
+            widget.modify_text(Gtk.StateType.NORMAL, normal_text)
             if hasattr(widget, 'set_inconsistent'):
                 widget.set_inconsistent(False)
-            if isinstance(widget, gtk.Entry):
-                widget.modify_fg(gtk.STATE_NORMAL, normal_fg)
+            if isinstance(widget, Gtk.Entry):
+                widget.modify_fg(Gtk.StateType.NORMAL, normal_fg)
             if (hasattr(widget, 'get_group') and
                     hasattr(widget.get_group(), 'set_inconsistent')):
                 widget.get_group().set_inconsistent(False)
@@ -497,7 +497,7 @@ class VariableWidget(object):
     def _get_focus(self, widget_for_focus):
         widget_for_focus.grab_focus()
         self.valuewidget.trigger_scroll(widget_for_focus, None)
-        if isinstance(widget_for_focus, gtk.Entry):
+        if isinstance(widget_for_focus, Gtk.Entry):
             text_length = len(widget_for_focus.get_text())
             if text_length > 0:
                 widget_for_focus.set_position(text_length)

@@ -18,9 +18,9 @@
 # along with Rose. If not, see <http://www.gnu.org/licenses/>.
 # -----------------------------------------------------------------------------
 
-import pygtk
-pygtk.require('2.0')
-import gtk
+import gi
+gi.require_version('Gtk', '3.0')
+from gi.repository import Gtk
 
 import rose.config_editor
 import rose.config_editor.valuewidget
@@ -31,7 +31,7 @@ ENV_COLOUR = rose.gtk.util.color_parse(
     rose.config_editor.COLOUR_VARIABLE_TEXT_VAL_ENV)
 
 
-class RawValueWidget(gtk.HBox):
+class RawValueWidget(Gtk.HBox):
 
     """This class generates a basic entry widget for an unformatted value."""
 
@@ -41,12 +41,12 @@ class RawValueWidget(gtk.HBox):
         self.metadata = metadata
         self.set_value = set_value
         self.hook = hook
-        self.entry = gtk.Entry()
-        insensitive_colour = gtk.Style().bg[0]
-        self.entry.modify_bg(gtk.STATE_INSENSITIVE, insensitive_colour)
-        self.normal_colour = gtk.Style().fg[gtk.STATE_NORMAL]
+        self.entry = Gtk.Entry()
+        insensitive_colour = Gtk.Style().bg[0]
+        self.entry.modify_bg(Gtk.StateType.INSENSITIVE, insensitive_colour)
+        self.normal_colour = Gtk.Style().fg[Gtk.StateType.NORMAL]
         if rose.env.contains_env_var(self.value):
-            self.entry.modify_text(gtk.STATE_NORMAL, ENV_COLOUR)
+            self.entry.modify_text(Gtk.StateType.NORMAL, ENV_COLOUR)
             self.entry.set_tooltip_text(rose.config_editor.VAR_WIDGET_ENV_INFO)
         self.entry.set_text(self.value)
         self.entry.connect("button-release-event",
@@ -69,7 +69,7 @@ class RawValueWidget(gtk.HBox):
         self.value = new_value
         self.set_value(self.value)
         if rose.env.contains_env_var(self.value):
-            self.entry.modify_text(gtk.STATE_NORMAL, ENV_COLOUR)
+            self.entry.modify_text(Gtk.StateType.NORMAL, ENV_COLOUR)
             self.entry.set_tooltip_text(rose.config_editor.VAR_WIDGET_ENV_INFO)
         else:
             self.entry.set_tooltip_text(None)
@@ -90,7 +90,7 @@ class RawValueWidget(gtk.HBox):
         return False
 
 
-class TextMultilineValueWidget(gtk.HBox):
+class TextMultilineValueWidget(Gtk.HBox):
 
     """This class displays text with multiple lines."""
 
@@ -102,16 +102,16 @@ class TextMultilineValueWidget(gtk.HBox):
         self.set_value = set_value
         self.hook = hook
 
-        self.entrybuffer = gtk.TextBuffer()
+        self.entrybuffer = Gtk.TextBuffer()
         self.entrybuffer.set_text(self.value)
-        self.entry = gtk.TextView(self.entrybuffer)
-        self.entry.set_wrap_mode(gtk.WRAP_WORD)
+        self.entry = Gtk.TextView(self.entrybuffer)
+        self.entry.set_wrap_mode(Gtk.WrapMode.WORD)
         self.entry.set_left_margin(rose.config_editor.SPACING_SUB_PAGE)
         self.entry.set_right_margin(rose.config_editor.SPACING_SUB_PAGE)
         self.entry.connect('focus-in-event', self.hook.trigger_scroll)
         self.entry.show()
 
-        viewport = gtk.Viewport()
+        viewport = Gtk.Viewport()
         viewport.add(self.entry)
         viewport.show()
 

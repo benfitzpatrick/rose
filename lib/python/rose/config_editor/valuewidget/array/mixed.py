@@ -21,16 +21,16 @@
 import re
 import sys
 
-import pygtk
-pygtk.require('2.0')
-import gtk
+import gi
+gi.require_version('Gtk', '3.0')
+from gi.repository import Gtk
 
 from . import entry
 import rose.gtk.util
 import rose.variable
 
 
-class MixedArrayValueWidget(gtk.HBox):
+class MixedArrayValueWidget(Gtk.HBox):
 
     """This is a class to represent a derived type variable as a table.
 
@@ -71,17 +71,17 @@ class MixedArrayValueWidget(gtk.HBox):
         self.num_cols = len(metadata[rose.META_PROP_TYPE])
         self.types_row = [t for t in
                           metadata[rose.META_PROP_TYPE]]
-        log_imgs = [(gtk.STOCK_MEDIA_STOP, gtk.ICON_SIZE_MENU),
-                    (gtk.STOCK_APPLY, gtk.ICON_SIZE_MENU),
-                    (gtk.STOCK_DIALOG_WARNING, gtk.ICON_SIZE_MENU)]
-        self.make_log_image = lambda i: gtk.image_new_from_stock(*log_imgs[i])
+        log_imgs = [(Gtk.STOCK_MEDIA_STOP, Gtk.IconSize.MENU),
+                    (Gtk.STOCK_APPLY, Gtk.IconSize.MENU),
+                    (Gtk.STOCK_DIALOG_WARNING, Gtk.IconSize.MENU)]
+        self.make_log_image = lambda i: Gtk.Image.new_from_stock(*log_imgs[i])
 
         self.has_titles = False
         if "element-titles" in metadata:
             self.has_titles = True
 
         self.set_num_rows()
-        self.entry_table = gtk.Table(rows=self.num_rows,
+        self.entry_table = Gtk.Table(rows=self.num_rows,
                                      columns=self.num_cols,
                                      homogeneous=False)
         self.entry_table.connect('focus-in-event',
@@ -274,8 +274,8 @@ class MixedArrayValueWidget(gtk.HBox):
             hook = self.hook
             setter = ArrayElementSetter(self.setter, unwrapped_index)
             if self.has_titles and row_index == 0:
-                widget = gtk.HBox()
-                label = gtk.Label(self.metadata['element-titles'][i])
+                widget = Gtk.HBox()
+                label = Gtk.Label(label=self.metadata['element-titles'][i])
                 label.show()
                 widget.pack_start(label, expand=True, fill=True)
             else:
@@ -286,8 +286,8 @@ class MixedArrayValueWidget(gtk.HBox):
             self.entry_table.attach(widget,
                                     i, i + 1,
                                     insert_row_index, insert_row_index + 1,
-                                    xoptions=gtk.SHRINK,
-                                    yoptions=gtk.SHRINK)
+                                    xoptions=Gtk.AttachOptions.SHRINK,
+                                    yoptions=Gtk.AttachOptions.SHRINK)
             widget_list.append(widget)
         self.rows.append(widget_list)
         self.widgets.extend(widget_list)
@@ -310,8 +310,8 @@ class MixedArrayValueWidget(gtk.HBox):
             child_list = e_widget.get_children()
             while child_list:
                 child = child_list.pop()
-                if (isinstance(child, gtk.Label) or
-                        isinstance(child, gtk.Entry) and
+                if (isinstance(child, Gtk.Label) or
+                        isinstance(child, Gtk.Entry) and
                         hasattr(child, 'get_text')):
                     width = len(child.get_text())
                     if width > max_width.get(i, -1):
@@ -331,7 +331,7 @@ class MixedArrayValueWidget(gtk.HBox):
             child_list = e_widget.get_children()
             while child_list:
                 child = child_list.pop()
-                if (isinstance(child, gtk.Entry) and
+                if (isinstance(child, Gtk.Entry) and
                         hasattr(child, 'set_width_chars')):
                     child.set_width_chars(max_width[i])
                 if hasattr(child, 'get_children'):
@@ -342,30 +342,30 @@ class MixedArrayValueWidget(gtk.HBox):
 
     def generate_buttons(self):
         """Insert an add row and delete row button."""
-        del_image = gtk.image_new_from_stock(gtk.STOCK_REMOVE,
-                                             gtk.ICON_SIZE_MENU)
+        del_image = Gtk.Image.new_from_stock(Gtk.STOCK_REMOVE,
+                                             Gtk.IconSize.MENU)
         del_image.show()
-        self.del_button = gtk.EventBox()
+        self.del_button = Gtk.EventBox()
         self.del_button.set_tooltip_text(self.TIP_ADD)
         self.del_button.add(del_image)
         self.del_button.show()
         self.del_button.connect('button-release-event', self.del_row)
         self.del_button.connect('enter-notify-event',
-                                lambda b, e: b.set_state(gtk.STATE_ACTIVE))
+                                lambda b, e: b.set_state(Gtk.StateType.ACTIVE))
         self.del_button.connect('leave-notify-event',
-                                lambda b, e: b.set_state(gtk.STATE_NORMAL))
-        add_image = gtk.image_new_from_stock(gtk.STOCK_ADD, gtk.ICON_SIZE_MENU)
+                                lambda b, e: b.set_state(Gtk.StateType.NORMAL))
+        add_image = Gtk.Image.new_from_stock(Gtk.STOCK_ADD, Gtk.IconSize.MENU)
         add_image.show()
-        self.add_button = gtk.EventBox()
+        self.add_button = Gtk.EventBox()
         self.add_button.set_tooltip_text(self.TIP_ADD)
         self.add_button.add(add_image)
         self.add_button.show()
         self.add_button.connect('button-release-event', self.add_row)
         self.add_button.connect('enter-notify-event',
-                                lambda b, e: b.set_state(gtk.STATE_ACTIVE))
+                                lambda b, e: b.set_state(Gtk.StateType.ACTIVE))
         self.add_button.connect('leave-notify-event',
-                                lambda b, e: b.set_state(gtk.STATE_NORMAL))
-        self.add_del_button_box = gtk.VBox()
+                                lambda b, e: b.set_state(Gtk.StateType.NORMAL))
+        self.add_del_button_box = Gtk.VBox()
         self.add_del_button_box.pack_start(
             self.add_button, expand=False, fill=False)
         self.add_del_button_box.pack_start(

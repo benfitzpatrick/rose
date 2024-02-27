@@ -18,15 +18,15 @@
 # along with Rose. If not, see <http://www.gnu.org/licenses/>.
 # -----------------------------------------------------------------------------
 
-import pygtk
-pygtk.require('2.0')
-import gtk
+import gi
+gi.require_version('Gtk', '3.0')
+from gi.repository import Gtk
 
 from rose import META_PROP_TYPE
 import rose.config_editor.util
 
 
-class QuotedTextValueWidget(gtk.HBox):
+class QuotedTextValueWidget(Gtk.HBox):
 
     """This class represents 'character' and 'quoted' types in an entry."""
 
@@ -57,9 +57,9 @@ class QuotedTextValueWidget(gtk.HBox):
         self.metadata = metadata
         self.set_value = set_value
         self.hook = hook
-        self.entry = gtk.Entry()
-        insensitive_colour = gtk.Style().bg[0]
-        self.entry.modify_bg(gtk.STATE_INSENSITIVE,
+        self.entry = Gtk.Entry()
+        insensitive_colour = Gtk.Style().bg[0]
+        self.entry.modify_bg(Gtk.StateType.INSENSITIVE,
                              insensitive_colour)
         self.in_error = not self.type_checker(self.value)
         self.set_entry_text()

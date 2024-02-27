@@ -20,9 +20,9 @@
 
 import os
 
-import pygtk
-pygtk.require('2.0')
-import gtk
+import gi
+gi.require_version('Gtk', '3.0')
+from gi.repository import Gtk
 
 import rose.config_editor
 import rose.external
@@ -30,15 +30,15 @@ import rose.gtk.dialog
 import rose.gtk.util
 
 
-class FileSystemPanel(gtk.ScrolledWindow):
+class FileSystemPanel(Gtk.ScrolledWindow):
 
-    """A class to show underlying files and directories in a gtk.TreeView."""
+    """A class to show underlying files and directories in a Gtk.TreeView."""
 
     def __init__(self, directory):
         super(FileSystemPanel, self).__init__()
         self.directory = directory
-        view = gtk.TreeView()
-        store = gtk.TreeStore(str, str)
+        view = Gtk.TreeView()
+        store = Gtk.TreeStore(str, str)
         dirpath_iters = {self.directory: None}
         for dirpath, dirnames, filenames in os.walk(self.directory):
             if dirpath not in dirpath_iters:
@@ -60,10 +60,10 @@ class FileSystemPanel(gtk.ScrolledWindow):
                     dirnames.remove(dirname)
             dirnames.sort()
         view.set_model(store)
-        col = gtk.TreeViewColumn()
+        col = Gtk.TreeViewColumn()
         col.set_title(rose.config_editor.TITLE_FILE_PANEL)
-        cell = gtk.CellRendererText()
-        col.pack_start(cell, expand=True)
+        cell = Gtk.CellRendererText()
+        col.pack_start(cell, True, True, 0)
         col.set_cell_data_func(cell,
                                self._set_path_markup, store)
         view.append_column(col)
@@ -72,7 +72,7 @@ class FileSystemPanel(gtk.ScrolledWindow):
         view.connect("row-activated", self._handle_activation)
         view.connect("button-press-event", self._handle_click)
         self.add(view)
-        self.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
+        self.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
         self.show()
 
     def _set_path_markup(self, column, cell, model, r_iter, treestore):
@@ -98,17 +98,17 @@ class FileSystemPanel(gtk.ScrolledWindow):
 
     def _handle_click(self, view, event):
         pathinfo = view.get_path_at_pos(int(event.x), int(event.y))
-        if (event.button == 1 and event.type == gtk.gdk._2BUTTON_PRESS and
+        if (event.button == 1 and event.type == Gdk._2BUTTON_PRESS and
                 pathinfo is None):
             self._handle_activation()
         if event.button == 3:
             ui_string = """<ui><popup name='Popup'>
                            <menuitem action='Open'/>
                            </popup> </ui>"""
-            actions = [('Open', gtk.STOCK_OPEN,
+            actions = [('Open', Gtk.STOCK_OPEN,
                         rose.config_editor.FILE_PANEL_MENU_OPEN)]
-            uimanager = gtk.UIManager()
-            actiongroup = gtk.ActionGroup('Popup')
+            uimanager = Gtk.UIManager()
+            actiongroup = Gtk.ActionGroup('Popup')
             actiongroup.add_actions(actions)
             uimanager.insert_action_group(actiongroup, pos=0)
             uimanager.add_ui_from_string(ui_string)

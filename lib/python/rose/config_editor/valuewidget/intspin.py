@@ -20,14 +20,14 @@
 
 import sys
 
-import pygtk
-pygtk.require('2.0')
-import gtk
+import gi
+gi.require_version('Gtk', '3.0')
+from gi.repository import Gtk
 
 import rose.config_editor
 
 
-class IntSpinButtonValueWidget(gtk.HBox):
+class IntSpinButtonValueWidget(Gtk.HBox):
 
     """This is a class to represent an integer with a spin button."""
 
@@ -56,7 +56,7 @@ class IntSpinButtonValueWidget(gtk.HBox):
             entry = self.make_spinner(int_value)
             signal = 'changed'
         else:
-            entry = gtk.Entry()
+            entry = Gtk.Entry()
             entry.set_text(self.value)
             signal = 'activate'
 
@@ -67,11 +67,11 @@ class IntSpinButtonValueWidget(gtk.HBox):
 
         self.pack_start(entry, False, False, 0)
 
-        self.warning_img = gtk.Image()
+        self.warning_img = Gtk.Image()
         if not value_ok:
-            self.warning_img = gtk.Image()
-            self.warning_img.set_from_stock(gtk.STOCK_DIALOG_WARNING,
-                                            gtk.ICON_SIZE_MENU)
+            self.warning_img = Gtk.Image()
+            self.warning_img.set_from_stock(Gtk.STOCK_DIALOG_WARNING,
+                                            Gtk.IconSize.MENU)
             self.warning_img.set_tooltip_text(
                 rose.config_editor.WARNING_INTEGER_OUT_OF_BOUNDS)
             self.warning_img.show()
@@ -80,12 +80,12 @@ class IntSpinButtonValueWidget(gtk.HBox):
         self.grab_focus = lambda: self.hook.get_focus(entry)
 
     def make_spinner(self, int_value):
-        my_adj = gtk.Adjustment(value=int_value,
+        my_adj = Gtk.Adjustment(value=int_value,
                                 upper=self.upper,
                                 lower=self.lower,
                                 step_incr=1)
 
-        spin_button = gtk.SpinButton(adjustment=my_adj, digits=0)
+        spin_button = Gtk.SpinButton(adjustment=my_adj, digits=0)
         spin_button.connect('focus-in-event',
                             self.hook.trigger_scroll)
 

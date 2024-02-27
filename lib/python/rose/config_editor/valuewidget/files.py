@@ -20,16 +20,16 @@
 
 import os
 
-import pygtk
-pygtk.require("2.0")
-import gtk
+import gi
+gi.require_version("Gtk", "3.0")
+from gi.repository import Gtk
 
 import rose.config_editor
 import rose.external
 import rose.gtk.util
 
 
-class FileChooserValueWidget(gtk.HBox):
+class FileChooserValueWidget(Gtk.HBox):
 
     """This class displays a path, with an open dialog to define a new one."""
 
@@ -43,8 +43,8 @@ class FileChooserValueWidget(gtk.HBox):
         self.generate_entry()
         self.generate_editor_launcher()
         self.open_button = rose.gtk.util.CustomButton(
-            stock_id=gtk.STOCK_OPEN,
-            size=gtk.ICON_SIZE_MENU,
+            stock_id=Gtk.STOCK_OPEN,
+            size=Gtk.IconSize.MENU,
             as_tool=False,
             tip_text="Browse for a filename")
         self.open_button.show()
@@ -53,34 +53,34 @@ class FileChooserValueWidget(gtk.HBox):
         self.edit_button.set_sensitive(os.path.isfile(self.value))
 
     def generate_entry(self):
-        self.entry = gtk.Entry()
+        self.entry = Gtk.Entry()
         self.entry.set_text(self.value)
         self.entry.show()
         self.entry.connect("changed", self.setter)
         self.entry.connect("focus-in-event",
                            self.hook.trigger_scroll)
-        self.pack_start(self.entry)
+        self.pack_start(self.entry, True, True, 0)
         self.grab_focus = lambda: self.hook.get_focus(self.entry)
 
     def run_and_destroy(self, *args):
-        file_chooser_widget = gtk.FileChooserDialog(
-            buttons=(gtk.STOCK_CANCEL,
-                     gtk.RESPONSE_REJECT,
-                     gtk.STOCK_OK,
-                     gtk.RESPONSE_ACCEPT))
+        file_chooser_widget = Gtk.FileChooserDialog(
+            buttons=(Gtk.STOCK_CANCEL,
+                     Gtk.ResponseType.REJECT,
+                     Gtk.STOCK_OK,
+                     Gtk.ResponseType.ACCEPT))
         if os.path.exists(os.path.dirname(self.value)):
             file_chooser_widget.set_filename(self.value)
         response = file_chooser_widget.run()
-        if response in [gtk.RESPONSE_ACCEPT, gtk.RESPONSE_OK,
-                        gtk.RESPONSE_YES]:
+        if response in [Gtk.ResponseType.ACCEPT, Gtk.ResponseType.OK,
+                        Gtk.ResponseType.YES]:
             self.entry.set_text(file_chooser_widget.get_filename())
         file_chooser_widget.destroy()
         return False
 
     def generate_editor_launcher(self):
         self.edit_button = rose.gtk.util.CustomButton(
-            stock_id=gtk.STOCK_DND,
-            size=gtk.ICON_SIZE_MENU,
+            stock_id=Gtk.STOCK_DND,
+            size=Gtk.IconSize.MENU,
             as_tool=False,
             tip_text="Edit the file")
         self.edit_button.connect(
@@ -95,7 +95,7 @@ class FileChooserValueWidget(gtk.HBox):
         return False
 
 
-class FileEditorValueWidget(gtk.HBox):
+class FileEditorValueWidget(Gtk.HBox):
 
     """This class creates a button that launches an editor for a file path."""
 
@@ -113,8 +113,8 @@ class FileEditorValueWidget(gtk.HBox):
     def generate_editor_launcher(self):
         self.edit_button = rose.gtk.util.CustomButton(
             label=rose.config_editor.LABEL_EDIT,
-            stock_id=gtk.STOCK_DND,
-            size=gtk.ICON_SIZE_MENU,
+            stock_id=Gtk.STOCK_DND,
+            size=Gtk.IconSize.MENU,
             as_tool=False,
             tip_text="Edit the file")
         self.edit_button.connect("clicked", self.on_click)
