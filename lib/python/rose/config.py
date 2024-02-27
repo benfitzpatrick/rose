@@ -168,15 +168,7 @@ class ConfigNode(object):
     __slots__ = ["STATE_NORMAL", "STATE_USER_IGNORED",
                  "STATE_SYST_IGNORED", "value", "state", "comments"]
 
-    STATE_NORMAL = ""
-    """The default state of a ConfigNode."""
-    STATE_USER_IGNORED = "!"
-    """ConfigNode state if it has been specifically ignored in the config."""
-    STATE_SYST_IGNORED = "!!"
-    """ConfigNode state if a metadata opperation has logically ignored the
-    config."""
-
-    def __init__(self, value=None, state=STATE_NORMAL, comments=None):
+    def __init__(self, value=None, state=None, comments=None):
         if value is None:
             value = {}
         if comments is None:
@@ -184,6 +176,16 @@ class ConfigNode(object):
         self.value = value
         self.state = state
         self.comments = comments
+        self.STATE_NORMAL = ""
+        """The default state of a ConfigNode."""
+        self.STATE_USER_IGNORED = "!"
+        """ConfigNode state if it has been specifically ignored in the config."""
+        self.STATE_SYST_IGNORED = "!!"
+        """ConfigNode state if a metadata opperation has logically ignored the
+    config."""
+        if self.state is None:
+            self.state = self.STATE_NORMAL
+
 
     def __repr__(self):
         return str({"value": self.value,

@@ -23,7 +23,7 @@ Convenient functions for searching resource files.
 
 import os
 from rose.config import ConfigLoader, ConfigNode
-import imp
+import importlib.machinery
 import inspect
 import string
 import sys
@@ -224,7 +224,11 @@ def import_object(import_string, from_files, error_handler,
         for filename in module_files:
             sys.path.insert(0, os.path.dirname(filename))
             try:
-                module = imp.load_source(as_name, filename)
+                module = (
+                    importlib.machinery.SourceFileLoader().load_source(
+                        as_name, filename
+                    )
+                )
             except ImportError as exc:
                 error_handler(exc)
             sys.path.pop(0)
