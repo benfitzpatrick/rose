@@ -63,7 +63,7 @@ class NavTreeManager(object):
             self.clear_namespace_tree()
         # Reload the information into the tree.
         if only_this_config is None:
-            configs = self.data.config.keys()
+            configs = list(self.data.config.keys())
             configs.sort(rose.config.sort_settings)
             configs.sort(
                 lambda x, y: cmp(

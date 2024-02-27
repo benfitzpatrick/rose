@@ -34,7 +34,7 @@ import tarfile
 from tempfile import NamedTemporaryFile
 from time import gmtime, strftime
 import traceback
-import urllib
+import urllib.request, urllib.parse, urllib.error
 
 import rose.config
 from rose.host_select import HostSelector
@@ -358,7 +358,7 @@ class RoseBushService(object):
             task_status = []
             if not isinstance(no_status, list):
                 no_status = [no_status]
-            for key, values in self.bush_dao.TASK_STATUS_GROUPS.items():
+            for key, values in list(self.bush_dao.TASK_STATUS_GROUPS.items()):
                 if key not in no_status:
                     task_status += values
         return self.taskjobs(
@@ -458,7 +458,7 @@ class RoseBushService(object):
             rose_suite_info = os.path.join(user_suite_dir, "rose-suite.info")
             try:
                 info_root = rose.config.load(rose_suite_info)
-                for key, node in info_root.value.items():
+                for key, node in list(info_root.value.items()):
                     if (node.is_ignored() or
                             not isinstance(node.value, str)):
                         continue
@@ -490,7 +490,7 @@ class RoseBushService(object):
                 mime = self.MIME_TEXT_PLAIN
             else:
                 mime = mimetypes.guess_type(
-                    urllib.pathname2url(path_in_tar))[0]
+                    urllib.request.pathname2url(path_in_tar))[0]
             handle.seek(0)
             if (mode == "download" or
                     f_size > view_size_max or
@@ -514,7 +514,7 @@ class RoseBushService(object):
             if open(f_name).read(2) == "#!":
                 mime = self.MIME_TEXT_PLAIN
             else:
-                mime = mimetypes.guess_type(urllib.pathname2url(f_name))[0]
+                mime = mimetypes.guess_type(urllib.request.pathname2url(f_name))[0]
             if not mime:
                 mime = self.MIME_TEXT_PLAIN
             if (mode == "download" or
@@ -527,7 +527,7 @@ class RoseBushService(object):
         try:
             if mode in [None, "text"]:
                 text = jinja2.escape(text)
-            lines = [unicode(line) for line in text.splitlines()]
+            lines = [str(line) for line in text.splitlines()]
         except UnicodeDecodeError:
             if path_in_tar:
                 handle.seek(0)
@@ -617,7 +617,7 @@ class RoseBushService(object):
             # no search is being performed, client is requesting the whole
             # page
             if mode in [None, "text"]:
-                line_numbers = range(1, len(lines) + 1)
+                line_numbers = list(range(1, len(lines) + 1))
             else:
                 line_numbers = []
             lines = [[line] for line in lines]
@@ -676,7 +676,7 @@ class RoseBushService(object):
         if os.path.isfile(info_name):
             try:
                 info_root = rose.config.load(info_name)
-                for key, node in info_root.value.items():
+                for key, node in list(info_root.value.items()):
                     if node.is_ignored() or not isinstance(node.value, str):
                         continue
                     data["info"][key] = node.value

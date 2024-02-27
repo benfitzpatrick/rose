@@ -160,7 +160,7 @@ class StackViewer(Gtk.Window):
             cell_text[title] = Gtk.CellRendererText()
             columns[title].pack_start(cell_text[title], True, True, 0)
             columns[title].add_attribute(cell_text[title], attribute='markup',
-                                         column=len(columns.keys()) - 1)
+                                         column=len(list(columns.keys())) - 1)
             stack_view.append_column(columns[title])
         stack_view.show()
         return stack_view

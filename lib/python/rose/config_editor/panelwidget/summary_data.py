@@ -175,7 +175,7 @@ class BaseSummaryDataPanel(Gtk.VBox):
     def update_tree_model(self):
         """Construct a data model of other page data."""
         self.var_id_map = {}
-        for variables in self.variables.values():
+        for variables in list(self.variables.values()):
             for variable in variables:
                 self.var_id_map[variable.metadata["id"]] = variable
         data_rows, column_names = self.get_model_data()
@@ -351,7 +351,7 @@ class BaseSummaryDataPanel(Gtk.VBox):
             return True
         for i in range(model.get_n_columns()):
             col_text = model.get_value(iter_, i)
-            if isinstance(col_text, basestring) and filt_text in col_text:
+            if isinstance(col_text, str) and filt_text in col_text:
                 return True
         child_iter = model.iter_children(iter_)
         while child_iter is not None:
@@ -624,7 +624,7 @@ class BaseSummaryDataPanel(Gtk.VBox):
         if section is None:
             if not self.sections or not self.is_duplicate:
                 return False
-            section_base = self.sections.keys()[0].rsplit("(", 1)[0]
+            section_base = list(self.sections.keys())[0].rsplit("(", 1)[0]
             i = 1
             section = section_base + "(" + str(i) + ")"
             while section in self.sections:
@@ -777,10 +777,10 @@ class StandardSummaryDataPanel(BaseSummaryDataPanel):
 
     def get_model_data(self):
         """Construct a data model of other page data."""
-        sub_sect_names = self.sections.keys()
+        sub_sect_names = list(self.sections.keys())
         sub_var_names = []
         self.var_id_map = {}
-        for section, variables in self.variables.items():
+        for section, variables in list(self.variables.items()):
             for variable in variables:
                 self.var_id_map[variable.metadata["id"]] = variable
                 if variable.name not in sub_var_names:
@@ -845,7 +845,7 @@ class StandardSummaryDataPanel(BaseSummaryDataPanel):
         tip_text += id_data.metadata.get(rose.META_PROP_DESCRIPTION, "")
         if tip_text:
             tip_text += "\n"
-        for key, value in id_data.error.items():
+        for key, value in list(id_data.error.items()):
             tip_text += (
                 rose.config_editor.SUMMARY_DATA_PANEL_ERROR_TIP.format(
                     key, value))

@@ -402,12 +402,12 @@ class MainController(object):
         self.toolbar.set_widget_sensitive(
             rose.config_editor.TOOLBAR_SUITE_GCONTROL,
             any(c.config_type == rose.TOP_CONFIG_NAME
-                for c in self.data.config.values()))
+                for c in list(self.data.config.values())))
 
         self.toolbar.set_widget_sensitive(
             rose.config_editor.TOOLBAR_VIEW_OUTPUT,
             any(c.config_type == rose.TOP_CONFIG_NAME
-                for c in self.data.config.values()))
+                for c in list(self.data.config.values())))
 
     def generate_menubar(self):
         """Link in the menu functionality and accelerators."""
@@ -604,7 +604,7 @@ class MainController(object):
             ))
         self.main_handle.load_macro_menu(self.menubar)
         if not any(c.config_type == rose.TOP_CONFIG_NAME
-                   for c in self.data.config.values()):
+                   for c in list(self.data.config.values())):
             self.menubar.uimanager.get_widget(
                 "/TopMenuBar/Tools/Run Suite").set_sensitive(False)
         self.update_bar_widgets()
@@ -660,7 +660,7 @@ class MainController(object):
     def handle_load_all(self, *args):
         """Handle a request to load all preview configurations."""
         load_these = []
-        for item in self.data.config.keys():
+        for item in list(self.data.config.keys()):
             if self.data.config[item].is_preview:
                 load_these.append(item)
         load_these.sort()
@@ -777,7 +777,7 @@ class MainController(object):
             if no_mod_name != no_num_name:
                 # There's a modifier in the section name.
                 ok_names.append(no_num_name)
-            for section, variables in config_data.vars.now.items():
+            for section, variables in list(config_data.vars.now.items()):
                 if not section.startswith(rose.SUB_CONFIG_FILE_DIR):
                     continue
                 for variable in variables:
@@ -1156,7 +1156,7 @@ class MainController(object):
         """Dump the component configurations in memory to disk."""
         if only_config_name is None:
             config_names = []
-            for config_name in self.data.config.keys():
+            for config_name in list(self.data.config.keys()):
                 if not self.data.config[config_name].is_preview:
                     config_names.append(config_name)
         else:
@@ -1241,19 +1241,19 @@ class MainController(object):
             config_data.save_config = new_save_config
             config_vars.save.clear()
             config_vars.latent_save.clear()
-            for section, variables in config_vars.now.items():
+            for section, variables in list(config_vars.now.items()):
                 config_vars.save.update({section: []})
                 for variable in variables:
                     config_vars.save[section].append(variable.copy())
-            for section, variables in config_vars.latent.items():
+            for section, variables in list(config_vars.latent.items()):
                 config_vars.latent_save.update({section: []})
                 for variable in variables:
                     config_vars.latent_save[section].append(variable.copy())
             config_sections.save.clear()
             config_sections.latent_save.clear()
-            for section, data in config_sections.now.items():
+            for section, data in list(config_sections.now.items()):
                 config_sections.save.update({section: data.copy()})
-            for section, data in config_sections.latent.items():
+            for section, data in list(config_sections.latent.items()):
                 config_sections.latent_save.update({section: data.copy()})
         self.data.saved_config_names = set(self.data.config.keys())
         # Update open pages.
@@ -1267,7 +1267,7 @@ class MainController(object):
     def output_config_objects(self, only_config_name=None):
         """Return a dict of config name - object pairs from this session."""
         if only_config_name is None:
-            config_names = self.data.config.keys()
+            config_names = list(self.data.config.keys())
         else:
             config_names = [only_config_name]
         return_dict = {}
@@ -1341,7 +1341,7 @@ class MainController(object):
                     page_window = self.tab_windows[tab_nses.index(name)]
                     page_window.destroy()
         self.group_ops.remove_sections(config_name,
-                                       config_data.sections.now.keys())
+                                       list(config_data.sections.now.keys()))
         if dirpath is not None:
             try:
                 shutil.rmtree(dirpath)
@@ -1374,7 +1374,7 @@ class MainController(object):
 
     def _has_preview_apps(self):
         """Return whether any configurations are currently just previews."""
-        for item in self.data.config.keys():
+        for item in list(self.data.config.keys()):
             if self.data.config[item].is_preview:
                 return True
         else:
@@ -1439,7 +1439,7 @@ class MainController(object):
             self._get_menu_widget('/Reload metadata').set_sensitive(
                 not self.metadata_off)
         if only_this_config is None:
-            configs = self.data.config.keys()
+            configs = list(self.data.config.keys())
         else:
             configs = [only_this_config]
         for config_name in configs:
@@ -1650,7 +1650,7 @@ class MainController(object):
             ns_cmp = lambda x, y: (y == current_ns) - (x == current_ns)
             name_cmp = lambda x, y: (y == current_name) - (x == current_name)
         id_cmp = lambda v, w: cmp(v.metadata['id'], w.metadata['id'])
-        config_keys = self.data.config.keys()
+        config_keys = list(self.data.config.keys())
         config_keys.sort()
         config_keys.sort(name_cmp)
         for config_name in config_keys:
@@ -1669,7 +1669,7 @@ class MainController(object):
                 if reg_find(variable.name) or reg_find(variable.value):
                     found_ns_vars.setdefault(ns, [])
                     found_ns_vars[ns].append(variable)
-            ns_list = found_ns_vars.keys()
+            ns_list = list(found_ns_vars.keys())
             ns_list.sort()
             ns_list.sort(ns_cmp)
             for ns in ns_list:
@@ -1912,7 +1912,7 @@ def spawn_window(config_directory_path=None, debug_mode=False,
             try:
                 ctrl.view_page(namespace)
             except Exception:
-                print >> sys.stderr, 'could not open ' + namespace
+                print('could not open ' + namespace, file=sys.stderr)
             # expand namespace in nav_panel
             path = ctrl.nav_panel.get_path_from_names(namespace.split('/'))
             if path:

@@ -160,7 +160,7 @@ class KGODatabase(object):
         self.statement_buffer = []
 
 
-class AnalysisTask(object):
+class AnalysisTask(object, metaclass=abc.ABCMeta):
     """Base class for an analysis task.
 
     All custom user tasks should inherit from this class and override
@@ -182,7 +182,6 @@ class AnalysisTask(object):
             used by the parent app (for spawning subprocesses).
 
     """
-    __metaclass__ = abc.ABCMeta
 
     def __init__(self, parent_app, task_options):
         """
@@ -550,7 +549,7 @@ class RoseAnaApp(BuiltinApp):
         user_config = (
             self.rose_conf.get_value(["rose-ana"]))
         if user_config is not None:
-            for name, obj in user_config.items():
+            for name, obj in list(user_config.items()):
                 if obj.state == "":
                     self.ana_config[name] = obj.value
 

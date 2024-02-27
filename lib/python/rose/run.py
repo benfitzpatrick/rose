@@ -89,7 +89,7 @@ class Dummy(object):
     """Convert a dict into an object."""
 
     def __init__(self, **kwargs):
-        for key, value in kwargs.items():
+        for key, value in list(kwargs.items()):
             setattr(self, key, value)
 
 

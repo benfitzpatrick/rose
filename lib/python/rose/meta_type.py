@@ -36,7 +36,7 @@ class MetaType(object):
         """Return the class for a named meta data type."""
         if key in cls.meta_type_classes:
             return cls.meta_type_classes[key]
-        for item in globals().values():
+        for item in list(globals().values()):
             if inspect.isclass(item):
                 if item != cls and issubclass(item, cls):
                     if item.KEY == key:

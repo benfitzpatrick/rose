@@ -383,7 +383,7 @@ class RoseBushDAO(object):
 
         # Sequential logs
         for entry in entries:
-            for filename, filename_items in entry["logs"].items():
+            for filename, filename_items in list(entry["logs"].items()):
                 seq_log_match = self.REC_SEQ_LOG.match(filename)
                 if not seq_log_match:
                     continue
@@ -393,7 +393,7 @@ class RoseBushDAO(object):
                 if seq_key not in entry["seq_logs_indexes"]:
                     entry["seq_logs_indexes"][seq_key] = {}
                 entry["seq_logs_indexes"][seq_key][index_str] = filename
-            for seq_key, indexes in entry["seq_logs_indexes"].items():
+            for seq_key, indexes in list(entry["seq_logs_indexes"].items()):
                 # Only one item, not a sequence
                 if len(indexes) <= 1:
                     entry["seq_logs_indexes"].pop(seq_key)
@@ -401,12 +401,12 @@ class RoseBushDAO(object):
                 # the template can sort them as numbers
                 try:
                     int_indexes = {}
-                    for index_str, filename in indexes.items():
+                    for index_str, filename in list(indexes.items()):
                         int_indexes[int(index_str)] = filename
                     entry["seq_logs_indexes"][seq_key] = int_indexes
                 except ValueError:
                     pass
-            for filename, log_dict in entry["logs"].items():
+            for filename, log_dict in list(entry["logs"].items()):
                 # Unset seq_key for singular items
                 if log_dict["seq_key"] not in entry["seq_logs_indexes"]:
                     log_dict["seq_key"] = None
@@ -524,7 +524,7 @@ class RoseBushDAO(object):
             pass
 
         states_stmt = {}
-        for key, names in self.TASK_STATUS_GROUPS.items():
+        for key, names in list(self.TASK_STATUS_GROUPS.items()):
             states_stmt[key] = " OR ".join(
                 ["status=='%s'" % (name) for name in names])
         stmt = (

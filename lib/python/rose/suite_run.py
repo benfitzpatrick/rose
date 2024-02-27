@@ -292,7 +292,7 @@ class SuiteRunner(Runner):
 
             # Process Files
             cwd = os.getcwd()
-            for rel_path, conf_dir in conf_tree.files.items():
+            for rel_path, conf_dir in list(conf_tree.files.items()):
                 if (conf_dir == cwd or
                         any(fnmatchcase(os.sep + rel_path, exclude)
                             for exclude in self.SYNC_EXCLUDES) or

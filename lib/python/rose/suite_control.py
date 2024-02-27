@@ -99,7 +99,7 @@ def get_suite_name(event_handler=None):
 
 def prompt(action, suite_name):
     """Prompt user to confirm action for suite_name at host."""
-    return raw_input(PROMPT % (action, suite_name)).strip() in [YES]
+    return input(PROMPT % (action, suite_name)).strip() in [YES]
 
 
 def main():

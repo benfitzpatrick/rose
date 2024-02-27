@@ -78,7 +78,7 @@ class SuiteRunCleaner(object):
             items = only_items
         items.sort()
         uuid_str = str(uuid4())
-        for auth, node in sorted(locs_conf.value.items(), self._auth_node_cmp):
+        for auth, node in sorted(list(locs_conf.value.items()), self._auth_node_cmp):
             locs = []
             roots = set([""])
             for item in items:
@@ -175,7 +175,7 @@ def main():
     for arg in args:
         if not opts.non_interactive:
             try:
-                answer = raw_input("Clean %s? y/n (default n) " % arg)
+                answer = input("Clean %s? y/n (default n) " % arg)
             except EOFError:
                 sys.exit(1)
             if answer not in ["Y", "y"]:

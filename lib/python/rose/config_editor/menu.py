@@ -274,7 +274,7 @@ class MenuBar(object):
         """Add the keyboard accelerators."""
         self.accelerators = Gtk.AccelGroup()
         self.accelerators.lookup = {}  # Unfortunately, this is necessary.
-        for key_press, accel_func in accel_dict.items():
+        for key_press, accel_func in list(accel_dict.items()):
             key, mod = Gtk.accelerator_parse(key_press)
             self.accelerators.lookup[str(key) + str(mod)] = accel_func
             self.accelerators.connect_group(
@@ -486,7 +486,7 @@ class MainMenuHandler(object):
     def load_macro_menu(self, menubar):
         """Refresh the menu dealing with custom macro launches."""
         menubar.clear_macros()
-        config_keys = self.data.config.keys()
+        config_keys = list(self.data.config.keys())
         config_keys.sort()
         tuple_sorter = lambda x, y: cmp(x[0], y[0])
         for config_name in config_keys:
@@ -518,7 +518,7 @@ class MainMenuHandler(object):
         config_sect_dict = {}
         for config_name in self.data.config:
             config_data = self.data.config[config_name]
-            config_sect_dict[config_name] = config_data.sections.now.keys()
+            config_sect_dict[config_name] = list(config_data.sections.now.keys())
             config_sect_dict[config_name].sort(rose.config.sort_settings)
         config_name, section = self.mainwindow.launch_graph_dialog(
             config_sect_dict)
@@ -533,7 +533,7 @@ class MainMenuHandler(object):
     def check_entry_value(self, entry_widget, dialog, entries,
                           labels, optionals):
         is_valid = True
-        for k, entry in entries.items():
+        for k, entry in list(entries.items()):
             this_is_valid = True
             try:
                 new_val = ast.literal_eval(entry.get_text())
@@ -551,7 +551,7 @@ class MainMenuHandler(object):
         return
 
     def handle_macro_entry_activate(self, entry_widget, dialog, entries):
-        for entry in entries.values():
+        for entry in list(entries.values()):
             try:
                 ast.literal_eval(entry.get_text())
             except (ValueError, EOFError, SyntaxError):
@@ -575,10 +575,10 @@ class MainMenuHandler(object):
             None)
         dialog.set_markup('Specify overrides for macro arguments:')
         dialog.set_title(methname)
-        table = Gtk.Table(len(optionals.items()), 2, False)
+        table = Gtk.Table(len(list(optionals.items())), 2, False)
         dialog.vbox.add(table)
-        for i in range(len(optionals.items())):
-            key, value = optionals.items()[i]
+        for i in range(len(list(optionals.items()))):
+            key, value = list(optionals.items())[i]
             label = Gtk.Label(label=str(key) + ":")
             entry = Gtk.Entry()
             if isinstance(value, str):
@@ -602,7 +602,7 @@ class MainMenuHandler(object):
             dialog.destroy()
         else:
             res = {}
-            for key, box in entries.items():
+            for key, box in list(entries.items()):
                 res[key] = ast.literal_eval(box.get_text())
         dialog.destroy()
         return res
@@ -992,7 +992,7 @@ class MainMenuHandler(object):
         """Run the suite, if possible."""
         if not isinstance(args, list):
             args = []
-        for key, value in kwargs.items():
+        for key, value in list(kwargs.items()):
             args.extend([key, value])
         rose.gtk.run.run_suite(*args)
         return False
@@ -1000,7 +1000,7 @@ class MainMenuHandler(object):
     def transform_default(self, only_this_config=None):
         """Run the Rose built-in transformer macros."""
         if (only_this_config is not None and
-                only_this_config in self.data.config.keys()):
+                only_this_config in list(self.data.config.keys())):
             config_keys = [only_this_config]
             text = rose.config_editor.DIALOG_LABEL_AUTOFIX
         else:

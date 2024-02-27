@@ -388,7 +388,7 @@ class Analyse(object):
         """
 
         tasks = []
-        for task in self.config.value.keys():
+        for task in list(self.config.value.keys()):
             if task is "env":
                 continue
             if task.startswith("file:"):

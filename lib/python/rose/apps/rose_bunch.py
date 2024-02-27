@@ -177,7 +177,7 @@ class RoseBunchApp(BuiltinApp):
 
         if instances:
             try:
-                instances = range(int(rose.env.env_var_process(instances)))
+                instances = list(range(int(rose.env.env_var_process(instances))))
             except ValueError:
                 raise ConfigValueError([self.BUNCH_SECTION,
                                         "command-instances"],
@@ -188,7 +188,7 @@ class RoseBunchApp(BuiltinApp):
         multi_args = conf_tree.node.get_value([self.ARGS_SECTION], {})
         bunch_args_names = []
         bunch_args_values = []
-        for key, val in multi_args.items():
+        for key, val in list(multi_args.items()):
             bunch_args_names.append(key)
             bunch_args_values.append(
                 shlex.split(rose.env.env_var_process(val.value)))
@@ -224,7 +224,7 @@ class RoseBunchApp(BuiltinApp):
                 arglength = len(instances)
             else:
                 arglength = len(bunch_args_values[0])
-            self.invocation_names = range(0, arglength)
+            self.invocation_names = list(range(0, arglength))
         else:
             arglength = len(self.invocation_names)
 
@@ -265,10 +265,10 @@ class RoseBunchApp(BuiltinApp):
             self.dao = None
 
         commands = {}
-        for vals in zip(range(arglength), self.invocation_names,
+        for vals in zip(list(range(arglength)), self.invocation_names,
                         *bunch_args_values):
             index, name, bunch_args_vals = vals[0], vals[1], vals[2:]
-            argsdict = dict(zip(bunch_args_names, bunch_args_vals))
+            argsdict = dict(list(zip(bunch_args_names, bunch_args_vals)))
             if instances:
                 if self.isformatted:
                     argsdict["command-instances"] = instances[index]
@@ -287,7 +287,7 @@ class RoseBunchApp(BuiltinApp):
         abort = False
 
         while procs or (commands and not abort):
-            for key, proc in procs.items():
+            for key, proc in list(procs.items()):
                 if proc.poll() is not None:
                     procs.pop(key)
                     if proc.returncode:
@@ -516,7 +516,7 @@ class RoseBunchDAO(object):
 
         args = []
 
-        for key, value in res.items():
+        for key, value in list(res.items()):
             args.append((key, value))
 
         i_stmt = ("INSERT OR REPLACE INTO " + self.TABLE_CONFIG +

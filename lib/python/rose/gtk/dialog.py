@@ -20,7 +20,7 @@
 
 from multiprocessing import Process
 import os
-import Queue
+import queue
 import shlex
 from subprocess import Popen, PIPE
 import sys
@@ -201,7 +201,7 @@ class DialogProcess(object):
                 while True:
                     try:
                         new_text = self.event_queue.get(False)
-                    except Queue.Empty:
+                    except queue.Empty:
                         break
                     end = self.text_buffer.get_end_iter()
                     self.text_buffer.insert_with_tags(end, new_text,

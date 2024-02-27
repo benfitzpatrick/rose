@@ -21,7 +21,7 @@
 
 from difflib import unified_diff
 import os
-from StringIO import StringIO
+from io import StringIO
 import sys
 import traceback
 
@@ -89,7 +89,7 @@ def main():
         sys.exit(2)
     try:
         lines = suite_vc_cmp.cmp_source_vc_info(suite_name=suite_name)
-    except (StandardError, RosePopenError) as exc:
+    except (Exception, RosePopenError) as exc:
         event_handler(exc)
         traceback.print_exc()
         sys.exit(2)

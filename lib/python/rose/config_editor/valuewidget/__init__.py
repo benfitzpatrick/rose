@@ -21,20 +21,20 @@
 import re
 
 import rose
-import array.entry
-import array.mixed
-import array.logical
-import array.python_list
-import array.spaced_list
-import booltoggle
-import character
-import combobox
-import files
-import intspin
-import meta
-import radiobuttons
-import text
-import valuehints
+from . import array.entry
+from . import array.mixed
+from . import array.logical
+from . import array.python_list
+from . import array.spaced_list
+from . import booltoggle
+from . import character
+from . import combobox
+from . import files
+from . import intspin
+from . import meta
+from . import radiobuttons
+from . import text
+from . import valuehints
 
 
 NON_TEXT_TYPES = ('boolean', 'integer', 'logical', 'python_boolean',

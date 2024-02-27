@@ -685,14 +685,14 @@ class ConfigPage(Gtk.VBox):
         if variable_id is None:
             bad_list = []
             for variable in self.panel_data + self.ghost_data:
-                bad_list += variable.error.items()
+                bad_list += list(variable.error.items())
             return bad_list
         else:
             for variable in self.panel_data + self.ghost_data:
                 if variable.metadata.get('id') == variable_id:
                     if variable.error == {}:
                         return None
-                    return variable.error.items()
+                    return list(variable.error.items())
         return None
 
     def choose_focus(self, focus_variable=None):
@@ -916,7 +916,7 @@ class ConfigPage(Gtk.VBox):
                 if ([e in target.errors for e in relevant_errs] !=
                         [e in target.variable.error for e in relevant_errs]):
                     refresh_list.append(target.variable.metadata['id'])
-                    target.errors = target.variable.error.keys()
+                    target.errors = list(target.variable.error.keys())
             target_widgets_done.append(target)
         if hasattr(self.main_container, "update_ignored"):
             self.main_container.update_ignored()
@@ -928,7 +928,7 @@ class ConfigPage(Gtk.VBox):
     def _check_show_ignored_reason(self, ignored_reason):
         """Return whether we should show this state."""
         mode = self.show_modes
-        if ignored_reason.keys() == [rose.variable.IGNORED_BY_USER]:
+        if list(ignored_reason.keys()) == [rose.variable.IGNORED_BY_USER]:
             return (mode[rose.config_editor.SHOW_MODE_IGNORED] or
                     mode[rose.config_editor.SHOW_MODE_USER_IGNORED])
         return mode[rose.config_editor.SHOW_MODE_IGNORED]
@@ -1165,7 +1165,7 @@ class ConfigPage(Gtk.VBox):
             label_list.append(latent_label)
         # This adds error notification for sections.
         for sect_data in self.sections + self.latent_sections:
-            for err, info in sect_data.error.items():
+            for err, info in list(sect_data.error.items()):
                 error_button = rose.gtk.util.CustomButton(
                     stock_id=Gtk.STOCK_DIALOG_ERROR,
                     as_tool=True,
@@ -1176,7 +1176,7 @@ class ConfigPage(Gtk.VBox):
                 error_label.show()
                 button_list.append(error_button)
                 label_list.append(error_label)
-        if self.custom_macros.items():
+        if list(self.custom_macros.items()):
             macro_button = rose.gtk.util.CustomButton(
                 label=rose.config_editor.LABEL_PAGE_MACRO_BUTTON,
                 stock_id=Gtk.STOCK_EXECUTE,

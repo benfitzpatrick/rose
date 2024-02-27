@@ -206,7 +206,7 @@ class ConfigNode(object):
 
     def __iter__(self):
         if isinstance(self.value, dict):
-            for key in self.value.keys():
+            for key in list(self.value.keys()):
                 yield key
 
     def __eq__(self, other):
@@ -284,7 +284,7 @@ class ConfigNode(object):
         while stack:
             node_keys, node = stack.pop(0)
             if isinstance(node.value, dict):
-                for key in node.value.keys():
+                for key in list(node.value.keys()):
                     child_keys = node_keys + [key]
                     subnode = self.get(child_keys, no_ignore)
                     if subnode is not None:
@@ -1069,7 +1069,7 @@ class ConfigDumper(object):
             for comment in root.comments:
                 handle.write(self._comment_format(comment))
             blank = "\n"
-        root_keys = root.value.keys()
+        root_keys = list(root.value.keys())
         root_keys.sort(sort_sections)
         root_option_keys = []
         section_keys = []
@@ -1097,7 +1097,7 @@ class ConfigDumper(object):
                 "state": section_node.state,
                 "key": section_key,
                 "close": CHAR_SECTION_CLOSE})
-            keys = section_node.value.keys()
+            keys = list(section_node.value.keys())
             keys.sort(sort_option_items)
             for key in keys:
                 value = section_node.value[key]
@@ -1497,7 +1497,7 @@ class ConfigLoader(object):
                 file_name = file_.name
             except AttributeError:
                 file_name = self.UNKNOWN_NAME
-        elif isinstance(file_, str) or isinstance(file_, unicode):
+        elif isinstance(file_, str) or isinstance(file_, str):
             file_name = os.path.abspath(file_)
             file_ = open(file_name, "r")
         else:
@@ -1597,8 +1597,8 @@ def sort_element(elem_1, elem_2):
 
 def sort_settings(setting_1, setting_2):
     """Sort sections and options, by numeric element if possible."""
-    if (not isinstance(setting_1, basestring) or
-            not isinstance(setting_2, basestring)):
+    if (not isinstance(setting_1, str) or
+            not isinstance(setting_2, str)):
         return cmp(setting_1, setting_2)
     match_1 = REC_SETTING_ELEMENT.match(setting_1)
     match_2 = REC_SETTING_ELEMENT.match(setting_2)

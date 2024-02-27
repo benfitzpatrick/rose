@@ -41,13 +41,13 @@ class BoolToggleValueWidget(Gtk.HBox):
         if metadata.get(rose.META_PROP_TYPE) == "boolean":
             self.allowed_values = [rose.TYPE_BOOLEAN_VALUE_FALSE,
                                    rose.TYPE_BOOLEAN_VALUE_TRUE]
-            self.label_dict = dict(zip(self.allowed_values,
-                                       self.allowed_values))
+            self.label_dict = dict(list(zip(self.allowed_values,
+                                       self.allowed_values)))
         elif metadata.get(rose.META_PROP_TYPE) == "python_boolean":
             self.allowed_values = [rose.TYPE_PYTHON_BOOLEAN_VALUE_FALSE,
                                    rose.TYPE_PYTHON_BOOLEAN_VALUE_TRUE]
-            self.label_dict = dict(zip(self.allowed_values,
-                                       self.allowed_values))
+            self.label_dict = dict(list(zip(self.allowed_values,
+                                       self.allowed_values)))
         else:
             self.allowed_values = [rose.TYPE_LOGICAL_VALUE_FALSE,
                                    rose.TYPE_LOGICAL_VALUE_TRUE]
@@ -60,7 +60,7 @@ class BoolToggleValueWidget(Gtk.HBox):
         imgs = [Gtk.Image.new_from_stock(Gtk.STOCK_MEDIA_STOP,
                                          Gtk.IconSize.MENU),
                 Gtk.Image.new_from_stock(Gtk.STOCK_APPLY, Gtk.IconSize.MENU)]
-        self.image_dict = dict(zip(self.allowed_values, imgs))
+        self.image_dict = dict(list(zip(self.allowed_values, imgs)))
         bad_img = Gtk.Image.new_from_stock(Gtk.STOCK_DIALOG_WARNING,
                                            Gtk.IconSize.MENU)
         self.button = Gtk.ToggleButton(label=self.value)
@@ -87,7 +87,7 @@ class BoolToggleValueWidget(Gtk.HBox):
 
     def setter(self, widget):
         label_value = widget.get_label()
-        for real_item, label in self.label_dict.items():
+        for real_item, label in list(self.label_dict.items()):
             if label == label_value:
                 chosen_value = real_item
                 break
