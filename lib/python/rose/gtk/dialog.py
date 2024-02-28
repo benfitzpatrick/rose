@@ -354,14 +354,9 @@ def run_dialog(dialog_type, text, title=None, modal=True,
 
     dialog.label = Gtk.Label(label=text)
     try:
-        Pango.parse_markup(text)
-    except GLib.GError:
-        try:
-            dialog.label.set_markup(rose.gtk.util.safe_str(text))
-        except Exception:
-            dialog.label.set_text(text)
-    else:
-        dialog.label.set_markup(text)
+        dialog.label.set_markup(rose.gtk.util.safe_str(text))
+    except Exception:
+        dialog.label.set_text(text)
     dialog.label.show()
     hbox = Gtk.HBox()
 
@@ -377,7 +372,7 @@ def run_dialog(dialog_type, text, title=None, modal=True,
     scrolled_window.set_border_width(0)
     scrolled_window.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.NEVER)
     vbox = Gtk.VBox()
-    vbox.pack_start(dialog.label, expand=True, fill=True)
+    vbox.pack_start(dialog.label, expand=True, fill=True, padding=0)
     vbox.show()
     scrolled_window.add_with_viewport(vbox)
     scrolled_window.get_child().set_shadow_type(Gtk.ShadowType.NONE)
@@ -385,7 +380,7 @@ def run_dialog(dialog_type, text, title=None, modal=True,
     hbox.pack_start(scrolled_window, expand=True, fill=True,
                     padding=rose.config_editor.SPACING_PAGE)
     hbox.show()
-    dialog.vbox.pack_end(hbox, expand=True, fill=True)
+    dialog.vbox.pack_end(hbox, expand=True, fill=True, padding=0)
 
     if "\n" in text:
         dialog.label.set_line_wrap(False)
@@ -696,7 +691,7 @@ def get_dialog_parent():
     """Find the currently active window, if any, and reparent dialog."""
     ok_windows = []
     max_size = -1
-    for window in Gtk.window_list_toplevels():
+    for window in Gtk.Window().list_toplevels():
         if window.get_title() is not None and window.get_toplevel() == window:
             ok_windows.append(window)
             size_proxy = window.get_size()[0] * window.get_size()[1]
@@ -722,7 +717,8 @@ def _configure_scroll(dialog, scrolled_window):
     """Set scroll window size and scroll policy."""
     # make sure the dialog size doesn't exceed the maximum - if so change it
     max_size = rose.config_editor.SIZE_MACRO_DIALOG_MAX
-    my_size = dialog.size_request()
+    my_size = [dialog.get_preferred_size().natural_size.width,
+               dialog.get_preferred_size().natural_size.height]
     new_size = [-1, -1]
     for i, scrollbar_cls in [(0, Gtk.VScrollbar), (1, Gtk.HScrollbar)]:
         new_size[i] = min([my_size[i], max_size[i]])
@@ -730,7 +726,10 @@ def _configure_scroll(dialog, scrolled_window):
             # Factor in existence of a scrollbar in the other dimension.
             # For horizontal dimension, add width of vertical scroll bar + 2
             # For vertical dimension, add height of horizontal scroll bar + 2
-            new_size[i] += scrollbar_cls().size_request()[i] + 2
+            new_size[i] += getattr(
+                scrollbar_cls().get_preferred_size().natural_size,
+                ["width", "height"][i]
+            ) + 2
     scrolled_window.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
     dialog.set_default_size(*new_size)
 

@@ -40,17 +40,17 @@ RE_FLOAT = r"(?:\.\d+)|(?:" + RE_NATURAL + r")(?:\.\d*)?"
 # Matches namelist literals for intrinsic types
 RE_INTEGER = r"[\+\-]?(?:" + RE_NATURAL + r")"
 REC_INTEGER = _rec(r"\A(?:" + RE_INTEGER + r")\Z")
-RE_REAL = r"(?i)[\+\-]?(?:" + RE_FLOAT + r")(?:[de][\+\-]?\d+)?"
-REC_REAL = _rec(r"\A(?:" + RE_REAL + r")\Z")
+RE_REAL = r"[\+\-]?(?:" + RE_FLOAT + r")(?:[de][\+\-]?\d+)?"
+REC_REAL = _rec(r"(?i)\A(?:" + RE_REAL + r")\Z")
 RE_COMPLEX = r"\(\s*" + RE_REAL + r"\s*" + RE_SEP + r"\s*" + RE_REAL + r"\s*\)"
-REC_COMPLEX = _rec(r"\A(?:" + RE_COMPLEX + r")\Z")
-RE_LOGICAL = r"(?i)\.(?:true|false)\."
-REC_LOGICAL = _rec(r"\A(?:" + RE_LOGICAL + r")\Z")
+REC_COMPLEX = _rec(r"(?i)\A(?:" + RE_COMPLEX + r")\Z")
+RE_LOGICAL = r"\.(?:true|false)\."
+REC_LOGICAL = _rec(r"(?i)\A(?:" + RE_LOGICAL + r")\Z")
 RE_CHARACTER = r"'(?:[^']|'')*'|\"(?:[^\"]|\"\")*\""
 REC_CHARACTER = _rec(r"\A(?:" + RE_CHARACTER + r")\Z")
 # Matches a complex literal, capture real and imaginary parts
 RE_COMPLEX_R_I = (
-    r"\(\s*(" + RE_REAL + r")\s*" + RE_SEP + r"\s*(" + RE_REAL + r")\s*\)")
+    r"(?i)\(\s*(" + RE_REAL + r")\s*" + RE_SEP + r"\s*(" + RE_REAL + r")\s*\)")
 REC_COMPLEX_R_I = _rec(RE_COMPLEX_R_I)
 # Matches a comment
 RE_COMMENT = r"(?:! .*)"

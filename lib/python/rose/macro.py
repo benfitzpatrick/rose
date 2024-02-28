@@ -42,7 +42,7 @@ It also stores macro base classes and macro library functions.
 import ast
 import copy
 import glob
-import imp
+import importlib
 import inspect
 import os
 import re
@@ -744,7 +744,11 @@ def load_meta_macro_modules(meta_files, module_prefix=None):
         else:
             as_name = module_prefix + macro_name
         try:
-            modules.append(imp.load_source(as_name, meta_file))
+            modules.append(
+                importlib.machinery.SourceFileLoader().load_source(
+                    as_name, meta_file
+                )
+            )
         except Exception:
             rose.reporter.Reporter()(
                 MacroLoadError(meta_file, traceback.format_exc()))

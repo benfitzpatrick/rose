@@ -35,6 +35,8 @@ import sys
 import tempfile
 import warnings
 
+print("Config editor main:", sys.version)
+
 # Ignore add menu related warnings for now, but remove this later.
 warnings.filterwarnings('ignore',
                         'instance of invalid non-instantiatable type',
@@ -54,7 +56,7 @@ warnings.filterwarnings('ignore',
 
 import gi
 gi.require_version('Gtk', '3.0')
-import gtk  # Only used to run the main gtk loop.
+from gi.repository import Gtk  # Only used to run the main gtk loop.
 
 import rose.config
 import rose.config_editor
@@ -1870,18 +1872,18 @@ def spawn_window(config_directory_path=None, debug_mode=False,
         title = rose.config_editor.UNTITLED_NAME
     else:
         title = config_directory_path.split("/")[-1]
-    splash_screen = rose.gtk.splash.SplashScreenProcess(logo, title,
-                                                        number_of_events)
+   # splash_screen = rose.gtk.splash.SplashScreenProcess(logo, title,
+   #                                                     number_of_events)
     try:
         ctrl = MainController(config_directory_path,
-                              load_updater=splash_screen,
+                            #  load_updater=splash_screen,  # Turn off splash screen
                               load_all_apps=load_all_apps,
                               load_no_apps=load_no_apps,
                               metadata_off=metadata_off,
                               opt_meta_paths=opt_meta_paths,
                               no_warn=no_warn)
     except BaseException:
-        splash_screen.stop()
+        #splash_screen.stop()
         raise
 
     # open up any initial_namespaces the user has provided us with
@@ -1955,18 +1957,18 @@ def get_number_of_configs(config_directory_path=None):
 
 def main():
     """Launch from the command line."""
-    if (Gtk.pygtk_version[0] < rose.config_editor.MIN_PYGTK_VERSION[0] or
-            Gtk.pygtk_version[1] < rose.config_editor.MIN_PYGTK_VERSION[1]):
-        this_version = '{0}.{1}.{2}'.format(*Gtk.pygtk_version)
-        required_version = '{0}.{1}.{2}'.format(
-            *rose.config_editor.MIN_PYGTK_VERSION)
-        rose.gtk.dialog.run_dialog(
-            rose.gtk.dialog.DIALOG_TYPE_ERROR,
-            rose.config_editor.ERROR_MIN_PYGTK_VERSION.format(
-                required_version, this_version),
-            rose.config_editor.ERROR_MIN_PYGTK_VERSION_TITLE
-        )
-        sys.exit(1)
+    #if (Gtk.pygtk_version[0] < rose.config_editor.MIN_PYGTK_VERSION[0] or
+    #        Gtk.pygtk_version[1] < rose.config_editor.MIN_PYGTK_VERSION[1]):
+    #    this_version = '{0}.{1}.{2}'.format(*Gtk.pygtk_version)
+    #    required_version = '{0}.{1}.{2}'.format(
+    #        *rose.config_editor.MIN_PYGTK_VERSION)
+    #    rose.gtk.dialog.run_dialog(
+    #        rose.gtk.dialog.DIALOG_TYPE_ERROR,
+    #        rose.config_editor.ERROR_MIN_PYGTK_VERSION.format(
+    #            required_version, this_version),
+    #        rose.config_editor.ERROR_MIN_PYGTK_VERSION_TITLE
+    #    )
+    #    sys.exit(1)
     sys.path.append(os.getenv('ROSE_HOME'))
     opt_parser = rose.opt_parse.RoseOptionParser()
     opt_parser.add_my_options("conf_dir", "meta_path", "new_mode",

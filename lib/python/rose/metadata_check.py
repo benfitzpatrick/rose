@@ -19,6 +19,7 @@
 # -----------------------------------------------------------------------------
 """Module to provide checking facilities for Rose configuration metadata."""
 
+import functools
 import os
 import re
 import sys
@@ -251,7 +252,7 @@ def metadata_check(meta_config, meta_dir=None,
     reports = []
     module_files = _get_module_files(meta_dir)
     sections = list(meta_config.value.keys())
-    sections.sort(rose.config.sort_settings)
+    sections.sort(key=functools.cmp_to_key(rose.config.sort_settings))
     for section in sections:
         node = meta_config.value[section]
         if node.is_ignored() or not isinstance(node.value, dict):
@@ -276,7 +277,7 @@ def metadata_check(meta_config, meta_dir=None,
                 reports.append(rose.macro.MacroReport(
                     section, rose.META_PROP_LENGTH, value, info))
         options = list(node.value.keys())
-        options.sort(rose.config.sort_settings)
+        options.sort(key=functools.cmp_to_key(rose.config.sort_settings))
         for option in options:
             opt_node = node.value[option]
             if ((only_these_properties is not None and
@@ -342,7 +343,7 @@ def metadata_check(meta_config, meta_dir=None,
                 new_rep_value = rep_trig_node.value
         reports.append(rose.macro.MacroReport(new_rep_section, new_rep_option,
                                               new_rep_value, report.info))
-    reports.sort(rose.macro.report_sort)
+    reports.sort(key=functools.cmp_to_key(rose.macro.report_sort))
     return reports
 
 

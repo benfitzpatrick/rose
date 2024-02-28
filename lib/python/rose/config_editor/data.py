@@ -1063,6 +1063,7 @@ class ConfigDataManager(object):
             if option is None:
                 if not isinstance(sect_node.value, dict):
                     continue
+                print(type(sect_node), dir(sect_node))
                 if not sect_node.is_ignored() and section.startswith("file:"):
                     file_sections.append(section)
                     if (sect_node.get_value([rose.META_PROP_DUPLICATE]) ==

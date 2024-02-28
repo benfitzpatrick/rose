@@ -21,11 +21,7 @@
 import re
 
 import rose
-from . import array.entry
-from . import array.mixed
-from . import array.logical
-from . import array.python_list
-from . import array.spaced_list
+from . import array
 from . import booltoggle
 from . import character
 from . import combobox

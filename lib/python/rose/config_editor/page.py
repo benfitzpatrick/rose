@@ -345,7 +345,7 @@ class ConfigPage(Gtk.VBox):
         self.tool_hbox.pack_start(button_frame, expand=False, fill=False)
         label_box = Gtk.HBox(homogeneous=False,
                              spacing=rose.config_editor.SPACING_PAGE)
-        label_box.pack_start(self.get_label_widget(is_detached=True, True, True, 0))
+        label_box.pack_start(self.get_label_widget(is_detached=True))  # Missing info?
         label_box.show()
         self.tool_hbox.pack_start(
             label_box, expand=True, fill=True, padding=10)

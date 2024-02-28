@@ -27,7 +27,7 @@ import webbrowser
 
 import gi
 gi.require_version("Gtk", "3.0")
-from gi.repository import Gtk
+from gi.repository import Gtk, Gdk
 from gi.repository import GObject
 from gi.repository import GLib
 from gi.repository import Pango
@@ -84,13 +84,13 @@ class CustomButton(Gtk.Button):
             self.icon.set_from_stock(stock_id, size)
             self.icon.show()
             if self.icon_at_start:
-                self.hbox.pack_start(self.icon, expand=False, fill=False)
+                self.hbox.pack_start(self.icon, expand=False, fill=False, padding=0)
             else:
-                self.hbox.pack_end(self.icon, expand=False, fill=False)
+                self.hbox.pack_end(self.icon, expand=False, fill=False, padding=0)
         if has_menu:
             arrow = Gtk.Arrow(Gtk.ArrowType.DOWN, Gtk.ShadowType.NONE)
             arrow.show()
-            self.hbox.pack_end(arrow, expand=False, fill=False)
+            self.hbox.pack_end(arrow, expand=False, fill=False, padding=0)
             self.hbox.reorder_child(arrow, 0)
         self.hbox.show()
         super(CustomButton, self).__init__()
@@ -109,9 +109,9 @@ class CustomButton(Gtk.Button):
         self.icon.set_from_stock(stock_id, self.size)
         self.stock_id = stock_id
         if self.icon_at_start:
-            self.hbox.pack_start(self.icon, expand=False, fill=False)
+            self.hbox.pack_start(self.icon, expand=False, fill=False, padding=0)
         else:
-            self.hbox.pack_end(self.icon, expand=False, fill=False)
+            self.hbox.pack_end(self.icon, expand=False, fill=False, padding=0)
         return False
 
     def set_tip_text(self, new_text):
@@ -170,9 +170,9 @@ class CustomExpandButton(Gtk.Button):
         self.icon.set_from_stock(self.stock_id, size)
         self.icon.show()
         if self.icon_at_start:
-            self.hbox.pack_start(self.icon, expand=False, fill=False)
+            self.hbox.pack_start(self.icon, expand=False, fill=False, padding=0)
         else:
-            self.hbox.pack_end(self.icon, expand=False, fill=False)
+            self.hbox.pack_end(self.icon, expand=False, fill=False, padding=0)
         self.hbox.show()
         super(CustomExpandButton, self).__init__()
 
@@ -192,9 +192,9 @@ class CustomExpandButton(Gtk.Button):
         self.icon.set_from_stock(stock_id, self.size)
         self.stock_id = stock_id
         if self.icon_at_start:
-            self.hbox.pack_start(self.icon, expand=False, fill=False)
+            self.hbox.pack_start(self.icon, expand=False, fill=False, padding=0)
         else:
-            self.hbox.pack_end(self.icon, expand=False, fill=False)
+            self.hbox.pack_end(self.icon, expand=False, fill=False, padding=0)
         return False
 
     def set_tip_text(self, new_text):
@@ -441,10 +441,8 @@ class Notebook(Gtk.Notebook):
         """Use this only with pages with the attribute 'namespace'."""
         self.remove_page(self.get_page_ids().index(page_id))
 
-    def set_tab_label_packing(self, page, expand=False, fill=True,
-                              pack_type=Gtk.PACK_START):
-        super(Notebook, self).set_tab_label_packing(page, expand, fill,
-                                                    pack_type)
+    def set_tab_label_packing(self, page):
+        super(Notebook, self).set_tab_label(page)  # Will this look OK?
 
 
 class TooltipTreeView(Gtk.TreeView):
@@ -622,12 +620,14 @@ def get_icon(system="rose"):
     """Return a GdkPixbuf.Pixbuf for the system icon."""
     locator = rose.resource.ResourceLocator(paths=sys.path)
     icon_path = locator.locate("etc/images/{0}-icon-trim.svg".format(system))
+    image = Gtk.Image()
     try:
-        pixbuf = GdkPixbuf.Pixbuf.new_from_file(icon_path)
+        image.set_from_file(icon_path)
     except Exception:
         icon_path = locator.locate(
             "etc/images/{0}-icon-trim.png".format(system))
-        pixbuf = GdkPixbuf.Pixbuf.new_from_file(icon_path)
+        image.set_from_file(icon_path)
+    pixbuf = image.get_pixbuf()
     return pixbuf
 
 
@@ -672,11 +672,12 @@ def setup_scheduler_icon(ipath=None):
     iname = "rose-gtk-scheduler"
     if ipath is None:
         new_icon_factory.add(
-            iname, Gtk.icon_factory_lookup_default(Gtk.STOCK_MISSING_IMAGE))
+            iname, Gtk.IconFactory().lookup_default(Gtk.STOCK_MISSING_IMAGE))
     else:
         path = locator.locate(ipath)
-        pixbuf = GdkPixbuf.Pixbuf.new_from_file(path)
-        new_icon_factory.add(iname, Gtk.IconSet(pixbuf))
+        image = gtk.Image()
+        image.set_from_file(path)
+        new_icon_factory.add(iname, Gtk.IconSet(image.get_pixbuf()))
     new_icon_factory.add_default()
 
 
@@ -693,9 +694,10 @@ def setup_stock_icons():
         ifile = png_icon_name + ".png"
         istring = png_icon_name.replace("_", "-")
         path = locator.locate("etc/images/rose-config-edit/" + ifile)
-        pixbuf = GdkPixbuf.Pixbuf.new_from_file(path)
+        image = Gtk.Image()
+        image.set_from_file(path)
         new_icon_factory.add("rose-gtk-" + istring,
-                             Gtk.IconSet(pixbuf))
+                             Gtk.IconSet(image.get_pixbuf()))
     exp_icon_pixbuf = get_icon()
     new_icon_factory.add("rose-exp-logo", Gtk.IconSet(exp_icon_pixbuf))
     new_icon_factory.add_default()

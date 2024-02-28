@@ -23,6 +23,7 @@ Convenient functions for searching resource files.
 
 import os
 from rose.config import ConfigLoader, ConfigNode
+import sys; print(sys.version)
 import importlib.machinery
 import inspect
 import string

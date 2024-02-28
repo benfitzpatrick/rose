@@ -165,8 +165,16 @@ class ConfigNode(object):
 
     """
 
-    __slots__ = ["STATE_NORMAL", "STATE_USER_IGNORED",
-                 "STATE_SYST_IGNORED", "value", "state", "comments"]
+    __slots__ = ["value", "state", "comments"]
+
+    STATE_NORMAL = ""
+    """The default state of a ConfigNode."""
+    STATE_USER_IGNORED = "!"
+    """ConfigNode state if it has been specifically ignored in the config."""
+    STATE_SYST_IGNORED = "!!"
+    """ConfigNode state if a metadata opperation has logically ignored the
+    config."""
+
 
     def __init__(self, value=None, state=None, comments=None):
         if value is None:
@@ -174,17 +182,11 @@ class ConfigNode(object):
         if comments is None:
             comments = []
         self.value = value
-        self.state = state
         self.comments = comments
-        self.STATE_NORMAL = ""
-        """The default state of a ConfigNode."""
-        self.STATE_USER_IGNORED = "!"
-        """ConfigNode state if it has been specifically ignored in the config."""
-        self.STATE_SYST_IGNORED = "!!"
-        """ConfigNode state if a metadata opperation has logically ignored the
-    config."""
-        if self.state is None:
+        if state is None:
             self.state = self.STATE_NORMAL
+        else:
+            self.state = state
 
 
     def __repr__(self):
@@ -234,6 +236,8 @@ class ConfigNode(object):
 
     def is_ignored(self):
         """Return True if current node is in the "ignored" state."""
+        if not hasattr(self, "STATE_NORMAL"):
+            print(dir(self), getattr(self, "STATE_NORMAL", None))
         return self.state != self.STATE_NORMAL
 
     def walk(self, keys=None, no_ignore=False):
@@ -1609,4 +1613,4 @@ def sort_settings(setting_1, setting_2):
         text_2, num_2 = match_2.groups()
         if text_1 == text_2:
             return sort_element(num_1, num_2)
-    return cmp(setting_1, setting_2)
+    return (setting_1 > setting_2) - (setting_1 < setting_2)

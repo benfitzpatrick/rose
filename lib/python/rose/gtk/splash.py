@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # -----------------------------------------------------------------------------
 # Copyright (C) 2012-2020 British Crown (Met Office) & Contributors.
@@ -29,7 +29,7 @@ import time
 
 import gi
 gi.require_version("Gtk", "3.0")
-from gi.repository import Gtk
+from gi.repository import Gtk, Gdk
 from gi.repository import GObject
 from gi.repository import Pango
 
@@ -60,16 +60,17 @@ class SplashScreen(Gtk.Window):
         self.set_icon(rose.gtk.util.get_icon())
         self.modify_bg(Gtk.StateType.NORMAL,
                        rose.gtk.util.color_parse(self.BACKGROUND_COLOUR))
-        self.set_gravity(Gdk.GRAVITY_CENTER)
+        self.set_gravity(Gdk.Gravity.CENTER)
         self.set_position(Gtk.WindowPosition.CENTER)
         main_vbox = Gtk.VBox()
         main_vbox.show()
-        image = Gtk.image_new_from_file(logo_path)
+        image = Gtk.Image()
+        image.set_from_file(logo_path)
         image.show()
         image_hbox = Gtk.HBox()
         image_hbox.show()
-        image_hbox.pack_start(image, expand=False, fill=True)
-        main_vbox.pack_start(image_hbox, expand=False, fill=True)
+        image_hbox.pack_start(image, expand=False, fill=True, padding=0)
+        main_vbox.pack_start(image_hbox, expand=False, fill=True, padding=0)
         self._is_progress_bar_pulsing = False
         self._progress_fraction = 0.0
         self.progress_bar = Gtk.ProgressBar()
@@ -200,10 +201,10 @@ class SplashScreenProcess(object):
     def _communicate(self, json_text):
         while True:
             try:
-                self.process.stdin.write(json_text + "\n")
+                self.process.communicate(input=(json_text + "\n").encode())
             except IOError:
                 self.start()
-                self.process.stdin.write(json_text + "\n")
+                self.process.communicate(input=(json_text + "\n").encode())
             else:
                 break
 
