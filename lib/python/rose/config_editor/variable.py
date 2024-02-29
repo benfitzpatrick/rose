@@ -113,13 +113,13 @@ class VariableWidget(object):
                             padding=max([(menu_offset - key_offset) / 2, 0]))
         key_vbox.show()
         label_content_hbox = Gtk.HBox()
-        label_content_hbox.pack_start(menu_vbox, expand=False, fill=False)
-        label_content_hbox.pack_start(key_vbox, expand=False, fill=False)
+        label_content_hbox.pack_start(menu_vbox, expand=False, fill=False, padding=0)
+        label_content_hbox.pack_start(key_vbox, expand=False, fill=False, padding=0)
         label_content_hbox.show()
         event_box = Gtk.EventBox()
         event_box.show()
-        self.labelwidget.pack_start(label_content_hbox, expand=True, fill=True)
-        self.labelwidget.pack_start(event_box, expand=True, fill=True)
+        self.labelwidget.pack_start(label_content_hbox, expand=True, fill=True, padding=0)
+        self.labelwidget.pack_start(event_box, expand=True, fill=True, padding=0)
 
     def generate_contentwidget(self):
         """Create the content widget, a vbox-packed valuewidget."""
@@ -128,9 +128,9 @@ class VariableWidget(object):
         content_event_box = Gtk.EventBox()
         content_event_box.show()
         self.contentwidget.pack_start(
-            self.valuewidget, expand=False, fill=False)
+            self.valuewidget, expand=False, fill=False, padding=0)
         self.contentwidget.pack_start(
-            content_event_box, expand=True, fill=True)
+            content_event_box, expand=True, fill=True, padding=0)
 
     def _valuewidget_set_value(self, value):
         # This is called by a valuewidget to change the variable value.

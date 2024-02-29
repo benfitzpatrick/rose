@@ -113,7 +113,7 @@ class ConfigPage(Gtk.VBox):
         self.scrolled_main_window.set_border_width(
             rose.config_editor.SPACING_SUB_PAGE)
         self.scrolled_vbox.pack_start(self.main_container,
-                                      expand=False, fill=True)
+                                      expand=False, fill=True, padding=0)
         self.scrolled_main_window.show()
         self.main_vpaned = Gtk.VPaned()
         self.info_panel = Gtk.VBox(homogeneous=False)
@@ -143,7 +143,7 @@ class ConfigPage(Gtk.VBox):
         self.vpaned.show()
         self.main_vpaned.pack2(self.vpaned)
         self.main_vpaned.show()
-        self.pack_start(self.main_vpaned, expand=True, fill=True)
+        self.pack_start(self.main_vpaned, expand=True, fill=True, padding=0)
         self.show()
         self.scroll_vadj = self.scrolled_main_window.get_vadjustment()
         self.scrolled_main_window.connect(
@@ -193,7 +193,7 @@ class ConfigPage(Gtk.VBox):
         label_box.pack_start(label_event_box, expand=False, fill=False,
                              padding=rose.config_editor.SPACING_SUB_PAGE)
         if not is_detached:
-            label_box.pack_end(close_button, expand=False, fill=False)
+            label_box.pack_end(close_button, expand=False, fill=False, padding=0)
         label_box.show()
         event_box = Gtk.EventBox()
         event_box.add(label_box)
@@ -311,7 +311,7 @@ class ConfigPage(Gtk.VBox):
         sep = Gtk.VSeparator()
         sep.show()
         sep_vbox = Gtk.VBox()
-        sep_vbox.pack_start(sep, expand=True, fill=True)
+        sep_vbox.pack_start(sep, expand=True, fill=True, padding=0)
         sep_vbox.set_border_width(rose.config_editor.SPACING_SUB_PAGE)
         sep_vbox.show()
         info_button = rose.gtk.util.CustomButton(
@@ -329,20 +329,20 @@ class ConfigPage(Gtk.VBox):
             as_tool=True,
             tip_text=rose.config_editor.TAB_MENU_WEB_HELP)
         url_button.connect("clicked", self.launch_url)
-        button_hbox.pack_start(add_button, expand=False, fill=False)
-        button_hbox.pack_start(revert_button, expand=False, fill=False)
-        button_hbox.pack_start(sep_vbox, expand=False, fill=False)
-        button_hbox.pack_start(info_button, expand=False, fill=False)
+        button_hbox.pack_start(add_button, expand=False, fill=False, padding=0)
+        button_hbox.pack_start(revert_button, expand=False, fill=False, padding=0)
+        button_hbox.pack_start(sep_vbox, expand=False, fill=False, padding=0)
+        button_hbox.pack_start(info_button, expand=False, fill=False, padding=0)
         if self.help is not None:
-            button_hbox.pack_start(help_button, expand=False, fill=False)
+            button_hbox.pack_start(help_button, expand=False, fill=False, padding=0)
         if self.url is not None:
-            button_hbox.pack_start(url_button, expand=False, fill=False)
+            button_hbox.pack_start(url_button, expand=False, fill=False, padding=0)
         button_hbox.show()
         button_frame = Gtk.Frame()
         button_frame.set_shadow_type(Gtk.ShadowType.NONE)
         button_frame.add(button_hbox)
         button_frame.show()
-        self.tool_hbox.pack_start(button_frame, expand=False, fill=False)
+        self.tool_hbox.pack_start(button_frame, expand=False, fill=False, padding=0)
         label_box = Gtk.HBox(homogeneous=False,
                              spacing=rose.config_editor.SPACING_PAGE)
         label_box.pack_start(self.get_label_widget(is_detached=True))  # Missing info?
@@ -350,7 +350,7 @@ class ConfigPage(Gtk.VBox):
         self.tool_hbox.pack_start(
             label_box, expand=True, fill=True, padding=10)
         self.tool_hbox.show()
-        self.pack_start(self.tool_hbox, expand=False, fill=False)
+        self.pack_start(self.tool_hbox, expand=False, fill=False, padding=0)
         self.reorder_child(self.tool_hbox, 0)
         if isinstance(parent, Gtk.Window):
             if parent.get_child() is not None:
@@ -401,11 +401,11 @@ class ConfigPage(Gtk.VBox):
         self._last_info_labels = [l.get_text() for l in label_list]
         for button, label in zip(button_list, label_list):
             var_hbox = Gtk.HBox(homogeneous=False)
-            var_hbox.pack_start(button, expand=False, fill=False)
+            var_hbox.pack_start(button, expand=False, fill=False, padding=0)
             var_hbox.pack_start(label, expand=False, fill=True,
                                 padding=rose.config_editor.SPACING_SUB_PAGE)
             var_hbox.show()
-            info_container.pack_start(var_hbox, expand=False, fill=True)
+            info_container.pack_start(var_hbox, expand=False, fill=True, padding=0)
         # Add page help.
         if self.description:
             help_label = rose.gtk.util.get_hyperlink_label(
@@ -414,11 +414,11 @@ class ConfigPage(Gtk.VBox):
             help_label_window.set_policy(Gtk.PolicyType.AUTOMATIC,
                                          Gtk.PolicyType.AUTOMATIC)
             help_label_hbox = Gtk.HBox()
-            help_label_hbox.pack_start(help_label, expand=False, fill=False)
+            help_label_hbox.pack_start(help_label, expand=False, fill=False, padding=0)
             help_label_hbox.show()
             help_label_vbox = Gtk.VBox()
             help_label_vbox.pack_start(
-                help_label_hbox, expand=False, fill=False)
+                help_label_hbox, expand=False, fill=False, padding=0)
             help_label_vbox.show()
             help_label_window.add_with_viewport(help_label_vbox)
             help_label_window.get_child().set_shadow_type(Gtk.ShadowType.NONE)
@@ -440,7 +440,7 @@ class ConfigPage(Gtk.VBox):
                 padding=rose.config_editor.SPACING_SUB_PAGE)
         for child in self.info_panel.get_children():
             self.info_panel.remove(child)
-        self.info_panel.pack_start(info_container, expand=True, fill=True)
+        self.info_panel.pack_start(info_container, expand=True, fill=True, padding=0)
 
     def generate_filesystem_panel(self):
         """Generate a widget to view the file hierarchy."""
@@ -802,7 +802,7 @@ class ConfigPage(Gtk.VBox):
             self.main_container.destroy()
             self.generate_main_container()
             self.scrolled_vbox.pack_start(self.main_container, expand=False,
-                                          fill=True)
+                                          fill=True, padding=0)
             self.choose_focus(focus_var)
             self.update_ignored(no_refresh=True)
             self.trigger_update_status()
