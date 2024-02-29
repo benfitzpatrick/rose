@@ -228,7 +228,7 @@ class CustomMenuButton(Gtk.MenuToolButton):
             self.icon = Gtk.Image()
             self.icon.set_from_stock(stock_id, size)
             self.icon.show()
-        GObject.GObject.__init__(self, self.icon, label)
+        super().__init__(self, self.icon, label)
         self.set_tooltip_text(tip_text)
         self.show()
         button_menu = Gtk.Menu()
@@ -237,7 +237,7 @@ class CustomMenuButton(Gtk.MenuToolButton):
             if len(item_tuple) == 1:
                 new_item = Gtk.MenuItem(name)
             else:
-                new_item = Gtk.ImageMenuItem(stock_id=item_tuple[1])
+                new_item = Gtk.ImageMenuItem.new_from_stock(item_tuple[1])
                 new_item.set_label(name)
             new_item._func = func
             new_item.connect("activate", lambda m: m._func())
@@ -262,7 +262,7 @@ class ToolBar(Gtk.Toolbar):
                 separator.show()
                 self.insert(separator, 0)
             if isinstance(stock, str) and stock.startswith("Gtk."):
-                stock = getattr(gtk, stock.replace("Gtk.", "", 1))
+                stock = getattr(Gtk, stock.replace("Gtk.", "", 1))
             if callable(stock):
                 widget = stock()
                 widget.show()

@@ -65,8 +65,8 @@ class SourceValueWidget(Gtk.HBox):
         formats_check_hbox = Gtk.HBox()
         formats_check_hbox.show()
         formats_check_hbox.pack_end(formats_check_button, expand=False,
-                                    fill=False)
-        vbox.pack_start(formats_check_hbox, expand=False, fill=False)
+                                    fill=False, padding=0)
+        vbox.pack_start(formats_check_hbox, expand=False, fill=False, padding=0)
         treeviews_hbox = Gtk.HPaned()
         treeviews_hbox.show()
         self._listview = rose.gtk.choice.ChoicesListView(
@@ -82,10 +82,10 @@ class SourceValueWidget(Gtk.HBox):
         frame.add(self._listview)
         value_vbox = Gtk.VBox()
         value_vbox.show()
-        value_vbox.pack_start(frame, expand=False, fill=False)
+        value_vbox.pack_start(frame, expand=False, fill=False, padding=0)
         value_eb = Gtk.EventBox()
         value_eb.show()
-        value_vbox.pack_start(value_eb, expand=True, fill=True)
+        value_vbox.pack_start(value_eb, expand=True, fill=True, padding=0)
 
         self._available_frame = Gtk.Frame()
         self._generate_available_treeview()
@@ -102,8 +102,8 @@ class SourceValueWidget(Gtk.HBox):
         self._adder.show()
         treeviews_hbox.add1(value_vbox)
         treeviews_hbox.add2(self._available_frame)
-        vbox.pack_start(treeviews_hbox, expand=True, fill=True)
-        vbox.pack_start(self._adder, expand=True, fill=True)
+        vbox.pack_start(treeviews_hbox, expand=True, fill=True, padding=0)
+        vbox.pack_start(self._adder, expand=True, fill=True, padding=0)
         self.grab_focus = lambda: self.hook.get_focus(self._listview)
         self.pack_start(vbox, True, True, 0)
 

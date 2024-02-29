@@ -112,7 +112,7 @@ class DialogProcess(object):
                                               Gtk.IconSize.DIALOG)
         self.image.show()
         image_vbox = Gtk.VBox()
-        image_vbox.pack_start(self.image, expand=False, fill=False)
+        image_vbox.pack_start(self.image, expand=False, fill=False, padding=0)
         image_vbox.show()
         top_hbox = Gtk.HBox()
         top_hbox.pack_start(image_vbox, expand=False, fill=False,
@@ -155,7 +155,7 @@ class DialogProcess(object):
         top_hbox.pack_start(main_vbox, expand=True, fill=True,
                             padding=DIALOG_PADDING)
         if self.event_queue is None:
-            self.dialog.vbox.pack_start(top_hbox, expand=True, fill=True)
+            self.dialog.vbox.pack_start(top_hbox, expand=True, fill=True, padding=0)
         else:
             text_view_scroll = Gtk.ScrolledWindow()
             text_view_scroll.set_policy(Gtk.PolicyType.NEVER,
@@ -302,9 +302,9 @@ def run_command_arg_dialog(cmd_name, help_text, run_hook):
         "clicked",
         lambda b: run_scrolled_dialog(help_text, title=help_label))
     help_hbox = Gtk.HBox()
-    help_hbox.pack_start(help_button, expand=False, fill=False)
+    help_hbox.pack_start(help_button, expand=False, fill=False, padding=0)
     help_hbox.show()
-    container.pack_end(help_hbox, expand=False, fill=False)
+    container.pack_end(help_hbox, expand=False, fill=False, padding=0)
     name_entry.grab_focus()
     dialog.connect("response", _handle_command_arg_response, run_hook,
                    name_entry)
@@ -335,7 +335,7 @@ def run_dialog(dialog_type, text, title=None, modal=True,
         info_button.connect(
             "clicked",
             lambda b: run_scrolled_dialog(extra_text, title=info_title))
-        dialog.action_area.pack_start(info_button, expand=False, fill=False)
+        dialog.action_area.pack_start(info_button, expand=False, fill=False, padding=0)
     ok_button = dialog.add_button(Gtk.STOCK_OK, Gtk.ResponseType.OK)
     if dialog_type == Gtk.MessageType.INFO:
         stock_id = Gtk.STOCK_DIALOG_INFO
@@ -443,10 +443,10 @@ def run_hyperlink_dialog(stock_id=None, text="", title=None,
     scrolled_window.get_child().set_shadow_type(Gtk.ShadowType.NONE)
     scrolled_window.show()
     vbox = Gtk.VBox()
-    vbox.pack_start(scrolled_window, expand=True, fill=True)
+    vbox.pack_start(scrolled_window, expand=True, fill=True, padding=0)
     vbox.show()
-    main_hbox.pack_start(vbox, expand=True, fill=True)
-    top_vbox.pack_start(main_hbox, expand=True, fill=True)
+    main_hbox.pack_start(vbox, expand=True, fill=True, padding=0)
+    top_vbox.pack_start(main_hbox, expand=True, fill=True, padding=0)
     # Insert the button
     button_box = Gtk.HBox(spacing=DIALOG_PADDING)
     button_box.show()
@@ -492,8 +492,8 @@ def run_scrolled_dialog(text, title=None):
     filler_eb = Gtk.EventBox()
     filler_eb.show()
     label_box = Gtk.VBox()
-    label_box.pack_start(label, expand=False, fill=False)
-    label_box.pack_start(filler_eb, expand=True, fill=True)
+    label_box.pack_start(label, expand=False, fill=False, padding=0)
+    label_box.pack_start(filler_eb, expand=True, fill=True, padding=0)
     label_box.show()
     width, height = label.size_request()
     max_width, max_height = DIALOG_SIZE_SCROLLED_MAX
@@ -507,11 +507,11 @@ def run_scrolled_dialog(text, title=None):
     button.show()
     button.grab_focus()
     button_box = Gtk.HBox()
-    button_box.pack_end(button, expand=False, fill=False)
+    button_box.pack_end(button, expand=False, fill=False, padding=0)
     button_box.show()
     main_vbox = Gtk.VBox(spacing=DIALOG_SUB_PADDING)
-    main_vbox.pack_start(scrolled, expand=True, fill=True)
-    main_vbox.pack_end(button_box, expand=False, fill=False)
+    main_vbox.pack_start(scrolled, expand=True, fill=True, padding=0)
+    main_vbox.pack_end(button_box, expand=False, fill=False, padding=0)
     main_vbox.show()
     window.add(main_vbox)
     window.show()
@@ -590,7 +590,7 @@ def run_choices_dialog(text, choices, title=None):
     else:
         label.set_markup(text)
     dialog.vbox.set_spacing(DIALOG_SUB_PADDING)
-    dialog.vbox.pack_start(label, expand=False, fill=False)
+    dialog.vbox.pack_start(label, expand=False, fill=False, padding=0)
     if len(choices) < 5:
         for i, choice in enumerate(choices):
             group = None
@@ -601,7 +601,7 @@ def run_choices_dialog(text, choices, title=None):
             radio_button = Gtk.RadioButton(group,
                                            label=choice,
                                            use_underline=False)
-            dialog.vbox.pack_start(radio_button, expand=False, fill=False)
+            dialog.vbox.pack_start(radio_button, expand=False, fill=False, padding=0)
         getter = (lambda:
                   [b.get_label() for b in radio_button.get_group()
                    if b.get_active()].pop())
@@ -610,7 +610,7 @@ def run_choices_dialog(text, choices, title=None):
         for choice in choices:
             combo_box.append_text(choice)
         combo_box.set_active(0)
-        dialog.vbox.pack_start(combo_box, expand=False, fill=False)
+        dialog.vbox.pack_start(combo_box, expand=False, fill=False, padding=0)
         getter = lambda: choices[combo_box.get_active()]
     dialog.show_all()
     response = dialog.run()

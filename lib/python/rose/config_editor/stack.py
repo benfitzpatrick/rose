@@ -135,7 +135,7 @@ class StackViewer(Gtk.Window):
         vbox.set_border_width(rose.config_editor.SPACING_SUB_PAGE)
         vbox.pack_start(label, expand=False, fill=True,
                         padding=rose.config_editor.SPACING_SUB_PAGE)
-        vbox.pack_start(text_scroller, expand=True, fill=True)
+        vbox.pack_start(text_scroller, expand=True, fill=True, padding=0)
         vbox.show()
         return vbox
 

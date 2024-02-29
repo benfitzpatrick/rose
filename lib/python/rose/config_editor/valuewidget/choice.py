@@ -131,8 +131,8 @@ class ChoicesValueWidget(Gtk.HBox):
         list_frame = Gtk.Frame()
         list_frame.show()
         list_frame.add(self._listview)
-        list_vbox.pack_start(list_frame, expand=False, fill=False)
-        self.pack_start(list_vbox, expand=True, fill=True)
+        list_vbox.pack_start(list_frame, expand=False, fill=False, padding=0)
+        self.pack_start(list_vbox, expand=True, fill=True, padding=0)
         tree_vbox = Gtk.VBox()
         tree_vbox.show()
         self._treeview = rose.gtk.choice.ChoicesTreeView(
@@ -145,11 +145,11 @@ class ChoicesValueWidget(Gtk.HBox):
         tree_frame = Gtk.Frame()
         tree_frame.show()
         tree_frame.add(self._treeview)
-        tree_vbox.pack_start(tree_frame, expand=True, fill=True)
+        tree_vbox.pack_start(tree_frame, expand=True, fill=True, padding=0)
         if self.should_edit:
             add_widget = self._get_add_widget()
-            tree_vbox.pack_end(add_widget, expand=False, fill=False)
-        self.pack_start(tree_vbox, expand=True, fill=True)
+            tree_vbox.pack_end(add_widget, expand=False, fill=False, padding=0)
+        self.pack_start(tree_vbox, expand=True, fill=True, padding=0)
         self._listview.connect('focus-in-event',
                                self.hook.trigger_scroll)
         self._treeview.connect('focus-in-event',
@@ -169,7 +169,7 @@ class ChoicesValueWidget(Gtk.HBox):
         add_entry.set_tooltip_text(rose.config_editor.CHOICE_TIP_ENTER_CUSTOM)
         add_entry.show()
         self._set_available_hints(add_entry)
-        add_hbox.pack_end(add_entry, expand=True, fill=True)
+        add_hbox.pack_end(add_entry, expand=True, fill=True, padding=0)
         add_hbox.show()
         return add_hbox
 

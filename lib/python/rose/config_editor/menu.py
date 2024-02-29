@@ -266,7 +266,7 @@ class MenuBar(object):
         self.actiongroup = Gtk.ActionGroup('MenuBar')
         self.actiongroup.add_actions(self.action_details)
         self.actiongroup.add_toggle_actions(self.toggle_action_details)
-        self.uimanager.insert_action_group(self.actiongroup, pos=0)
+        self.uimanager.insert_action_group(self.actiongroup, 0)
         self.uimanager.add_ui_from_string(self.ui_config_string)
         self.macro_ids = []
 
@@ -385,7 +385,7 @@ class MainMenuHandler(object):
     def get_orphan_container(self, page):
         """Return a container with the page object inside."""
         box = Gtk.VBox()
-        box.pack_start(page, expand=True, fill=True)
+        box.pack_start(page, expand=True, fill=True, padding=0)
         box.show()
         return box
 

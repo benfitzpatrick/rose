@@ -64,7 +64,7 @@ class BaseSummaryDataPanel(Gtk.VBox):
         self.group_index = None
         self.util = rose.config_editor.util.Lookup()
         self.control_widget_hbox = self._get_control_widget_hbox()
-        self.pack_start(self.control_widget_hbox, expand=False, fill=False)
+        self.pack_start(self.control_widget_hbox, expand=False, fill=False, padding=0)
         self._prev_store = None
         self._prev_sort_model = None
         self._view = rose.gtk.util.TooltipTreeView(
@@ -83,7 +83,7 @@ class BaseSummaryDataPanel(Gtk.VBox):
         self.update()
         self._window.add(self._view)
         self._window.show()
-        self.pack_start(self._window, expand=True, fill=True)
+        self.pack_start(self._window, expand=True, fill=True, padding=0)
         self.show()
 
     def add_cell_renderer_for_value(self, column, column_title):
@@ -164,11 +164,11 @@ class BaseSummaryDataPanel(Gtk.VBox):
         self._group_widget.connect("changed", self._handle_group_change)
         self._group_widget.show()
         filter_hbox = Gtk.HBox()
-        filter_hbox.pack_start(group_label, expand=False, fill=False)
-        filter_hbox.pack_start(self._group_widget, expand=False, fill=False)
+        filter_hbox.pack_start(group_label, expand=False, fill=False, padding=0)
+        filter_hbox.pack_start(self._group_widget, expand=False, fill=False, padding=0)
         filter_hbox.pack_start(filter_label, expand=False, fill=False,
                                padding=rose.config_editor.SPACING_SUB_PAGE)
-        filter_hbox.pack_start(self._filter_widget, expand=False, fill=False)
+        filter_hbox.pack_start(self._filter_widget, expand=False, fill=False, padding=0)
         filter_hbox.show()
         return filter_hbox
 
