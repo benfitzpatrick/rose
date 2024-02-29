@@ -18,12 +18,13 @@
 # along with Rose. If not, see <http://www.gnu.org/licenses/>.
 # -----------------------------------------------------------------------------
 
+import functools
 import re
 import sys
 
 import gi
 gi.require_version('Gtk', '3.0')
-from gi.repository import Gtk
+from gi.repository import Gtk, GdkPixbuf
 from gi.repository import GObject
 
 import rose.config
@@ -74,9 +75,9 @@ class PageNavigationPanel(Gtk.ScrolledWindow):
         self.cell_error_icon = Gtk.CellRendererPixbuf()
         self.cell_changed_icon = Gtk.CellRendererPixbuf()
         self.cell_title = Gtk.CellRendererText()
-        self.panel_top.pack_start(self.cell_error_icon, False, True, 0)
-        self.panel_top.pack_start(self.cell_changed_icon, False, True, 0)
-        self.panel_top.pack_start(self.cell_title, False, True, 0)
+        self.panel_top.pack_start(self.cell_error_icon, False)
+        self.panel_top.pack_start(self.cell_changed_icon, False)
+        self.panel_top.pack_start(self.cell_title, False)
         self.panel_top.add_attribute(self.cell_error_icon,
                                      attribute='pixbuf',
                                      column=self.COLUMN_ERROR_ICON)
@@ -186,7 +187,7 @@ class PageNavigationPanel(Gtk.ScrolledWindow):
         if row is None:
             self.data_store.clear()
         initials = list(namespace_subtree.items())
-        initials.sort(self.sort_tree_items)
+        initials.sort(key=functools.cmp_to_key(self.sort_tree_items))
         stack = []
         if row is None:
             start_keylist = []
@@ -217,7 +218,7 @@ class PageNavigationPanel(Gtk.ScrolledWindow):
             name_iter_map["/".join(new_keylist)] = new_row
             if isinstance(value, dict):
                 newer_initials = list(value.items())
-                newer_initials.sort(self.sort_tree_items)
+                newer_initials.sort(key=functools.cmp_to_key(self.sort_tree_items))
                 for vals in newer_initials:
                     stack.append([new_row] + [list(new_keylist)] + list(vals))
             stack.pop(0)
@@ -595,7 +596,7 @@ class PageNavigationPanel(Gtk.ScrolledWindow):
             iter_stack.append(model.iter_next(iter_))
         return True
 
-    def _get_should_show(self, model, iter_):
+    def _get_should_show(self, model, iter_, _):
         # Determine whether to show a row.
         latent_status = model.get_value(iter_, self.COLUMN_LATENT_STATUS)
         ignored_status = model.get_value(iter_, self.COLUMN_IGNORED_STATUS)
@@ -606,7 +607,7 @@ class PageNavigationPanel(Gtk.ScrolledWindow):
         if is_visible:
             return True
         while child_iter is not None:
-            if self._get_should_show(model, child_iter):
+            if self._get_should_show(model, child_iter, _):
                 return True
             child_iter = model.iter_next(child_iter)
         return False

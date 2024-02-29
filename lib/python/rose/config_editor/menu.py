@@ -277,7 +277,7 @@ class MenuBar(object):
         for key_press, accel_func in list(accel_dict.items()):
             key, mod = Gtk.accelerator_parse(key_press)
             self.accelerators.lookup[str(key) + str(mod)] = accel_func
-            self.accelerators.connect_group(
+            self.accelerators.connect(
                 key, mod,
                 Gtk.AccelFlags.VISIBLE,
                 lambda a, c, k, m: self.accelerators.lookup[str(k) + str(m)]())
@@ -488,12 +488,11 @@ class MainMenuHandler(object):
         menubar.clear_macros()
         config_keys = list(self.data.config.keys())
         config_keys.sort()
-        tuple_sorter = lambda x, y: cmp(x[0], y[0])
         for config_name in config_keys:
             image = self.data.helper.get_icon_path_for_config(config_name)
             macros = self.data.config[config_name].macros
             macro_tuples = rose.macro.get_macro_class_methods(macros)
-            macro_tuples.sort(tuple_sorter)
+            macro_tuples.sort(key=lambda x: x[0])
             for macro_mod, macro_cls, macro_func, help_ in macro_tuples:
                 menubar.add_macro(config_name, macro_mod, macro_cls,
                                   macro_func, help_, image,

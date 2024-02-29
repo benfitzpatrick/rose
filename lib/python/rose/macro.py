@@ -772,9 +772,9 @@ def get_macro_class_methods(macro_modules):
                     doc_string = obj.__doc__
                     macro_methods.append((macro_name, obj_name, att_name,
                                           doc_string))
-    macro_methods.sort(lambda x, y: cmp(x[1], y[1]))
-    macro_methods.sort(lambda x, y: cmp(x[0], y[0]))
-    macro_methods.sort(lambda x, y: cmp(y[2], x[2]))
+    macro_methods.sort(key=lambda x: x[1])
+    macro_methods.sort(key=lambda x: x[0])
+    macro_methods.sort(key=lambda x: x[2])
     return macro_methods
 
 
