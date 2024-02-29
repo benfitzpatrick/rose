@@ -1,0 +1,2 @@
+conda create -n rose_edit pygobject gtk3 jinja2
+conda activate rose_edit
