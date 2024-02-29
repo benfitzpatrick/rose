@@ -236,8 +236,6 @@ class ConfigNode(object):
 
     def is_ignored(self):
         """Return True if current node is in the "ignored" state."""
-        if not hasattr(self, "STATE_NORMAL"):
-            print(dir(self), getattr(self, "STATE_NORMAL", None))
         return self.state != self.STATE_NORMAL
 
     def walk(self, keys=None, no_ignore=False):

@@ -35,7 +35,6 @@ import sys
 import tempfile
 import warnings
 
-print("Config editor main:", sys.version)
 
 # Ignore add menu related warnings for now, but remove this later.
 warnings.filterwarnings('ignore',
