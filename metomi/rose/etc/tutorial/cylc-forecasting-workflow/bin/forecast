@@ -2,7 +2,8 @@
 # -*- coding: utf-8 -*-
 # -----------------------------------------------------------------------------
 # THIS FILE IS PART OF THE CYLC WORKFLOW ENGINE.
-# Copyright (C) NIWA & British Crown (Met Office) & Contributors.
+# Copyright (C) Earth Sciences New Zealand & British Crown (Met Office)
+# & Contributors.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -150,11 +151,12 @@ def push_rainfall(rainfall, wind_data, step, resolution, spline_level):
                                 dim_x, dim_y, resolution, resolution,
                                 spline_level)
 
+    domain = util.parse_domain(os.environ['DOMAIN'])
+
     while True:
         out_of_bounds = []
         for itt in range(len(x_values)):
             try:
-                domain = util.parse_domain(os.environ['DOMAIN'])
                 lng = domain['lng1'] + x_values[itt]
                 lat = domain['lat1'] + y_values[itt]
 
@@ -242,6 +244,7 @@ def main(forecast_interval, forecast_iterations):
 
 
 if __name__ == '__main__':
+    util.sleep()
     try:
         args = [int(sys.argv[1]), int(sys.argv[2])]
     except IndexError:

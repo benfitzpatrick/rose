@@ -2,7 +2,8 @@
 # -*- coding: utf-8 -*-
 # -----------------------------------------------------------------------------
 # THIS FILE IS PART OF THE CYLC WORKFLOW ENGINE.
-# Copyright (C) NIWA & British Crown (Met Office) & Contributors.
+# Copyright (C) Earth Sciences New Zealand & British Crown (Met Office)
+# & Contributors.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -61,7 +62,7 @@ def plot_wind_data(wind_x, wind_y, x_range, y_range, x_coords, y_coords,
                [x[0] for x in z_coords],
                [y[1] for y in z_coords],
                color='red')
-    plt.savefig('wind.png')
+    plt.savefig(f'{os.environ["CYLC_TASK_LOG_DIR"]}/wind.png')
 
 
 def get_wind_fields():
@@ -115,4 +116,5 @@ def main():
 
 
 if __name__ == '__main__':
+    util.sleep()
     main()
