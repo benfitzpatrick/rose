@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 # -----------------------------------------------------------------------------
 # THIS FILE IS PART OF THE CYLC WORKFLOW ENGINE.
-# Copyright (C) NIWA & British Crown (Met Office) & Contributors.
+# Copyright (C) Earth Sciences New Zealand & British Crown (Met Office)
+# & Contributors.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -17,13 +18,15 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # -----------------------------------------------------------------------------
 # This is illustrative code developed for tutorial purposes, it is not
-# intended for scientific use and is not guarantied to be accurate or correct.
+# intended for scientific use and is not guaranteed to be accurate or correct.
 from copy import copy
 from contextlib import suppress
 import math
-import jinja2
+import os
 import sys
+import time
 
+import jinja2
 
 R_0 = 6371.  # Radius of the Earth (km).
 
@@ -142,7 +145,7 @@ def interpolate_grid(points, dim_x, dim_y, d_x, d_y, spline_order=0):
         d_x (float): The grid spacing in the x-dimension.
         d_y (float): The grid spacing in the y-dimension.
         spline_order (int): The order of the beta-spline to use for
-            interpolation (0 = nearset).
+            interpolation (0 = nearest).
 
     Return:
         list - 2D matrix of dimensions dim_x, dim_y containing the interpolated
@@ -280,13 +283,18 @@ class SurfaceFitter:
         return z_val
 
 
-def parse_domain(domain):
-    bbox = list(map(float, domain.split(',')))
+def parse_domain(domain: str):
+    lng1, lat1, lng2, lat2 = list(map(float, domain.split(',')))
+    msg = "Invalid domain '{}' ({} {} >= {})"
+    if lng1 >= lng2:
+        raise ValueError(msg.format(domain, 'longitude', lng1, lng2))
+    if lat1 >= lat2:
+        raise ValueError(msg.format(domain, 'latitude', lat1, lat2))
     return {
-        'lng1': bbox[0],
-        'lat1': bbox[1],
-        'lng2': bbox[2],
-        'lat2': bbox[3]
+        'lng1': lng1,
+        'lat1': lat1,
+        'lng2': lng2,
+        'lat2': lat2,
     }
 
 
@@ -301,3 +309,12 @@ def generate_html_map(filename, template_file, data, domain, resolution):
                 lat2=domain['lat2'],
                 data=data
             ))
+
+
+def sleep(secs=4):
+    """Make the tutorials run a little slower so users can follow along.
+
+    (Only if not running in CI).
+    """
+    if 'CI' not in os.environ:
+        time.sleep(secs)
