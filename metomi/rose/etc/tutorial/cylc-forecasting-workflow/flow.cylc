@@ -1,11 +1,14 @@
 #!jinja2
-[scheduler]
-    UTC mode = True
+
+{# Generate 5 forecasts at 60 minute intervals. #}
+{% set FORECAST_LENGTH = 60 %}
+{% set FORECAST_COUNT = 5 %}
+
 [task parameters]
     # A list of the weather stations we will be fetching observations from.
-    station = camborne, heathrow, shetland, aldergrove
+    station = aldergrove, camborne, heathrow, shetland
     # A list of the sites we will be generating forecasts for.
-    site = exeter
+    site = exeter, edinburgh
 
 [scheduling]
     # Start the workflow 7 hours before now ignoring minutes and seconds
@@ -41,15 +44,13 @@
         [[[environment]]]
             # The dimensions of each grid cell in degrees.
             RESOLUTION = 0.2
+
             # The area to generate forecasts for (lng1, lat1, lng2, lat2)
-            DOMAIN = -12,48,5,61  # Do not change!
+            DOMAIN = -12,46,12,61  # Do not change!
+
 
     [[get_observations<station>]]
         script = get-observations
-        [[[environment]]]
-            # The key required to get weather data from the DataPoint service.
-            # To use archived data comment this line out.
-            API_KEY = DATAPOINT_API_KEY
 
     [[get_observations<station=aldergrove>]]
         [[[environment]]]
@@ -69,13 +70,9 @@
 
     [[get_rainfall]]
         script = get-rainfall
-        [[[environment]]]
-            # The key required to get weather data from the DataPoint service.
-            # To use archived data comment this line out.
-            API_KEY = DATAPOINT_API_KEY
 
     [[forecast]]
-        script = forecast 60 5  # Generate 5 forecasts at 60 minute intervals.
+        script = forecast {{ FORECAST_LENGTH }} {{ FORECAST_COUNT }}  # Generate 5 forecasts at 60 minute intervals.
         [[[environment]]]
             # The path to the files containing wind data (the {variables} will
             # get substituted in the forecast script).
@@ -90,7 +87,7 @@
             MAP_TEMPLATE = "$CYLC_WORKFLOW_RUN_DIR/lib/template/map.html"
 
     [[post_process<site>]]
-        # Generate a forecast for the location <site> 60 minutes in the future.
-        script = post-process $CYLC_TASK_PARAM_site 60
+        # Generate a weather report for [length * count] minutes in the future for <site>
+        script = post-process $CYLC_TASK_PARAM_site {{ FORECAST_LENGTH * FORECAST_COUNT }}
 
 {% include 'etc/python-job.settings' %}
